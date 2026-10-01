@@ -100,7 +100,7 @@ export const PurchasingFilterBar: React.FC<PurchasingFilterBarProps> = ({
             onClick={onOpenCreatePO}
             style={{ backgroundColor: '#1677ff' }}
           >
-            {isZh ? '+ 新建采购单' : '+ New Purchase Order'}
+            {isZh ? '新建采购单' : 'New Purchase Order'}
           </Button>
 
           <Button

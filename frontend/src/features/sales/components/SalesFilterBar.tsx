@@ -99,7 +99,7 @@ export const SalesFilterBar: React.FC<SalesFilterBarProps> = ({
             onClick={onOpenCreateSO}
             style={{ backgroundColor: '#1677ff' }}
           >
-            {isZh ? '+ 新建销售订单' : '+ New Sales Order'}
+            {isZh ? '新建销售订单' : 'New Sales Order'}
           </Button>
 
           <Button

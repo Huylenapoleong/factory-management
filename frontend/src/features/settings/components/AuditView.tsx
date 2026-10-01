@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Tag, Input, Select, Row, Col, Statistic, Button, message, Space } from 'antd';
+import { Table, Card, Tag, Input, Select, Row, Col, Statistic, Button, message, Space, theme } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   AuditOutlined,
@@ -15,6 +15,7 @@ import { AuditLogItem } from '../types';
 
 export const AuditView: React.FC = () => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,9 +163,9 @@ export const AuditView: React.FC = () => {
       {/* 1. KPI Ribbon */}
       <Row gutter={[10, 10]} style={{ marginBottom: 12 }}>
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
+          <Card size="small" style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}>
             <Statistic
-              title={<span style={{ fontSize: 11, color: '#6b7280' }}>{isZh ? '今日审计事件总数' : 'TOTAL AUDIT EVENTS'}</span>}
+              title={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>{isZh ? '今日审计事件总数' : 'TOTAL AUDIT EVENTS'}</span>}
               value={1492}
               valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1677ff' }}
               prefix={<AuditOutlined />}
@@ -173,7 +174,7 @@ export const AuditView: React.FC = () => {
         </Col>
 
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: '1px solid #bbf7d0', backgroundColor: '#f0fdf4' }}>
+          <Card size="small" style={{ borderRadius: 4, border: '1px solid #86efac', backgroundColor: token.colorFillAlter }}>
             <Statistic
               title={<span style={{ fontSize: 11, color: '#15803d' }}>{isZh ? '合规溯源达成度' : 'COMPLIANCE INTEGRITY'}</span>}
               value={100}
@@ -185,7 +186,7 @@ export const AuditView: React.FC = () => {
         </Col>
 
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: '1px solid #fed7aa', backgroundColor: '#fffbf5' }}>
+          <Card size="small" style={{ borderRadius: 4, border: '1px solid #fed7aa', backgroundColor: token.colorFillAlter }}>
             <Statistic
               title={<span style={{ fontSize: 11, color: '#d97706' }}>{isZh ? '质量异常评审 (NCR)' : 'FLAGGED NCRs'}</span>}
               value={1}
@@ -197,11 +198,11 @@ export const AuditView: React.FC = () => {
         </Col>
 
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
+          <Card size="small" style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}>
             <Statistic
-              title={<span style={{ fontSize: 11, color: '#6b7280' }}>{isZh ? '在线车间工控机 / PDA' : 'ONLINE TERMINALS'}</span>}
+              title={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>{isZh ? '在线车间工控机 / PDA' : 'ONLINE TERMINALS'}</span>}
               value={24}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1f2937' }}
+              valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
               suffix={<span style={{ fontSize: 11, color: '#10b981', marginLeft: 6 }}>TLS 1.3 Active</span>}
             />
           </Card>
@@ -211,7 +212,7 @@ export const AuditView: React.FC = () => {
       {/* 2. Filter Bar */}
       <Card
         size="small"
-        style={{ borderRadius: 4, border: '1px solid #e5e7eb', marginBottom: 12 }}
+        style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer, marginBottom: 12 }}
         styles={{ body: { padding: '10px 14px' } }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
@@ -270,7 +271,7 @@ export const AuditView: React.FC = () => {
       {/* 3. Table */}
       <Card
         size="small"
-        style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
+        style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
         styles={{ body: { padding: 0 } }}
       >
         <Table

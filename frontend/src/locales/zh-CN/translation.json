@@ -34,7 +34,7 @@
     "shift": "早班 (08:00 - 16:30)",
     "shiftName": "早班",
     "systemStatus": "产线正常运行",
-    "autoRefresh": "自动刷新: 10秒",
+    "autoRefresh": "自动刷新",
     "manualRefresh": "手动刷新",
     "systemTime": "系统时间 (UTC+8)",
     "userRole": "厂长",

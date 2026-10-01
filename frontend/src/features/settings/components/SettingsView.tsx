@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, InputNumber, Button, Row, Col, Select, message, Tabs, Tag, Alert } from 'antd';
+import { Card, Form, Input, InputNumber, Button, Row, Col, Select, message, Tabs, Tag, Alert, theme } from 'antd';
 import {
   SettingOutlined,
   SaveOutlined,
@@ -15,6 +15,7 @@ import { UserManagementTable } from './UserManagementTable';
 
 export const SettingsView: React.FC = () => {
   const { language, setLanguage } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
@@ -79,19 +80,15 @@ export const SettingsView: React.FC = () => {
             {isZh ? '保存系统配置' : 'Save Configurations'}
           </Button>
         }
-        style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
+        style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
       >
         <Tabs
           defaultActiveKey="workshop"
           items={[
             {
               key: 'workshop',
-              label: (
-                <span>
-                  <GlobalOutlined />
-                  {isZh ? '车间基础参数' : 'Workshop Parameters'}
-                </span>
-              ),
+              icon: <GlobalOutlined />,
+              label: isZh ? '车间基础参数' : 'Workshop Parameters',
               children: (
                 <Form form={form} layout="vertical" size="small" disabled={loading}>
                   <Row gutter={16}>
@@ -163,8 +160,8 @@ export const SettingsView: React.FC = () => {
                     </Col>
                   </Row>
 
-                  <div style={{ marginTop: 8, padding: 12, backgroundColor: '#f9fafb', borderRadius: 4 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1f2937' }}>
+                  <div style={{ marginTop: 8, padding: 12, backgroundColor: token.colorFillAlter, border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: token.colorText }}>
                       {isZh ? '控制台界面首选语言 / Display Language' : 'Display Language'}
                     </div>
                     <Select
@@ -183,12 +180,8 @@ export const SettingsView: React.FC = () => {
             },
             {
               key: 'gateway',
-              label: (
-                <span>
-                  <ApiOutlined />
-                  {isZh ? '工业总线与 SCADA 网关' : 'Industrial SCADA & ERP Gateway'}
-                </span>
-              ),
+              icon: <ApiOutlined />,
+              label: isZh ? '工业总线与 SCADA 网关' : 'Industrial SCADA & ERP Gateway',
               children: (
                 <Form form={form} layout="vertical" size="small" disabled={loading}>
                   <Alert
@@ -244,57 +237,53 @@ export const SettingsView: React.FC = () => {
             },
             {
               key: 'rbac',
-              label: (
-                <span>
-                  <SafetyCertificateOutlined />
-                  {isZh ? '角色与权限矩阵' : 'Role-Based Access (RBAC)'}
-                </span>
-              ),
+              icon: <SafetyCertificateOutlined />,
+              label: isZh ? '角色与权限矩阵' : 'Role-Based Access (RBAC)',
               children: (
                 <div>
-                  <div style={{ marginBottom: 12, fontSize: 12, color: '#6b7280' }}>
+                  <div style={{ marginBottom: 12, fontSize: 12, color: token.colorTextSecondary }}>
                     {isZh
                       ? '本系统已启用细粒度权限控制，车间作业员仅允许工序报工，仓库员负责过账，厂长及调度主管具备全局管理权限。'
                       : 'Fine-grained RBAC enforces operational boundaries for dispatchers, operators, and clerks.'}
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
-                    <div style={{ border: '1px solid #e5e7eb', borderRadius: 4, padding: 10, backgroundColor: '#ffffff' }}>
+                    <div style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4, padding: 10, backgroundColor: token.colorFillAlter }}>
                       <Tag color="red">ROLE_ADMIN</Tag>
-                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4, color: token.colorText }}>
                         {isZh ? '厂长总监 / 系统管理员' : 'Plant Director'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 4 }}>
                         {isZh ? '全权限 · 工单排产 · 调账确认 · 发货放行' : 'Full system privileges & release override'}
                       </div>
                     </div>
 
-                    <div style={{ border: '1px solid #e5e7eb', borderRadius: 4, padding: 10, backgroundColor: '#ffffff' }}>
+                    <div style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4, padding: 10, backgroundColor: token.colorFillAlter }}>
                       <Tag color="blue">ROLE_DISPATCHER</Tag>
-                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4, color: token.colorText }}>
                         {isZh ? '车间调度主管' : 'Workshop Dispatcher'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 4 }}>
                         {isZh ? '工单下发 · 工序派工 · 报工审核 · 停机排障' : 'Work order dispatching & report verification'}
                       </div>
                     </div>
 
-                    <div style={{ border: '1px solid #e5e7eb', borderRadius: 4, padding: 10, backgroundColor: '#ffffff' }}>
+                    <div style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4, padding: 10, backgroundColor: token.colorFillAlter }}>
                       <Tag color="green">ROLE_WAREHOUSE</Tag>
-                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4, color: token.colorText }}>
                         {isZh ? '仓储物流管理员' : 'Warehouse Clerk'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 4 }}>
                         {isZh ? '库位调拨 · 采购到货收货 · 销售发运出库' : 'Stock transfers, goods receipts, and DO shipping'}
                       </div>
                     </div>
 
-                    <div style={{ border: '1px solid #e5e7eb', borderRadius: 4, padding: 10, backgroundColor: '#ffffff' }}>
+                    <div style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4, padding: 10, backgroundColor: token.colorFillAlter }}>
                       <Tag color="purple">ROLE_QUALITY</Tag>
-                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 4, color: token.colorText }}>
                         {isZh ? '来料/过程质检员' : 'Quality Engineer'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 4 }}>
                         {isZh ? '到货质检抽查 · 开具异常评审 (NCR) · 报废退料' : 'IQC inspection, defect hold, scrap quarantine'}
                       </div>
                     </div>

@@ -34,7 +34,7 @@
     "shift": "Shift A (08:00 - 16:30)",
     "shiftName": "Morning Shift",
     "systemStatus": "All Lines Operational",
-    "autoRefresh": "Auto-refresh: 10s",
+    "autoRefresh": "Auto-refresh",
     "manualRefresh": "Manual Refresh",
     "systemTime": "System Time (UTC+8)",
     "userRole": "Plant Director",

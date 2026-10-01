@@ -272,7 +272,7 @@ export const ItemsView: React.FC = () => {
               onClick={() => setModalVisible(true)}
               style={{ backgroundColor: '#1677ff' }}
             >
-              {isZh ? '+ 新增物料定义' : '+ New Item SKU'}
+              {isZh ? '新增物料定义' : 'New Item SKU'}
             </Button>
             <Button
               size="small"

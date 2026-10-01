@@ -124,12 +124,8 @@ export const UserGuideModal: React.FC = () => {
   const tabItems = [
     {
       key: 'flow',
-      label: (
-        <span>
-          <BookOutlined style={{ marginRight: 6 }} />
-          {isZh ? '车间业务流转 SOP' : 'Plant Floor Workflow SOP'}
-        </span>
-      ),
+      icon: <BookOutlined />,
+      label: isZh ? '车间业务流转 SOP' : 'Plant Floor Workflow SOP',
       children: (
         <div style={{ padding: '8px 0' }}>
           <Alert
@@ -191,12 +187,8 @@ export const UserGuideModal: React.FC = () => {
     },
     {
       key: 'hotkeys',
-      label: (
-        <span>
-          <KeyOutlined style={{ marginRight: 6 }} />
-          {isZh ? '工控快捷键速查' : 'Industrial Hotkeys'}
-        </span>
-      ),
+      icon: <KeyOutlined />,
+      label: isZh ? '工控快捷键速查' : 'Industrial Hotkeys',
       children: (
         <div style={{ padding: '8px 0' }}>
           <Paragraph style={{ color: token.colorTextSecondary }}>
@@ -216,12 +208,8 @@ export const UserGuideModal: React.FC = () => {
     },
     {
       key: 'thresholds',
-      label: (
-        <span>
-          <DashboardOutlined style={{ marginRight: 6 }} />
-          {isZh ? 'KPI指标与阈值标准' : 'KPI Benchmarks & Alarms'}
-        </span>
-      ),
+      icon: <DashboardOutlined />,
+      label: isZh ? 'KPI指标与阈值标准' : 'KPI Benchmarks & Alarms',
       children: (
         <div style={{ padding: '8px 0' }}>
           <Table
@@ -236,12 +224,8 @@ export const UserGuideModal: React.FC = () => {
     },
     {
       key: 'andon',
-      label: (
-        <span>
-          <AlertOutlined style={{ marginRight: 6 }} />
-          {isZh ? '安灯异常与停机响应' : 'Andon Emergency Protocols'}
-        </span>
-      ),
+      icon: <AlertOutlined />,
+      label: isZh ? '安灯异常与停机响应' : 'Andon Emergency Protocols',
       children: (
         <div style={{ padding: '8px 0' }}>
           <Alert

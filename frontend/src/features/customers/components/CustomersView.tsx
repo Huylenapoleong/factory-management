@@ -250,7 +250,7 @@ export const CustomersView: React.FC = () => {
               onClick={() => setModalVisible(true)}
               style={{ backgroundColor: '#1677ff' }}
             >
-              {isZh ? '+ 新建客户档案' : '+ Register Account'}
+              {isZh ? '新建客户档案' : 'Register Account'}
             </Button>
             <Button
               size="small"

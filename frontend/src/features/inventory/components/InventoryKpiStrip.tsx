@@ -1,5 +1,5 @@
 import React from 'react';
-import { Row, Col, Card, Statistic } from 'antd';
+import { Row, Col, Card, Statistic, theme } from 'antd';
 import {
   AppstoreOutlined,
   DollarOutlined,
@@ -11,6 +11,7 @@ import { useAppStore } from '@/stores/useAppStore';
 
 export const InventoryKpiStrip: React.FC = () => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
 
   return (
@@ -19,27 +20,27 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
+          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '在库物料种类' : 'TOTAL ACTIVE SKUS'}
                 </span>
                 <AppstoreOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
             value={1482}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1f2937' }}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
             suffix={
               <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
                 +12 {isZh ? '本周新增' : 'this week'}
               </span>
             }
           />
-          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
             98.4% {isZh ? '已赋条码/RFID' : 'RFID/Bar Tracked'}
           </div>
         </Card>
@@ -49,13 +50,13 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
+          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '库存总货值' : 'INVENTORY VALUATION'}
                 </span>
                 <DollarOutlined style={{ color: '#0f766e', fontSize: 13 }} />
@@ -65,11 +66,11 @@ export const InventoryKpiStrip: React.FC = () => {
             precision={2}
             prefix="$"
             suffix={
-              <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>
-                M <span style={{ color: '#9ca3af' }}>({isZh ? '约¥30.8M' : '¥30.8M'})</span>
+              <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 6 }}>
+                M <span style={{ color: token.colorTextSecondary }}>({isZh ? '约¥30.8M' : '¥30.8M'})</span>
               </span>
             }
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1f2937' }}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
           />
           <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
             MoM -2.4% | {isZh ? '周转率 14.2天' : 'Turnover 14.2d'}
@@ -81,20 +82,20 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={4} xl={4}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #fed7aa', backgroundColor: '#fffbf5' }}
+          style={{ borderRadius: 4, border: '1px solid #f87171', backgroundColor: token.colorFillAlter }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#d97706', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 600 }}>
                   {isZh ? '安全库存预警' : 'LOW SAFETY STOCK'}
                 </span>
-                <AlertOutlined style={{ color: '#d97706', fontSize: 13 }} />
+                <AlertOutlined style={{ color: '#dc2626', fontSize: 13 }} />
               </div>
             }
             value={14}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#d97706' }}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}
             suffix={
               <span
                 style={{
@@ -111,7 +112,7 @@ export const InventoryKpiStrip: React.FC = () => {
               </span>
             }
           />
-          <div style={{ fontSize: 11, color: '#b45309', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: '#ef4444', marginTop: 2 }}>
             4 {isZh ? '笔采购单在途' : 'POs in transit'}
           </div>
         </Card>
@@ -121,23 +122,23 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
+          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '待检入库暂存' : 'INBOUND STAGING'}
                 </span>
                 <InboxOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
             value={180}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1f2937' }}
-            suffix={<span style={{ fontSize: 11, color: '#6b7280', marginLeft: 4 }}>{isZh ? '托盘' : 'pallets'}</span>}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            suffix={<span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>{isZh ? '托盘' : 'pallets'}</span>}
           />
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
             6 {isZh ? '批到货待检 (Dock 01-04)' : 'ASN arriving (Dock 01-04)'}
           </div>
         </Card>
@@ -147,20 +148,20 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
+          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '产线备料待出库' : 'STAGED FOR LINES'}
                 </span>
                 <SendOutlined style={{ color: '#10b981', fontSize: 13 }} />
               </div>
             }
             value={42}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1f2937' }}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
             suffix={
               <span
                 style={{
@@ -177,7 +178,7 @@ export const InventoryKpiStrip: React.FC = () => {
               </span>
             }
           />
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
             {isZh ? '下次派送料: 25分钟后' : 'Next dispatch: 25 min'}
           </div>
         </Card>

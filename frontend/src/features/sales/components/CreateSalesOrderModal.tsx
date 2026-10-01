@@ -186,7 +186,7 @@ export const CreateSalesOrderModal: React.FC<CreateSalesOrderModalProps> = ({
                 icon={<PlusOutlined />}
                 size="small"
               >
-                {isZh ? '+ 添加产品行明细' : '+ Add Product Line Item'}
+                {isZh ? '添加产品行明细' : 'Add Product Line Item'}
               </Button>
             </div>
           )}

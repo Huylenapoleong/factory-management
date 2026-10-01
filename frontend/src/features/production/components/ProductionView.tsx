@@ -224,7 +224,7 @@ export const ProductionView: React.FC = () => {
               onClick={() => setCreateModalOpen(true)}
               style={{ backgroundColor: '#1677ff' }}
             >
-              {language === 'zh-CN' ? '+ 新建工单' : '+ New Work Order'}
+              {language === 'zh-CN' ? '新建工单' : 'New Work Order'}
             </Button>
           </Space>
         </div>

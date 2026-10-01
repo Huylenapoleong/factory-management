@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Table, Card, Tag, Button, Space, message, Typography } from 'antd';
-import type { TableColumnsType } from 'antd';
+import { Table, Card, Tag, Button, Space, Typography, theme, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
   SwapOutlined,
-  BarcodeOutlined,
+  EditOutlined,
   InboxOutlined,
+  BarcodeOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
 import { InventoryBalanceItem } from '../types';
@@ -13,42 +14,54 @@ const { Text } = Typography;
 
 interface InventoryLedgerTableProps {
   balances: InventoryBalanceItem[];
-  loading?: boolean;
-  onTransferItem: (item: InventoryBalanceItem) => void;
-  onAdjustItem: (item: InventoryBalanceItem) => void;
+  loading: boolean;
+  onTransferItem: (record: InventoryBalanceItem) => void;
+  onAdjustItem: (record: InventoryBalanceItem) => void;
 }
 
 export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
   balances,
-  loading = false,
+  loading,
   onTransferItem,
   onAdjustItem,
 }) => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  const columns: TableColumnsType<InventoryBalanceItem> = [
+  const columns: ColumnsType<InventoryBalanceItem> = [
     {
       title: isZh ? '物料编码 (SKU)' : 'SKU / Item Code',
       dataIndex: 'itemCode',
       key: 'itemCode',
       width: 140,
+      fixed: 'left',
       render: (code: string) => (
-        <span className="tnum" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff', fontSize: 12 }}>
+        <span
+          className="tnum"
+          style={{
+            fontFamily: 'monospace',
+            fontWeight: 600,
+            color: '#1677ff',
+            fontSize: 12,
+          }}
+        >
           {code}
         </span>
       ),
     },
     {
       title: isZh ? '物料名称与规格' : 'Material Description & Spec',
-      key: 'materialInfo',
+      dataIndex: 'itemNameEn',
+      key: 'itemName',
+      width: 220,
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 600, fontSize: 13, color: '#1f2937' }}>
+          <div style={{ fontWeight: 600, fontSize: 12, color: token.colorText }}>
             {isZh ? record.itemNameZh : record.itemNameEn}
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>
+          <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 1 }}>
             {record.itemSpec}
           </div>
         </div>
@@ -66,9 +79,9 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
             margin: 0,
             borderRadius: 3,
             fontSize: 11,
-            backgroundColor: '#f9fafb',
-            borderColor: '#e5e7eb',
-            color: '#374151',
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorBorderSecondary,
+            color: token.colorText,
           }}
         >
           {loc}
@@ -81,7 +94,7 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       key: 'lotNumber',
       width: 125,
       render: (lot: string) => (
-        <span className="tnum" style={{ fontFamily: 'monospace', fontSize: 11, color: '#4b5563' }}>
+        <span className="tnum" style={{ fontFamily: 'monospace', fontSize: 11, color: token.colorTextSecondary }}>
           {lot}
         </span>
       ),
@@ -93,7 +106,7 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       width: 100,
       align: 'right',
       render: (qty: number, record) => (
-        <span className="tnum" style={{ fontWeight: 600, color: '#1f2937' }}>
+        <span className="tnum" style={{ fontWeight: 600, color: token.colorText }}>
           {qty.toLocaleString()} <Text type="secondary" style={{ fontSize: 11 }}>{record.itemUnitCode}</Text>
         </span>
       ),
@@ -126,7 +139,7 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       width: 90,
       align: 'right',
       render: (res: number) => (
-        <span className="tnum" style={{ color: '#6b7280', fontSize: 12 }}>
+        <span className="tnum" style={{ color: token.colorTextSecondary, fontSize: 12 }}>
           {res > 0 ? res.toLocaleString() : '-'}
         </span>
       ),
@@ -138,7 +151,7 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       width: 90,
       align: 'right',
       render: (min: number) => (
-        <span className="tnum" style={{ color: '#9ca3af', fontSize: 11 }}>
+        <span className="tnum" style={{ color: token.colorTextTertiary || token.colorTextSecondary, fontSize: 11 }}>
           {min > 0 ? min.toLocaleString() : '-'}
         </span>
       ),
@@ -150,10 +163,10 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       align: 'right',
       render: (_, record) => (
         <div style={{ textAlign: 'right' }}>
-          <div className="tnum" style={{ fontWeight: 600, color: '#1f2937', fontSize: 12 }}>
+          <div className="tnum" style={{ fontWeight: 600, color: token.colorText, fontSize: 12 }}>
             ${record.totalValuation.toLocaleString()}
           </div>
-          <div style={{ fontSize: 10, color: '#9ca3af' }}>
+          <div style={{ fontSize: 10, color: token.colorTextSecondary }}>
             ${record.unitCost.toFixed(2)}/{record.itemUnitCode}
           </div>
         </div>
@@ -180,23 +193,25 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       },
     },
     {
-      title: isZh ? '操作' : 'Actions',
-      key: 'actions',
+      title: isZh ? '操作' : 'Action',
+      key: 'action',
       width: 130,
+      fixed: 'right',
       render: (_, record) => (
         <Space size="small">
           <Button
             type="link"
             size="small"
+            icon={<SwapOutlined />}
             style={{ padding: 0, fontSize: 12 }}
             onClick={() => onTransferItem(record)}
           >
             {isZh ? '调拨' : 'Transfer'}
           </Button>
-          <span style={{ color: '#e5e7eb' }}>|</span>
           <Button
             type="link"
             size="small"
+            icon={<EditOutlined />}
             style={{ padding: 0, fontSize: 12 }}
             onClick={() => onAdjustItem(record)}
           >
@@ -221,7 +236,8 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       size="small"
       style={{
         borderRadius: 4,
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${token.colorBorderSecondary}`,
+        backgroundColor: token.colorBgContainer,
       }}
       styles={{ body: { padding: 0 } }}
     >
@@ -232,11 +248,11 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '10px 14px',
-          borderBottom: '1px solid #f0f2f5',
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontWeight: 600, fontSize: 13, color: '#1f2937' }}>
+          <span style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}>
             {isZh ? '实时物料在库台账' : 'Real-Time Inventory Stock Ledger'}
           </span>
           <Tag color="blue" style={{ borderRadius: 2, margin: 0, fontSize: 11 }}>
@@ -246,7 +262,7 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
 
         {selectedRowKeys.length > 0 && (
           <Space size="small">
-            <span style={{ fontSize: 12, color: '#6b7280' }}>
+            <span style={{ fontSize: 12, color: token.colorTextSecondary }}>
               {isZh ? `已选中 ${selectedRowKeys.length} 项` : `Selected ${selectedRowKeys.length} items`}
             </span>
             <Button

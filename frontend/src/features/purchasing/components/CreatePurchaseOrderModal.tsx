@@ -186,7 +186,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
                 icon={<PlusOutlined />}
                 size="small"
               >
-                {isZh ? '+ 添加采购物料行' : '+ Add PO Line Item'}
+                {isZh ? '添加采购物料行' : 'Add PO Line Item'}
               </Button>
             </div>
           )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Tag, Radio, Button, Space, message, Badge } from 'antd';
+import { Card, Tag, Radio, Button, Space, message, Badge, theme } from 'antd';
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -21,6 +21,7 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
   logs,
 }) => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [filterType, setFilterType] = useState<string>('ALL');
 
@@ -81,7 +82,8 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
         size="small"
         style={{
           borderRadius: 4,
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${token.colorBorderSecondary}`,
+          backgroundColor: token.colorBgContainer,
         }}
         styles={{ body: { padding: '12px' } }}
       >
@@ -96,11 +98,11 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Badge status="processing" color="#10b981" />
-            <span style={{ fontWeight: 600, fontSize: 13, color: '#1f2937' }}>
+            <span style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}>
               {isZh ? '实时物料流转出入库动态' : 'Real-time Lot Audit Trail'}
             </span>
           </div>
-          <span style={{ fontSize: 11, color: '#9ca3af' }}>Live Sync</span>
+          <span style={{ fontSize: 11, color: token.colorTextSecondary }}>Live Sync</span>
         </div>
 
         {/* Filter Pills */}
@@ -137,10 +139,10 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
               <div
                 key={log.id}
                 style={{
-                  border: '1px solid #f0f0f0',
+                  border: `1px solid ${token.colorBorderSecondary}`,
                   borderRadius: 4,
                   padding: '8px 10px',
-                  backgroundColor: '#ffffff',
+                  backgroundColor: token.colorFillAlter,
                   boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                 }}
               >
@@ -170,15 +172,15 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
                   </span>
                 </div>
 
-                <div style={{ fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 2 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: token.colorText, marginBottom: 2 }}>
                   {isZh ? log.itemNameZh : log.itemNameEn}
                 </div>
 
-                <div style={{ fontSize: 11, color: '#6b7280', display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: token.colorTextSecondary, display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                   <span>
                     {log.targetLocation ? `-> ${log.targetLocation}` : log.sourceLocation}
                   </span>
-                  <span style={{ fontFamily: 'monospace', color: '#9ca3af' }}>{log.docReference}</span>
+                  <span style={{ fontFamily: 'monospace', color: token.colorTextTertiary || token.colorTextSecondary }}>{log.docReference}</span>
                 </div>
 
                 <div
@@ -187,9 +189,9 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     fontSize: 11,
-                    color: '#9ca3af',
+                    color: token.colorTextSecondary,
                     marginTop: 4,
-                    borderTop: '1px dashed #f0f0f0',
+                    borderTop: `1px dashed ${token.colorBorderSecondary}`,
                     paddingTop: 4,
                   }}
                 >
@@ -207,15 +209,15 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
         size="small"
         style={{
           borderRadius: 4,
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#fafafa',
+          border: `1px solid ${token.colorBorderSecondary}`,
+          backgroundColor: token.colorBgContainer,
         }}
         styles={{ body: { padding: '12px' } }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <Space size="small">
             <QrcodeOutlined style={{ color: '#1677ff' }} />
-            <span style={{ fontWeight: 600, fontSize: 12, color: '#1f2937' }}>
+            <span style={{ fontWeight: 600, fontSize: 12, color: token.colorText }}>
               {isZh ? '手持 PDA 终端状态' : 'PDA Terminal Status'}
             </span>
           </Space>
@@ -224,7 +226,7 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
           </Tag>
         </div>
 
-        <div style={{ fontSize: 11, color: '#6b7280', lineHeight: '18px' }}>
+        <div style={{ fontSize: 11, color: token.colorTextSecondary, lineHeight: '18px' }}>
           <div>{isZh ? '分配领料员: 陈斌 (工号: WH-030)' : 'Operator: Chen Bin (WH-030)'}</div>
           <div>{isZh ? '当前作业区: WH-01 原材料立库 A-5' : 'Active Zone: WH-01 High Rack A-5'}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>

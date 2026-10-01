@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Space, Modal, Form, Input, Select, message, Popconfirm } from 'antd';
+import { Table, Tag, Button, Space, Modal, Form, Input, Select, message, Popconfirm, theme } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   UserAddOutlined,
@@ -12,6 +12,7 @@ import { userService, UserAccount, CreateUserPayload } from '@/services/userServ
 
 export const UserManagementTable: React.FC = () => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
 
   const [users, setUsers] = useState<UserAccount[]>([]);
@@ -183,10 +184,10 @@ export const UserManagementTable: React.FC = () => {
     <div style={{ marginTop: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 13, color: '#1f2937' }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}>
             {isZh ? '系统操作员账号与访问权限列表' : 'Authorized Operator Accounts & Credentials'}
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>
+          <div style={{ fontSize: 11, color: token.colorTextSecondary }}>
             {isZh ? '实时查询 /api/v1/users，控制车间终端登录与权限分配' : 'Live RBAC credentials managed via /api/v1/users'}
           </div>
         </div>
@@ -198,7 +199,7 @@ export const UserManagementTable: React.FC = () => {
           onClick={() => setCreateModalVisible(true)}
           style={{ backgroundColor: '#1677ff' }}
         >
-          {isZh ? '+ 新增系统用户' : '+ New User'}
+          {isZh ? '新增系统用户' : 'New User'}
         </Button>
       </div>
 
@@ -209,7 +210,7 @@ export const UserManagementTable: React.FC = () => {
         columns={columns}
         dataSource={users}
         pagination={{ pageSize: 5 }}
-        style={{ border: '1px solid #e5e7eb', borderRadius: 4 }}
+        style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}
       />
 
       {/* Create User Modal */}

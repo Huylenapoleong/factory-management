@@ -261,7 +261,7 @@ export const SuppliersView: React.FC = () => {
               onClick={() => setModalVisible(true)}
               style={{ backgroundColor: '#1677ff' }}
             >
-              {isZh ? '+ 新建供应商档案' : '+ Register Vendor'}
+              {isZh ? '新建供应商档案' : 'Register Vendor'}
             </Button>
             <Button
               size="small"

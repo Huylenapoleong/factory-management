@@ -124,7 +124,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             onClick={onOpenTransfer}
             style={{ backgroundColor: '#1677ff' }}
           >
-            {isZh ? '+ 库位调拨' : '+ Stock Transfer'}
+            {isZh ? '库位调拨' : 'Stock Transfer'}
           </Button>
 
           <Button
