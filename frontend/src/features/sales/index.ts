@@ -1,2 +1,2 @@
-// Sales feature module
-export {};
+export { SalesView } from './components/SalesView';
+export * from './types';

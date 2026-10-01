@@ -10,6 +10,7 @@ import { DashboardView } from '@/features/dashboard/components/DashboardView';
 import { ProductionView } from '@/features/production';
 import { InventoryView } from '@/features/inventory';
 import { PurchasingView } from '@/features/purchasing';
+import { SalesView } from '@/features/sales';
 
 export const App: React.FC = () => {
   const { language } = useAppStore();
@@ -29,7 +30,7 @@ export const App: React.FC = () => {
             <Route path="/inventory" element={<InventoryView />} />
             <Route path="/items" element={<InventoryView />} />
             <Route path="/purchasing" element={<PurchasingView />} />
-            <Route path="/sales" element={<div style={{ padding: 24 }}>Sales Module</div>} />
+            <Route path="/sales" element={<SalesView />} />
             <Route path="/settings" element={<div style={{ padding: 24 }}>Settings Module</div>} />
           </Route>
           <Route path="*" element={<div>404 Not Found</div>} />
