@@ -8,6 +8,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { MainLayout } from '@/layouts/MainLayout';
 import { DashboardView } from '@/features/dashboard/components/DashboardView';
 import { ProductionView } from '@/features/production';
+import { InventoryView } from '@/features/inventory';
 
 export const App: React.FC = () => {
   const { language } = useAppStore();
@@ -23,9 +24,10 @@ export const App: React.FC = () => {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardView />} />
-            <Route path="/items" element={<div style={{ padding: 24 }}>Items Module</div>} />
-            <Route path="/purchasing" element={<div style={{ padding: 24 }}>Purchasing Module</div>} />
             <Route path="/production" element={<ProductionView />} />
+            <Route path="/inventory" element={<InventoryView />} />
+            <Route path="/items" element={<InventoryView />} />
+            <Route path="/purchasing" element={<div style={{ padding: 24 }}>Purchasing Module</div>} />
             <Route path="/sales" element={<div style={{ padding: 24 }}>Sales Module</div>} />
             <Route path="/settings" element={<div style={{ padding: 24 }}>Settings Module</div>} />
           </Route>
