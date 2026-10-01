@@ -57,6 +57,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
       open={visible}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       width={680}
       okText={isZh ? '确认创建' : 'Create Item'}

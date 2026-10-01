@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, DatePicker, Switch, Button, message, Space, Alert } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, DatePicker, Switch, Button, message, Space, Alert, theme } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
 import { purchasingService } from '@/services/purchasingService';
@@ -16,6 +16,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
   onSuccess,
 }) => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -55,6 +56,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
       title={isZh ? '新建采购订单 (Create Purchase Order)' : 'Create Purchase Order'}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={isZh ? '确认下达采购单' : 'Issue Purchase Order'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -123,10 +125,10 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
                     gridTemplateColumns: '2fr 1fr 1fr auto',
                     gap: 8,
                     alignItems: 'center',
-                    backgroundColor: '#fafafa',
+                    backgroundColor: token.colorFillAlter,
                     padding: '8px 10px',
                     borderRadius: 4,
-                    border: '1px solid #e5e7eb',
+                    border: `1px solid ${token.colorBorderSecondary}`,
                   }}
                 >
                   <Form.Item

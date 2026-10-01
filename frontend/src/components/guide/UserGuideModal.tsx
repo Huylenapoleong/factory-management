@@ -283,6 +283,7 @@ export const UserGuideModal: React.FC = () => {
     <Modal
       open={userGuideVisible}
       onCancel={() => setUserGuideVisible(false)}
+      centered
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <BookOutlined style={{ color: token.colorPrimary, fontSize: 18 }} />

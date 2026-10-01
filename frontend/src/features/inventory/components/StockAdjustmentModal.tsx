@@ -74,6 +74,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
       title={isZh ? '库存盘点与台账调整 (Stocktake Adjustment)' : 'Stocktake Adjustment'}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={isZh ? '确认调账' : 'Confirm Adjustment'}
       cancelText={isZh ? '取消' : 'Cancel'}

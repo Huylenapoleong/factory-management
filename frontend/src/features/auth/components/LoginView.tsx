@@ -283,7 +283,7 @@ export const LoginView: React.FC = () => {
       <div style={{ marginTop: 24, textAlign: 'center', color: '#64748b', fontSize: 12 }}>
         <div>WIFIM MES Enterprise Suite | ISO 9001:2015 Manufacturing Standard</div>
         <div style={{ marginTop: 4, fontSize: 11, color: '#475569' }}>
-          Backend REST: /api/v1 | Spring Boot 3.4 &amp; React 19 Engine
+          Plant Operations System v2.6 | Secure Industrial Protocol Active
         </div>
       </div>
     </div>

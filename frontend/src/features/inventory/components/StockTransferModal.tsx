@@ -76,6 +76,7 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
       title={isZh ? '库位物料调拨单 (Stock Transfer)' : 'Stock Transfer Order'}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={isZh ? '确认调拨' : 'Confirm Transfer'}
       cancelText={isZh ? '取消' : 'Cancel'}

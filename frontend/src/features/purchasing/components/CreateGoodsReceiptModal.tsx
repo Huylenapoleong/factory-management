@@ -85,6 +85,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
       title={isZh ? '办理采购到货收货 (Create Goods Receipt)' : 'Create Goods Receipt'}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={isZh ? '确认到货建单' : 'Submit Receipt'}
       cancelText={isZh ? '取消' : 'Cancel'}

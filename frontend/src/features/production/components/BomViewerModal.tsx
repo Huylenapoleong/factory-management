@@ -147,6 +147,7 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
       }
       open={open}
       onCancel={onClose}
+      centered
       width={820}
       footer={[
         <Button key="cancel" size="small" onClick={onClose}>

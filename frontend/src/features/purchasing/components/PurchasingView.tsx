@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Spin, message, Card } from 'antd';
+import { Row, Col, Spin, message, Card, theme } from 'antd';
 import { purchasingService } from '@/services/purchasingService';
 import { useAppStore } from '@/stores/useAppStore';
 import {
@@ -16,6 +16,7 @@ import { CreateGoodsReceiptModal } from './CreateGoodsReceiptModal';
 
 export const PurchasingView: React.FC = () => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<PurchaseOrderSummary[]>([]);
@@ -129,13 +130,13 @@ export const PurchasingView: React.FC = () => {
         size="small"
         style={{
           borderRadius: 4,
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${token.colorBorderSecondary}`,
           marginTop: 12,
-          backgroundColor: '#fafafa',
+          backgroundColor: token.colorFillAlter,
         }}
         styles={{ body: { padding: '8px 14px' } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', fontSize: 11, color: token.colorTextSecondary }}>
           <div style={{ display: 'flex', gap: 16 }}>
             <span>● SAP S/4HANA Sync: <strong style={{ color: '#15803d' }}>Active (24ms)</strong></span>
             <span>● WMS Gateway: <strong style={{ color: '#15803d' }}>Connected (Zone A/B/C)</strong></span>

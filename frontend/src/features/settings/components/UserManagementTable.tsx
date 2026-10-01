@@ -188,7 +188,7 @@ export const UserManagementTable: React.FC = () => {
             {isZh ? '系统操作员账号与访问权限列表' : 'Authorized Operator Accounts & Credentials'}
           </div>
           <div style={{ fontSize: 11, color: token.colorTextSecondary }}>
-            {isZh ? '实时查询 /api/v1/users，控制车间终端登录与权限分配' : 'Live RBAC credentials managed via /api/v1/users'}
+            {isZh ? '统一控制车间终端操作员登录、岗位角色与安全权限' : 'Centralized RBAC management for workshop operators and credentials'}
           </div>
         </div>
 
@@ -219,6 +219,7 @@ export const UserManagementTable: React.FC = () => {
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         onOk={handleCreateUser}
+        centered
         destroyOnClose
         okText={isZh ? '确认创建' : 'Create'}
         cancelText={isZh ? '取消' : 'Cancel'}
@@ -282,6 +283,7 @@ export const UserManagementTable: React.FC = () => {
           setSelectedUserId(null);
         }}
         onOk={handleResetPassword}
+        centered
         destroyOnClose
         okText={isZh ? '确认重置' : 'Reset'}
         cancelText={isZh ? '取消' : 'Cancel'}

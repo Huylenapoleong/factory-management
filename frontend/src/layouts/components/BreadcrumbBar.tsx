@@ -3,6 +3,7 @@ import { Breadcrumb, Button, Space, theme } from 'antd';
 import { ReloadOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
+import { getLocalTimezoneOffsetString } from '@/utils/timezone';
 
 interface BreadcrumbBarProps {
   onRefresh?: () => void;
@@ -13,6 +14,7 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
   const { token } = theme.useToken();
   const { language, autoRefreshInterval } = useAppStore();
   const [timeString, setTimeString] = useState<string>('');
+  const tzString = getLocalTimezoneOffsetString();
 
   useEffect(() => {
     const updateTime = () => {
@@ -76,7 +78,7 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
 
       <Space size="middle" align="center" className="tnum">
         <span style={{ color: token.colorTextSecondary }}>
-          {t('header.systemTime')}: <strong style={{ color: token.colorText }}>{timeString}</strong>
+          {t('header.systemTime')} ({tzString}): <strong style={{ color: token.colorText }}>{timeString}</strong>
         </span>
         <span style={{ color: token.colorBorder }}>|</span>
         <span

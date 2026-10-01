@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore, ThemeMode } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { playSuccessChime } from '@/utils/audioAlert';
+import { getFactoryShift } from '@/utils/shift';
 
 export const HeaderBar: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -50,6 +51,8 @@ export const HeaderBar: React.FC = () => {
     setShiftHandoverVisible,
   } = useAppStore();
   const { user, logout } = useAuthStore();
+  const currentShift = getFactoryShift();
+  const shiftText = language === 'zh-CN' ? currentShift.badgeZh : currentShift.badgeEn;
 
   const handleLanguageChange = () => {
     const nextLang = language === 'zh-CN' ? 'en' : 'zh-CN';
@@ -241,29 +244,33 @@ export const HeaderBar: React.FC = () => {
           />
         </Space>
 
-        <Tag
-          color="blue"
-          style={{
-            margin: 0,
-            fontSize: 12,
-            padding: '2px 8px',
-            borderRadius: 3,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-          }}
-        >
-          <span
+        <Tooltip title={language === 'zh-CN' ? `当前班次: ${currentShift.nameZh} (${currentShift.timeRange}) · 点击打开交接记录` : `Active Shift: ${currentShift.nameEn} (${currentShift.timeRange}) · Click to open Docket`}>
+          <Tag
+            color="blue"
+            onClick={() => setShiftHandoverVisible(true)}
             style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              backgroundColor: '#52c41a',
-              display: 'inline-block',
+              margin: 0,
+              fontSize: 12,
+              padding: '2px 8px',
+              borderRadius: 3,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'pointer',
             }}
-          />
-          {t('header.shift')}
-        </Tag>
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                backgroundColor: '#52c41a',
+                display: 'inline-block',
+              }}
+            />
+            {shiftText}
+          </Tag>
+        </Tooltip>
 
         <Tag color="success" style={{ margin: 0, fontSize: 12, borderRadius: 3 }}>
           <CheckCircleFilled style={{ marginRight: 4 }} />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Button, Tag, Divider, Row, Col, Table, message } from 'antd';
+import { Modal, Button, Tag, Divider, Row, Col, Table, message, theme } from 'antd';
 import {
   PrinterOutlined,
   CheckCircleFilled,
@@ -12,17 +12,34 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
 import { playSuccessChime } from '@/utils/audioAlert';
+import { getFactoryShift } from '@/utils/shift';
+import { getLocalTimezoneOffsetString } from '@/utils/timezone';
 
 export const ShiftHandoverModal: React.FC = () => {
   const { t } = useTranslation();
+  const { token } = theme.useToken();
   const { shiftHandoverVisible, setShiftHandoverVisible, language } = useAppStore();
   const [incomingSigned, setIncomingSigned] = useState<boolean>(false);
   const [signedTime, setSignedTime] = useState<string>('');
 
+  const currentShift = getFactoryShift();
+  const tzString = getLocalTimezoneOffsetString();
+
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const docketDateTag = dateStr.replace(/-/g, '');
+  const docketNo = `SHD-${docketDateTag}-${currentShift.code}2${currentShift.nextShiftCode}`;
+
+  const formattedDateTime = `${dateStr} ${now.toLocaleTimeString(language === 'zh-CN' ? 'zh-CN' : 'en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  })} (${tzString})`;
+
   const handleSign = () => {
-    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const timeNow = new Date().toLocaleTimeString('en-US', { hour12: false });
     setIncomingSigned(true);
-    setSignedTime(now);
+    setSignedTime(timeNow);
     playSuccessChime();
     message.success(
       language === 'zh-CN'
@@ -66,6 +83,7 @@ export const ShiftHandoverModal: React.FC = () => {
     <Modal
       open={shiftHandoverVisible}
       onCancel={() => setShiftHandoverVisible(false)}
+      centered
       width={860}
       footer={[
         <Button key="close" onClick={() => setShiftHandoverVisible(false)}>
@@ -89,7 +107,7 @@ export const ShiftHandoverModal: React.FC = () => {
         </Button>,
       ]}
       styles={{
-        body: { padding: '16px 20px', maxHeight: '78vh', overflowY: 'auto' },
+        body: { padding: '16px 20px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' },
       }}
     >
       {/* Printable Container with print-specific ID and styling */}
@@ -121,30 +139,30 @@ export const ShiftHandoverModal: React.FC = () => {
         </style>
 
         {/* Docket Header */}
-        <div style={{ borderBottom: '2px solid #1f2937', paddingBottom: 12, marginBottom: 16 }}>
+        <div style={{ borderBottom: `2px solid ${token.colorBorder}`, paddingBottom: 12, marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AuditOutlined style={{ fontSize: 24, color: '#1677ff' }} />
-                <span style={{ fontSize: 18, fontWeight: 800, color: '#111827', letterSpacing: '0.02em' }}>
+                <AuditOutlined style={{ fontSize: 24, color: token.colorPrimary }} />
+                <span style={{ fontSize: 18, fontWeight: 800, color: token.colorText, letterSpacing: '0.02em' }}>
                   WIFIM MES
                 </span>
                 <Tag color="blue" style={{ borderRadius: 2, fontWeight: 600 }}>
                   ISO-9001 / IATF-16949 COMPLIANT
                 </Tag>
               </div>
-              <h2 style={{ margin: '4px 0 0 0', fontSize: 16, fontWeight: 700, color: '#1f2937' }}>
+              <h2 style={{ margin: '4px 0 0 0', fontSize: 16, fontWeight: 700, color: token.colorText }}>
                 {t('handover.title')}
               </h2>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>
+              <div style={{ fontSize: 11, color: token.colorTextSecondary }}>
                 {t('handover.subTitle')}
               </div>
             </div>
 
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>{t('handover.docNo')}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color: '#1677ff' }}>
-                SHD-20261001-A2B
+              <div style={{ fontSize: 11, color: token.colorTextSecondary }}>{t('handover.docNo')}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color: token.colorPrimary }}>
+                {docketNo}
               </div>
               <Tag color="green" style={{ margin: '4px 0 0 0', borderRadius: 2 }}>
                 {language === 'zh-CN' ? '审核归档中' : 'Pending Custody Transfer'}
@@ -157,8 +175,8 @@ export const ShiftHandoverModal: React.FC = () => {
             style={{
               marginTop: 12,
               padding: '8px 12px',
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: token.colorFillAlter,
+              border: `1px solid ${token.colorBorderSecondary}`,
               borderRadius: 4,
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
@@ -167,25 +185,25 @@ export const ShiftHandoverModal: React.FC = () => {
             }}
           >
             <div>
-              <span style={{ color: '#64748b' }}>{t('header.workshop')}:</span>
-              <div style={{ fontWeight: 600, color: '#1e293b' }}>
+              <span style={{ color: token.colorTextSecondary }}>{t('header.workshop')}:</span>
+              <div style={{ fontWeight: 600, color: token.colorText }}>
                 {language === 'zh-CN' ? '第一车间 - 机加工与总装' : 'Workshop 01 - Heavy Machining'}
               </div>
             </div>
             <div>
-              <span style={{ color: '#64748b' }}>{language === 'zh-CN' ? '交接日期与时间' : 'Shift Handover Time'}:</span>
-              <div style={{ fontWeight: 600, color: '#1e293b' }}>2026-10-01 16:30 (UTC+8)</div>
+              <span style={{ color: token.colorTextSecondary }}>{language === 'zh-CN' ? '交接日期与时间' : 'Shift Handover Time'}:</span>
+              <div style={{ fontWeight: 600, color: token.colorText }}>{formattedDateTime}</div>
             </div>
             <div>
-              <span style={{ color: '#64748b' }}>{t('handover.outgoingShift')}:</span>
-              <div style={{ fontWeight: 600, color: '#0958d9' }}>
-                {language === 'zh-CN' ? '早班 (08:00 - 16:30)' : 'Shift A (08:00 - 16:30)'}
+              <span style={{ color: token.colorTextSecondary }}>{t('handover.outgoingShift')}:</span>
+              <div style={{ fontWeight: 600, color: token.colorPrimary }}>
+                {language === 'zh-CN' ? `${currentShift.nameZh} (${currentShift.timeRange})` : `${currentShift.nameEn} (${currentShift.timeRange})`}
               </div>
             </div>
             <div>
-              <span style={{ color: '#64748b' }}>{t('handover.incomingShift')}:</span>
-              <div style={{ fontWeight: 600, color: '#52c41a' }}>
-                {language === 'zh-CN' ? '中班 (16:30 - 01:00)' : 'Shift B (16:30 - 01:00)'}
+              <span style={{ color: token.colorTextSecondary }}>{t('handover.incomingShift')}:</span>
+              <div style={{ fontWeight: 600, color: token.colorSuccess }}>
+                {language === 'zh-CN' ? `${currentShift.nextShiftNameZh} (${currentShift.nextShiftRange})` : `${currentShift.nextShiftNameEn} (${currentShift.nextShiftRange})`}
               </div>
             </div>
           </div>
@@ -193,39 +211,39 @@ export const ShiftHandoverModal: React.FC = () => {
 
         {/* Section 1: Output & Quality Summary */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FileDoneOutlined style={{ color: '#1677ff' }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: token.colorText, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <FileDoneOutlined style={{ color: token.colorPrimary }} />
             {t('handover.outputSummary')}
           </div>
           <Row gutter={[8, 8]}>
             <Col span={5}>
-              <div style={{ padding: '8px 10px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 4 }}>
-                <div style={{ fontSize: 10, color: '#6b7280' }}>{t('handover.targetUnits')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#1f2937' }}>1,500 <span style={{ fontSize: 10 }}>pcs</span></div>
+              <div style={{ padding: '8px 10px', backgroundColor: token.colorFillAlter, border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}>
+                <div style={{ fontSize: 10, color: token.colorTextSecondary }}>{t('handover.targetUnits')}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: token.colorText }}>1,500 <span style={{ fontSize: 10 }}>pcs</span></div>
               </div>
             </Col>
             <Col span={5}>
-              <div style={{ padding: '8px 10px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 4 }}>
-                <div style={{ fontSize: 10, color: '#1e40af' }}>{t('handover.actualUnits')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#1d4ed8' }}>1,462 <span style={{ fontSize: 10 }}>pcs</span></div>
+              <div style={{ padding: '8px 10px', backgroundColor: token.colorInfoBg, border: `1px solid ${token.colorInfoBorder}`, borderRadius: 4 }}>
+                <div style={{ fontSize: 10, color: token.colorInfoText }}>{t('handover.actualUnits')}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: token.colorInfoText }}>1,462 <span style={{ fontSize: 10 }}>pcs</span></div>
               </div>
             </Col>
             <Col span={5}>
-              <div style={{ padding: '8px 10px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 4 }}>
-                <div style={{ fontSize: 10, color: '#166534' }}>{t('handover.planAttainment')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d' }}>97.5%</div>
+              <div style={{ padding: '8px 10px', backgroundColor: token.colorSuccessBg, border: `1px solid ${token.colorSuccessBorder}`, borderRadius: 4 }}>
+                <div style={{ fontSize: 10, color: token.colorSuccessText }}>{t('handover.planAttainment')}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: token.colorSuccessText }}>97.5%</div>
               </div>
             </Col>
             <Col span={4}>
-              <div style={{ padding: '8px 10px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4 }}>
-                <div style={{ fontSize: 10, color: '#991b1b' }}>{t('handover.defectUnits')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c' }}>14 <span style={{ fontSize: 10 }}>pcs</span> (0.95%)</div>
+              <div style={{ padding: '8px 10px', backgroundColor: token.colorErrorBg, border: `1px solid ${token.colorErrorBorder}`, borderRadius: 4 }}>
+                <div style={{ fontSize: 10, color: token.colorErrorText }}>{t('handover.defectUnits')}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: token.colorErrorText }}>14 <span style={{ fontSize: 10 }}>pcs</span> (0.95%)</div>
               </div>
             </Col>
             <Col span={5}>
-              <div style={{ padding: '8px 10px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4 }}>
-                <div style={{ fontSize: 10, color: '#92400e' }}>{t('handover.wipBalance')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#b45309' }}>240 <span style={{ fontSize: 10 }}>pcs</span></div>
+              <div style={{ padding: '8px 10px', backgroundColor: token.colorWarningBg, border: `1px solid ${token.colorWarningBorder}`, borderRadius: 4 }}>
+                <div style={{ fontSize: 10, color: token.colorWarningText }}>{t('handover.wipBalance')}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: token.colorWarningText }}>240 <span style={{ fontSize: 10 }}>pcs</span></div>
               </div>
             </Col>
           </Row>
@@ -233,8 +251,8 @@ export const ShiftHandoverModal: React.FC = () => {
 
         {/* Section 2: Machine Downtime & Incident Log */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <AlertOutlined style={{ color: '#faad14' }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: token.colorText, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <AlertOutlined style={{ color: token.colorWarning }} />
             {t('handover.machineIncidents')}
           </div>
           <Table
@@ -257,43 +275,44 @@ export const ShiftHandoverModal: React.FC = () => {
               },
             ]}
             dataSource={incidentsData}
-            style={{ border: '1px solid #e5e7eb', borderRadius: 4 }}
+            style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}
           />
         </div>
 
         {/* Section 3: 5S & Safety Handover Checklist */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <SafetyCertificateFilled style={{ color: '#52c41a' }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: token.colorText, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <SafetyCertificateFilled style={{ color: token.colorSuccess }} />
             {t('handover.safetyChecklist')}
           </div>
           <div
             style={{
               padding: '8px 12px',
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: token.colorFillAlter,
+              border: `1px solid ${token.colorBorderSecondary}`,
               borderRadius: 4,
               fontSize: 11,
               display: 'flex',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
               gap: 8,
+              color: token.colorText,
             }}
           >
             <span>
-              <CheckCircleFilled style={{ color: '#52c41a', marginRight: 4 }} />
+              <CheckCircleFilled style={{ color: token.colorSuccess, marginRight: 4 }} />
               {language === 'zh-CN' ? '工段通道与安全通道通畅无阻塞' : 'Passageways & fire aisles cleared'}
             </span>
             <span>
-              <CheckCircleFilled style={{ color: '#52c41a', marginRight: 4 }} />
+              <CheckCircleFilled style={{ color: token.colorSuccess, marginRight: 4 }} />
               {language === 'zh-CN' ? '铁屑废料箱已清空并定置标识' : 'Scrap metal bins emptied & tagged'}
             </span>
             <span>
-              <CheckCircleFilled style={{ color: '#52c41a', marginRight: 4 }} />
+              <CheckCircleFilled style={{ color: token.colorSuccess, marginRight: 4 }} />
               {language === 'zh-CN' ? '关键量检具已归位并确认校准' : 'Calibrated gauges accounted for'}
             </span>
             <span>
-              <CheckCircleFilled style={{ color: '#52c41a', marginRight: 4 }} />
+              <CheckCircleFilled style={{ color: token.colorSuccess, marginRight: 4 }} />
               {language === 'zh-CN' ? '零工伤事故 (Zero Safety Incidents)' : 'Zero Safety Incidents'}
             </span>
           </div>
@@ -303,7 +322,7 @@ export const ShiftHandoverModal: React.FC = () => {
 
         {/* Section 4: Electronic Signatures & Approvals */}
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: token.colorText, marginBottom: 10 }}>
             {language === 'zh-CN' ? '交接双签与主管核准 (Electronic Signatures)' : 'Shift Lead Verification & Approval'}
           </div>
           <Row gutter={[12, 12]}>
@@ -312,23 +331,23 @@ export const ShiftHandoverModal: React.FC = () => {
               <div
                 style={{
                   padding: 10,
-                  border: '1px solid #bfdbfe',
+                  border: `1px solid ${token.colorInfoBorder}`,
                   borderRadius: 4,
-                  backgroundColor: '#f0f7ff',
+                  backgroundColor: token.colorInfoBg,
                   height: '100%',
                 }}
               >
-                <div style={{ fontSize: 11, color: '#1e40af', fontWeight: 600 }}>
+                <div style={{ fontSize: 11, color: token.colorInfoText, fontWeight: 600 }}>
                   {t('handover.outgoingSignature')}
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <SafetyCertificateFilled style={{ color: '#1d4ed8' }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
+                  <SafetyCertificateFilled style={{ color: token.colorPrimary }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: token.colorText }}>
                     {language === 'zh-CN' ? '张强 (工号 EMP-1002)' : 'Zhang Qiang (EMP-1002)'}
                   </span>
                 </div>
-                <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
-                  {language === 'zh-CN' ? '电子签名时间: 16:28:14' : 'Signed: Today 16:28:14'}
+                <div style={{ fontSize: 10, color: token.colorTextSecondary, marginTop: 4 }}>
+                  {language === 'zh-CN' ? '电子签名状态: 现班已确认' : 'Status: Outgoing Lead Signed'}
                 </div>
               </div>
             </Col>
@@ -338,9 +357,9 @@ export const ShiftHandoverModal: React.FC = () => {
               <div
                 style={{
                   padding: 10,
-                  border: incomingSigned ? '1px solid #bbf7d0' : '1px dashed #d1d5db',
+                  border: incomingSigned ? `1px solid ${token.colorSuccessBorder}` : `1px dashed ${token.colorBorderSecondary}`,
                   borderRadius: 4,
-                  backgroundColor: incomingSigned ? '#f0fdf4' : '#ffffff',
+                  backgroundColor: incomingSigned ? token.colorSuccessBg : token.colorFillAlter,
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
@@ -348,23 +367,23 @@ export const ShiftHandoverModal: React.FC = () => {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 11, color: incomingSigned ? '#166534' : '#4b5563', fontWeight: 600 }}>
+                  <div style={{ fontSize: 11, color: incomingSigned ? token.colorSuccessText : token.colorTextSecondary, fontWeight: 600 }}>
                     {t('handover.incomingSignature')}
                   </div>
                   {incomingSigned ? (
                     <div style={{ marginTop: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <CheckCircleFilled style={{ color: '#15803d' }} />
-                        <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
+                        <CheckCircleFilled style={{ color: token.colorSuccess }} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: token.colorText }}>
                           {language === 'zh-CN' ? '李伟 (工号 EMP-1045)' : 'Li Wei (EMP-1045)'}
                         </span>
                       </div>
-                      <div style={{ fontSize: 10, color: '#166534', marginTop: 4 }}>
+                      <div style={{ fontSize: 10, color: token.colorSuccessText, marginTop: 4 }}>
                         {language === 'zh-CN' ? `电子签署时间: ${signedTime}` : `Signed: ${signedTime}`}
                       </div>
                     </div>
                   ) : (
-                    <div style={{ marginTop: 8, fontSize: 11, color: '#6b7280' }}>
+                    <div style={{ marginTop: 8, fontSize: 11, color: token.colorTextTertiary }}>
                       {language === 'zh-CN' ? '等待接班领班李伟确认交接' : 'Pending signature by Li Wei'}
                     </div>
                   )}
@@ -376,7 +395,7 @@ export const ShiftHandoverModal: React.FC = () => {
                     size="small"
                     className="no-print"
                     onClick={handleSign}
-                    style={{ marginTop: 8, fontSize: 11, backgroundColor: '#52c41a' }}
+                    style={{ marginTop: 8, fontSize: 11, backgroundColor: token.colorSuccess, borderColor: token.colorSuccess }}
                   >
                     {t('handover.signNow')}
                   </Button>
@@ -389,24 +408,24 @@ export const ShiftHandoverModal: React.FC = () => {
               <div
                 style={{
                   padding: 10,
-                  border: '1px solid #e2e8f0',
+                  border: `1px solid ${token.colorBorderSecondary}`,
                   borderRadius: 4,
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: token.colorFillAlter,
                   height: '100%',
                 }}
               >
-                <div style={{ fontSize: 11, color: '#475569', fontWeight: 600 }}>
+                <div style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {t('handover.directorApproval')}
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Tag color="success" style={{ margin: 0, fontWeight: 700 }}>
                     APPROVED
                   </Tag>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: token.colorText }}>
                     {language === 'zh-CN' ? '工厂生产总监办' : 'Plant Operations Office'}
                   </span>
                 </div>
-                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
+                <div style={{ fontSize: 10, color: token.colorTextTertiary, marginTop: 4 }}>
                   WIFIM-MES-SEC-CERT: #8841-A9
                 </div>
               </div>
@@ -421,7 +440,7 @@ export const ShiftHandoverModal: React.FC = () => {
             marginTop: 12,
             textAlign: 'center',
             fontSize: 11,
-            color: '#9ca3af',
+            color: token.colorTextTertiary,
           }}
         >
           {t('handover.printNotice')}

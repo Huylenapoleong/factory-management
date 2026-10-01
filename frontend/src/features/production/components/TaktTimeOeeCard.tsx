@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Progress, Tag, Button, Space, Typography, Tooltip, message } from 'antd';
+import { Card, Row, Col, Progress, Tag, Button, Space, Typography, Tooltip, message, theme } from 'antd';
 import {
   DashboardOutlined,
   AlertFilled,
@@ -76,6 +76,7 @@ const INITIAL_STATIONS: WorkstationTakt[] = [
 
 export const TaktTimeOeeCard: React.FC = () => {
   const { t } = useTranslation();
+  const { token } = theme.useToken();
   const { language, soundAlertsEnabled, kioskMode } = useAppStore();
   const [stations, setStations] = useState<WorkstationTakt[]>(INITIAL_STATIONS);
   const [isRunning, setIsRunning] = useState<boolean>(true);
@@ -195,8 +196,8 @@ export const TaktTimeOeeCard: React.FC = () => {
                 style={{
                   padding: 12,
                   borderRadius: 4,
-                  border: isExceeded ? '2px solid #faad14' : '1px solid #e5e7eb',
-                  backgroundColor: isExceeded ? '#fffbe6' : '#ffffff',
+                  border: isExceeded ? `2px solid ${token.colorWarning}` : `1px solid ${token.colorBorderSecondary}`,
+                  backgroundColor: isExceeded ? token.colorWarningBg : token.colorBgContainer,
                   boxShadow: isExceeded ? '0 0 10px rgba(250, 173, 20, 0.35)' : 'none',
                   transition: 'all 0.3s ease',
                   position: 'relative',
@@ -210,14 +211,14 @@ export const TaktTimeOeeCard: React.FC = () => {
                       style={{
                         fontSize: 13,
                         fontWeight: 700,
-                        color: isExceeded ? '#d48806' : '#1f2937',
+                        color: isExceeded ? token.colorWarningText : token.colorText,
                         fontFamily: 'monospace',
                         letterSpacing: '0.04em',
                       }}
                     >
                       {st.stationCode}
                     </span>
-                    <div style={{ fontSize: 11, color: '#4b5563', fontWeight: 500, lineHeight: 1.2 }}>
+                    <div style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 500, lineHeight: 1.2 }}>
                       {language === 'zh-CN' ? st.nameZh : st.nameEn}
                     </div>
                   </div>
@@ -273,7 +274,7 @@ export const TaktTimeOeeCard: React.FC = () => {
                     {st.currentElapsed.toFixed(0)}
                     <span style={{ fontSize: 14, fontWeight: 500, marginLeft: 2 }}>s</span>
                   </span>
-                  <span style={{ fontSize: 11, color: '#6b7280' }}>
+                  <span style={{ fontSize: 11, color: token.colorTextSecondary }}>
                     / {t('takt.targetTakt')}: <strong>{st.targetTakt}s</strong>
                   </span>
                 </div>
@@ -289,10 +290,10 @@ export const TaktTimeOeeCard: React.FC = () => {
                 />
 
                 {/* Part & Operator Details */}
-                <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.4, marginBottom: 8 }}>
+                <div style={{ fontSize: 11, color: token.colorTextSecondary, lineHeight: 1.4, marginBottom: 8 }}>
                   <div>
                     <Text type="secondary">{t('takt.activePart')}: </Text>
-                    <Text strong style={{ color: '#1f2937' }}>{st.partCode}</Text>
+                    <Text strong style={{ color: token.colorText }}>{st.partCode}</Text>
                   </div>
                   <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {st.partName}
@@ -334,9 +335,9 @@ export const TaktTimeOeeCard: React.FC = () => {
         style={{
           marginTop: 12,
           padding: '10px 16px',
-          backgroundColor: '#f8fafc',
+          backgroundColor: token.colorFillAlter,
           borderRadius: 4,
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${token.colorBorderSecondary}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -345,14 +346,14 @@ export const TaktTimeOeeCard: React.FC = () => {
         }}
       >
         <Space size="middle" align="center">
-          <DashboardOutlined style={{ fontSize: 20, color: '#1677ff' }} />
+          <DashboardOutlined style={{ fontSize: 20, color: token.colorPrimary }} />
           <div>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600, textTransform: 'uppercase' }}>
               {t('takt.meanOee')}
             </div>
-            <div className="tnum" style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>
+            <div className="tnum" style={{ fontSize: 22, fontWeight: 800, color: token.colorText, lineHeight: 1.1 }}>
               86.8%{' '}
-              <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}>
+              <span style={{ fontSize: 11, color: token.colorSuccess, fontWeight: 600 }}>
                 ({language === 'zh-CN' ? '达标 ≥85%' : 'Benchmark ≥85%'})
               </span>
             </div>
@@ -361,23 +362,23 @@ export const TaktTimeOeeCard: React.FC = () => {
 
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>{t('takt.availability')}</div>
-            <div className="tnum" style={{ fontSize: 15, fontWeight: 700, color: '#1f2937' }}>
-              93.4% <span style={{ fontSize: 11, color: '#6b7280' }}>(28m {language === 'zh-CN' ? '停机' : 'downtime'})</span>
+            <div style={{ fontSize: 11, color: token.colorTextSecondary }}>{t('takt.availability')}</div>
+            <div className="tnum" style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
+              93.4% <span style={{ fontSize: 11, color: token.colorTextSecondary }}>(28m {language === 'zh-CN' ? '停机' : 'downtime'})</span>
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>{t('takt.performance')}</div>
-            <div className="tnum" style={{ fontSize: 15, fontWeight: 700, color: '#1f2937' }}>
-              94.2% <span style={{ fontSize: 11, color: '#6b7280' }}>(42.1s / 45s)</span>
+            <div style={{ fontSize: 11, color: token.colorTextSecondary }}>{t('takt.performance')}</div>
+            <div className="tnum" style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
+              94.2% <span style={{ fontSize: 11, color: token.colorTextSecondary }}>(42.1s / 45s)</span>
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>{t('takt.quality')}</div>
-            <div className="tnum" style={{ fontSize: 15, fontWeight: 700, color: '#16a34a' }}>
-              98.7% <span style={{ fontSize: 11, color: '#6b7280' }}>(14 {language === 'zh-CN' ? '件报废' : 'scraps'})</span>
+            <div style={{ fontSize: 11, color: token.colorTextSecondary }}>{t('takt.quality')}</div>
+            <div className="tnum" style={{ fontSize: 15, fontWeight: 700, color: token.colorSuccess }}>
+              98.7% <span style={{ fontSize: 11, color: token.colorTextSecondary }}>(14 {language === 'zh-CN' ? '件报废' : 'scraps'})</span>
             </div>
           </div>
         </div>

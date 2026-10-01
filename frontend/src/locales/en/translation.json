@@ -36,7 +36,7 @@
     "systemStatus": "All Lines Operational",
     "autoRefresh": "Auto-refresh",
     "manualRefresh": "Manual Refresh",
-    "systemTime": "System Time (UTC+8)",
+    "systemTime": "System Time",
     "userRole": "Plant Director",
     "adminBadge": "Admin",
     "portal": "Factory Portal",
@@ -212,14 +212,14 @@
     "loggingIn": "Verifying Credentials...",
     "loginSuccess": "Authentication successful. Access granted.",
     "loginFailed": "Authentication failed. Please verify credentials.",
-    "demoAccounts": "Quick Access Profiles (Dev/Demo)",
+    "demoAccounts": "Quick Access Profiles",
     "adminDemo": "Admin (Plant Director)",
     "operatorDemo": "Operator (Shop Floor)",
-    "onlineGateway": "Connected to Gateway (/api/v1)",
+    "onlineGateway": "Factory Network Online",
     "offlineMode": "Local Terminal Simulation Mode",
     "logoutConfirm": "Are you sure you want to sign out?",
     "logout": "Sign Out",
-    "terminalId": "Terminal ID: WS-PROD-GATEWAY-01",
+    "terminalId": "Terminal ID: WS-PROD-01",
     "securityNotice": "Industrial Security Policy: All terminal actions are logged to quality audit trail."
   }
 }

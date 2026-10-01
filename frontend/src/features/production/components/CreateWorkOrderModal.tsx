@@ -52,6 +52,7 @@ export const CreateWorkOrderModal: React.FC<CreateWorkOrderModalProps> = ({
       open={open}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={t('common.confirm')}
       cancelText={t('common.cancel')}

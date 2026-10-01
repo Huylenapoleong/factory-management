@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Space, Badge } from 'antd';
+import { Card, Space, Badge, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
 import { HourlyThroughputItem } from '../types';
@@ -10,6 +10,7 @@ interface HourlyThroughputCardProps {
 
 export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data }) => {
   const { t } = useTranslation();
+  const { token } = theme.useToken();
   const { kioskMode } = useAppStore();
   const maxQty = Math.max(...data.map((d) => Math.max(d.targetQty, d.actualQty)), 250);
 
@@ -21,12 +22,12 @@ export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data
       size="small"
       title={
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-          <span style={{ fontSize: kioskMode ? 16 : 14, fontWeight: 700, color: '#1f2937' }}>
+          <span style={{ fontSize: kioskMode ? 16 : 14, fontWeight: 700, color: token.colorText }}>
             {t('dashboard.hourlyThroughput')}
           </span>
           <Space size="middle" style={{ fontSize: kioskMode ? 13 : 12 }}>
-            <Badge color="#e5e7eb" text={<span style={{ color: '#6b7280' }}>{t('dashboard.targetOutput')}</span>} />
-            <Badge color="#1677ff" text={<span style={{ color: '#1f2937', fontWeight: 500 }}>{t('dashboard.actualOutput')}</span>} />
+            <Badge color={token.colorFillAlter} text={<span style={{ color: token.colorTextSecondary }}>{t('dashboard.targetOutput')}</span>} />
+            <Badge color="#1677ff" text={<span style={{ color: token.colorText, fontWeight: 500 }}>{t('dashboard.actualOutput')}</span>} />
             <Badge color="#52c41a" text={<span style={{ color: '#52c41a', fontWeight: 600 }}>{t('dashboard.yieldRate')} (98.6%)</span>} />
           </Space>
         </div>
@@ -137,11 +138,11 @@ export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data
         style={{
           marginTop: 4,
           padding: '6px 12px',
-          backgroundColor: '#fafafa',
+          backgroundColor: token.colorFillAlter,
           borderRadius: 3,
-          border: '1px solid #f0f0f0',
+          border: `1px solid ${token.colorBorderSecondary}`,
           fontSize: 11,
-          color: '#4b5563',
+          color: token.colorTextSecondary,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',

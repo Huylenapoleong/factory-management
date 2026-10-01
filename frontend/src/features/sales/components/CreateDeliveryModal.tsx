@@ -83,6 +83,7 @@ export const CreateDeliveryModal: React.FC<CreateDeliveryModalProps> = ({
       title={isZh ? '办理销售出库发运 (Stage Outbound Delivery)' : 'Stage Outbound Delivery'}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={isZh ? '生成发货单' : 'Stage Delivery'}
       cancelText={isZh ? '取消' : 'Cancel'}

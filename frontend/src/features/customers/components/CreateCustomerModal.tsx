@@ -56,6 +56,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
       open={visible}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       width={680}
       okText={isZh ? '确认保存' : 'Save Customer'}

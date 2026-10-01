@@ -36,7 +36,7 @@
     "systemStatus": "产线正常运行",
     "autoRefresh": "自动刷新",
     "manualRefresh": "手动刷新",
-    "systemTime": "系统时间 (UTC+8)",
+    "systemTime": "系统时间",
     "userRole": "厂长",
     "adminBadge": "管理员",
     "portal": "工厂门户",
@@ -212,14 +212,14 @@
     "loggingIn": "正在验证工卡与权限...",
     "loginSuccess": "身份验证通过，进入生产控制台。",
     "loginFailed": "认证失败，请检查工号或密码。",
-    "demoAccounts": "快速测试账号 (开发/演示)",
+    "demoAccounts": "快捷身份切换",
     "adminDemo": "厂长 / 系统管理员",
     "operatorDemo": "车间操作员 / 主管",
-    "onlineGateway": "已连接后端服务网关 (/api/v1)",
+    "onlineGateway": "工厂专网服务已连接",
     "offlineMode": "本地终端离线模拟模式",
     "logoutConfirm": "确认退出当前系统登录？",
     "logout": "退出登录",
-    "terminalId": "终端机号: WS-PROD-GATEWAY-01",
+    "terminalId": "车间终端号: WS-PROD-01",
     "securityNotice": "工业安全规范：所有终端操作与调度记录均纳入质量追溯审计日志。"
   }
 }

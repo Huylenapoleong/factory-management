@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, DatePicker, Switch, Button, message, Space, Alert } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, DatePicker, Switch, Button, message, Space, Alert, theme } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
 import { salesService } from '@/services/salesService';
@@ -16,6 +16,7 @@ export const CreateSalesOrderModal: React.FC<CreateSalesOrderModalProps> = ({
   onSuccess,
 }) => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -55,6 +56,7 @@ export const CreateSalesOrderModal: React.FC<CreateSalesOrderModalProps> = ({
       title={isZh ? '新建客户销售订单 (Create Sales Order)' : 'Create Sales Order'}
       onCancel={onClose}
       onOk={handleSubmit}
+      centered
       confirmLoading={submitting}
       okText={isZh ? '确认生成订单' : 'Create Order'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -124,10 +126,10 @@ export const CreateSalesOrderModal: React.FC<CreateSalesOrderModalProps> = ({
                     gridTemplateColumns: '2fr 1fr 1fr auto',
                     gap: 8,
                     alignItems: 'center',
-                    backgroundColor: '#fafafa',
+                    backgroundColor: token.colorFillAlter,
                     padding: '8px 10px',
                     borderRadius: 4,
-                    border: '1px solid #e5e7eb',
+                    border: `1px solid ${token.colorBorderSecondary}`,
                   }}
                 >
                   <Form.Item

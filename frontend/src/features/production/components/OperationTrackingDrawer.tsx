@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tag, InputNumber, Select, Button, Form, message, Steps } from 'antd';
+import { Card, Tag, InputNumber, Select, Button, Form, message, Steps, theme } from 'antd';
 import {
   CheckCircleFilled,
   ClockCircleFilled,
@@ -24,6 +24,7 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
   onReportSubmitted,
 }) => {
   const { language } = useAppStore();
+  const { token } = theme.useToken();
   const [steps, setSteps] = useState<OperationStep[]>([]);
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -100,14 +101,14 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
       styles={{ body: { padding: '12px 14px' } }}
     >
       {/* Product Summary Header */}
-      <div style={{ padding: '8px 10px', backgroundColor: '#f9fafb', borderRadius: 4, marginBottom: 12 }}>
-        <div style={{ fontWeight: 600, color: '#1f2937', fontSize: 13 }}>
+      <div style={{ padding: '8px 10px', backgroundColor: token.colorFillAlter, border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4, marginBottom: 12 }}>
+        <div style={{ fontWeight: 600, color: token.colorText, fontSize: 13 }}>
           {language === 'zh-CN' ? order.productNameZh : order.productName}
         </div>
-        <div style={{ fontSize: 11, color: '#6b7280', display: 'flex', gap: 12, marginTop: 2 }}>
-          <span>Part: <strong style={{ color: '#374151' }}>{order.productCode}</strong></span>
-          <span>Batch: <strong style={{ color: '#374151' }}>{order.batchNo}</strong></span>
-          <span>Total: <strong style={{ color: '#1677ff' }}>{order.plannedQty} {order.uom}</strong></span>
+        <div style={{ fontSize: 11, color: token.colorTextSecondary, display: 'flex', gap: 12, marginTop: 2 }}>
+          <span>Part: <strong style={{ color: token.colorText }}>{order.productCode}</strong></span>
+          <span>Batch: <strong style={{ color: token.colorText }}>{order.batchNo}</strong></span>
+          <span>Total: <strong style={{ color: token.colorPrimary }}>{order.plannedQty} {order.uom}</strong></span>
         </div>
       </div>
 
@@ -155,12 +156,12 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
       {/* Quick Operation Reporting Form */}
       <div
         style={{
-          borderTop: '1px solid #e5e7eb',
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
           paddingTop: 12,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#1f2937' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: token.colorText }}>
             {language === 'zh-CN' ? '现场工位快速报工 (Quick Dispatch)' : 'Quick Operation Reporting'}
           </span>
           <Tag color="blue" style={{ fontSize: 10, borderRadius: 2 }}>
