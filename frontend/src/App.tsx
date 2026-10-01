@@ -1,26 +1,21 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider } from 'antd';
 import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
+import { industrialTheme } from '@/app/theme';
 import { useAppStore } from '@/stores/useAppStore';
 import { MainLayout } from '@/layouts/MainLayout';
 import { DashboardView } from '@/features/dashboard/components/DashboardView';
 
 export const App: React.FC = () => {
-  const { themeMode, language } = useAppStore();
+  const { language } = useAppStore();
   const antdLocale = language === 'zh-CN' ? zhCN : enUS;
 
   return (
     <ConfigProvider
       locale={antdLocale}
-      theme={{
-        algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
-        token: {
-          colorPrimary: '#1677ff',
-          borderRadius: 6,
-        },
-      }}
+      theme={industrialTheme}
     >
       <BrowserRouter>
         <Routes>

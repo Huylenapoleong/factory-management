@@ -1,35 +1,103 @@
-import React from 'react';
-import { Card, Col, Row, Statistic } from 'antd';
-import { useTranslation } from 'react-i18next';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Row, Col, Spin, message } from 'antd';
+import { dashboardService } from '@/services/dashboardService';
+import {
+  DashboardSummary,
+  WorkOrderProgressItem,
+  MaterialShortageItem,
+  HourlyThroughputItem,
+  StockMovementItem,
+} from '../types';
+import { KpiMetricsStrip } from './KpiMetricsStrip';
+import { PriorityWorkOrdersCard } from './PriorityWorkOrdersCard';
+import { HourlyThroughputCard } from './HourlyThroughputCard';
+import { MaterialShortageCard } from './MaterialShortageCard';
+import { StockMovementsTimelineCard } from './StockMovementsTimelineCard';
 
 export const DashboardView: React.FC = () => {
-  const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [workOrders, setWorkOrders] = useState<WorkOrderProgressItem[]>([]);
+  const [throughput, setThroughput] = useState<HourlyThroughputItem[]>([]);
+  const [shortages, setShortages] = useState<MaterialShortageItem[]>([]);
+  const [movements, setMovements] = useState<StockMovementItem[]>([]);
+
+  const loadData = useCallback(async (isSilent = false) => {
+    try {
+      const [sumData, woData, tpData, shortData, movData] = await Promise.all([
+        dashboardService.getSummary(),
+        dashboardService.getPriorityWorkOrders(),
+        dashboardService.getHourlyThroughput(),
+        dashboardService.getMaterialShortages(),
+        dashboardService.getRecentMovements(),
+      ]);
+
+      setSummary(sumData);
+      setWorkOrders(woData);
+      setThroughput(tpData);
+      setShortages(shortData);
+      setMovements(movData);
+    } catch {
+      message.error('Failed to load dashboard operational data');
+    } finally {
+      if (!isSilent) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const run = async () => {
+      await loadData();
+      if (!isMounted) return;
+    };
+
+    void run();
+
+    const interval = setInterval(() => {
+      void loadData(true);
+    }, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [loadData]);
+
+  if (loading || !summary) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <Spin size="large" tip="Loading real-time operational telemetry..." />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2>{t('menu.dashboard')}</h2>
-      <Row gutter={[16, 16]}>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Total Inventory Items" value={0} />
-          </Card>
+    <div style={{ maxWidth: 1920, margin: '0 auto' }}>
+      {/* Row 1: KPI Metrics Strip */}
+      <KpiMetricsStrip summary={summary} />
+
+      {/* Row 2: Operations & Warehouse Grid */}
+      <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+        {/* Left Column (65% width): Production Execution & Line Throughput */}
+        <Col xs={24} lg={16}>
+          <PriorityWorkOrdersCard orders={workOrders} />
+          <HourlyThroughputCard data={throughput} />
         </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Pending Purchase Orders" value={0} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Active Production Orders" value={0} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Open Sales Orders" value={0} />
-          </Card>
+
+        {/* Right Column (35% width): Shortage Alerts & Inventory Movements */}
+        <Col xs={24} lg={8}>
+          <MaterialShortageCard
+            shortages={shortages}
+            onPoCreated={() => loadData(true)}
+          />
+          <StockMovementsTimelineCard movements={movements} />
         </Col>
       </Row>
     </div>
   );
 };
+
+export default DashboardView;

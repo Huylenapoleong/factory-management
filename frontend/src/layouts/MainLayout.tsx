@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Button, Space, Select } from 'antd';
+import { Layout, Menu } from 'antd';
 import {
   DashboardOutlined,
   AppstoreOutlined,
@@ -7,19 +7,23 @@ import {
   ToolOutlined,
   ShoppingCartOutlined,
   SettingOutlined,
-  GlobalOutlined,
+  InboxOutlined,
+  AuditOutlined,
+  BuildFilled,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
+import { HeaderBar } from './components/HeaderBar';
+import { BreadcrumbBar } from './components/BreadcrumbBar';
 
-const { Header, Sider, Content } = Layout;
+const { Sider, Content } = Layout;
 
 export const MainLayout: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarCollapsed, setSidebarCollapsed, language, setLanguage } = useAppStore();
+  const { sidebarCollapsed, setSidebarCollapsed } = useAppStore();
 
   const menuItems = [
     {
@@ -28,9 +32,14 @@ export const MainLayout: React.FC = () => {
       label: t('menu.dashboard'),
     },
     {
-      key: '/items',
-      icon: <AppstoreOutlined />,
-      label: t('menu.items'),
+      key: '/production',
+      icon: <ToolOutlined />,
+      label: t('menu.production'),
+    },
+    {
+      key: '/inventory',
+      icon: <InboxOutlined />,
+      label: t('menu.inventory'),
     },
     {
       key: '/purchasing',
@@ -38,14 +47,19 @@ export const MainLayout: React.FC = () => {
       label: t('menu.purchasing'),
     },
     {
-      key: '/production',
-      icon: <ToolOutlined />,
-      label: t('menu.production'),
-    },
-    {
       key: '/sales',
       icon: <ShoppingCartOutlined />,
       label: t('menu.sales'),
+    },
+    {
+      key: '/items',
+      icon: <AppstoreOutlined />,
+      label: t('menu.items'),
+    },
+    {
+      key: '/audit',
+      icon: <AuditOutlined />,
+      label: t('menu.audit'),
     },
     {
       key: '/settings',
@@ -55,15 +69,54 @@ export const MainLayout: React.FC = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
       <Sider
         collapsible
         collapsed={sidebarCollapsed}
         onCollapse={(value) => setSidebarCollapsed(value)}
         theme="light"
+        width={210}
+        collapsedWidth={64}
+        style={{
+          borderRight: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+        }}
       >
-        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-          {sidebarCollapsed ? 'FM' : 'Factory Management'}
+        <div
+          style={{
+            height: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+            padding: sidebarCollapsed ? 0 : '0 16px',
+            borderBottom: '1px solid #e5e7eb',
+            gap: 8,
+          }}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 4,
+              backgroundColor: '#1677ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+            }}
+          >
+            <BuildFilled style={{ fontSize: 16 }} />
+          </div>
+          {!sidebarCollapsed && (
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937', letterSpacing: '0.02em' }}>
+                WIFIM MES
+              </div>
+              <div style={{ fontSize: 10, color: '#6b7280' }}>
+                {t('app.shortName')}
+              </div>
+            </div>
+          )}
         </div>
         <Menu
           theme="light"
@@ -71,25 +124,14 @@ export const MainLayout: React.FC = () => {
           mode="inline"
           items={menuItems}
           onClick={({ key }) => navigate(key)}
+          style={{ borderRight: 0, marginTop: 4, fontSize: 13 }}
         />
       </Sider>
-      <Layout>
-        <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Space orientation="horizontal" size="middle">
-            <GlobalOutlined />
-            <Select
-              value={language}
-              onChange={(value: 'en' | 'zh-CN') => setLanguage(value)}
-              style={{ width: 120 }}
-              options={[
-                { value: 'en', label: 'English' },
-                { value: 'zh-CN', label: '简体中文' },
-              ]}
-            />
-            <Button type="text">{t('app.logout')}</Button>
-          </Space>
-        </Header>
-        <Content style={{ margin: '16px' }}>
+
+      <Layout style={{ backgroundColor: '#f0f2f5' }}>
+        <HeaderBar />
+        <BreadcrumbBar />
+        <Content style={{ padding: '16px 20px', minHeight: 'calc(100vh - 86px)' }}>
           <Outlet />
         </Content>
       </Layout>
