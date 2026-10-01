@@ -1,2 +1,3 @@
-// Settings feature module
-export {};
+export { SettingsView } from './components/SettingsView';
+export { AuditView } from './components/AuditView';
+export * from './types';
