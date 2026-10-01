@@ -79,43 +79,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         return { success: true };
       }
       throw new Error('Invalid authentication response structure');
-    } catch {
-      // 2. Standalone fallback for offline testing or demo environments
-      if (
-        (username === 'admin' && password === 'admin123') ||
-        (username === 'operator' && password === 'operator123')
-      ) {
-        const isAdmin = username === 'admin';
-        const demoUser: AuthUser = {
-          id: isAdmin ? 1 : 2,
-          username,
-          fullName: isAdmin ? 'Zhang Yong (张厂长)' : 'Li Jun (李班长)',
-          email: `${username}@wifim-factory.com`,
-          phone: '+86-13800000001',
-          roles: isAdmin ? ['ROLE_ADMIN', 'ROLE_PLANT_DIRECTOR'] : ['ROLE_OPERATOR', 'ROLE_QC'],
-        };
-        const demoToken = `wifim_demo_jwt_${username}_${Date.now()}`;
-        const demoRefresh = `wifim_demo_refresh_${username}_${Date.now()}`;
-
-        localStorage.setItem('access_token', demoToken);
-        localStorage.setItem('refresh_token', demoRefresh);
-        localStorage.setItem('auth_user', JSON.stringify(demoUser));
-
-        set({
-          token: demoToken,
-          refreshToken: demoRefresh,
-          user: demoUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-
-        return { success: true };
-      }
-
+    } catch (err: unknown) {
       set({ isLoading: false });
+      const apiMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       return {
         success: false,
-        error: 'Invalid credentials. Default: admin / admin123',
+        error: apiMessage || 'Authentication failed. Please check your username and password.',
       };
     }
   },
