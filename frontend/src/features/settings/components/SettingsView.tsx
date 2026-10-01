@@ -172,8 +172,8 @@ export const SettingsView: React.FC = () => {
                       onChange={handleLanguageChange}
                       style={{ width: 220 }}
                       options={[
-                        { value: 'zh-CN', label: '🇨🇳 简体中文 (Simplified Chinese)' },
-                        { value: 'en', label: '🇺🇸 English (US)' },
+                        { value: 'zh-CN', label: '简体中文 (Simplified Chinese)' },
+                        { value: 'en', label: 'English (US)' },
                       ]}
                     />
                   </div>

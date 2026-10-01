@@ -161,22 +161,22 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
           </Radio.Button>
           <Radio.Button value="NORMAL">
             <span style={{ color: selectedStatus === 'NORMAL' ? '#fff' : '#15803d' }}>
-              ● {isZh ? '充足 (1,418)' : 'Normal (1,418)'}
+              {isZh ? '充足 (1,418)' : 'Normal (1,418)'}
             </span>
           </Radio.Button>
           <Radio.Button value="LOW_STOCK">
             <span style={{ color: selectedStatus === 'LOW_STOCK' ? '#fff' : '#b45309' }}>
-              ▲ {isZh ? '低于安全线 (14)' : 'Below Safety (14)'}
+              {isZh ? '低于安全线 (14)' : 'Below Safety (14)'}
             </span>
           </Radio.Button>
           <Radio.Button value="STOCKOUT">
             <span style={{ color: selectedStatus === 'STOCKOUT' ? '#fff' : '#b91c1c' }}>
-              ✖ {isZh ? '缺料断货 (4)' : 'Zero Stock (4)'}
+              {isZh ? '缺料断货 (4)' : 'Zero Stock (4)'}
             </span>
           </Radio.Button>
           <Radio.Button value="QUARANTINE">
             <span style={{ color: selectedStatus === 'QUARANTINE' ? '#fff' : '#6b7280' }}>
-              ⚑ {isZh ? '待检隔离 (46)' : 'Quarantine (46)'}
+              {isZh ? '待检隔离 (46)' : 'Quarantine (46)'}
             </span>
           </Radio.Button>
         </Radio.Group>

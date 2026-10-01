@@ -1,11 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
 import { industrialTheme } from '@/app/theme';
 import { useAppStore } from '@/stores/useAppStore';
 import { MainLayout } from '@/layouts/MainLayout';
+import { ProtectedRoute } from '@/routes/ProtectedRoute';
+import { LoginView } from '@/features/auth';
 import { DashboardView } from '@/features/dashboard/components/DashboardView';
 import { ProductionView } from '@/features/production';
 import { InventoryView } from '@/features/inventory';
@@ -22,22 +24,32 @@ export const App: React.FC = () => {
       locale={antdLocale}
       theme={industrialTheme}
     >
-      <BrowserRouter>
-        <Routes>
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardView />} />
-            <Route path="/production" element={<ProductionView />} />
-            <Route path="/inventory" element={<InventoryView />} />
-            <Route path="/items" element={<InventoryView />} />
-            <Route path="/purchasing" element={<PurchasingView />} />
-            <Route path="/sales" element={<SalesView />} />
-            <Route path="/audit" element={<AuditView />} />
-            <Route path="/settings" element={<SettingsView />} />
-          </Route>
-          <Route path="*" element={<div>404 Not Found</div>} />
-        </Routes>
-      </BrowserRouter>
+      <AntdApp>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Terminal Authentication */}
+            <Route path="/login" element={<LoginView />} />
+
+            {/* Protected Enterprise Industrial Console Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<DashboardView />} />
+                <Route path="/production" element={<ProductionView />} />
+                <Route path="/inventory" element={<InventoryView />} />
+                <Route path="/items" element={<InventoryView />} />
+                <Route path="/purchasing" element={<PurchasingView />} />
+                <Route path="/sales" element={<SalesView />} />
+                <Route path="/audit" element={<AuditView />} />
+                <Route path="/settings" element={<SettingsView />} />
+              </Route>
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AntdApp>
     </ConfigProvider>
   );
 };

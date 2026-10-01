@@ -123,5 +123,27 @@
     "pcs": "件",
     "kg": "千克",
     "meters": "米"
+  },
+  "auth": {
+    "loginTitle": "工业制造执行系统终端登录",
+    "loginSubtitle": "WIFIM 智慧工厂生产与仓储协同控制台",
+    "username": "工号 / 用户名",
+    "usernamePlaceholder": "请输入工号或用户名",
+    "password": "密码",
+    "passwordPlaceholder": "请输入安全访问密码",
+    "rememberMe": "记住此终端会话",
+    "loginButton": "登录控制台",
+    "loggingIn": "正在验证工卡与权限...",
+    "loginSuccess": "身份验证通过，进入生产控制台。",
+    "loginFailed": "认证失败，请检查工号或密码。",
+    "demoAccounts": "快速测试账号 (开发/演示)",
+    "adminDemo": "厂长 / 系统管理员",
+    "operatorDemo": "车间操作员 / 主管",
+    "onlineGateway": "已连接后端服务网关 (/api/v1)",
+    "offlineMode": "本地终端离线模拟模式",
+    "logoutConfirm": "确认退出当前系统登录？",
+    "logout": "退出登录",
+    "terminalId": "终端机号: WS-PROD-GATEWAY-01",
+    "securityNotice": "工业安全规范：所有终端操作与调度记录均纳入质量追溯审计日志。"
   }
 }

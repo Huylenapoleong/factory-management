@@ -1,5 +1,6 @@
 import React from 'react';
-import { Select, Badge, Avatar, Button, Space, Tag, Tooltip } from 'antd';
+import { Select, Badge, Avatar, Button, Space, Tag, Tooltip, Dropdown, Modal } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   BankOutlined,
   BellOutlined,
@@ -8,19 +9,75 @@ import {
   GlobalOutlined,
   FullscreenOutlined,
   QuestionCircleOutlined,
+  LogoutOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export const HeaderBar: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { language, setLanguage } = useAppStore();
+  const { user, logout } = useAuthStore();
 
   const handleLanguageChange = () => {
     const nextLang = language === 'zh-CN' ? 'en' : 'zh-CN';
     setLanguage(nextLang);
     i18n.changeLanguage(nextLang);
   };
+
+  const handleLogout = () => {
+    Modal.confirm({
+      title: t('auth.logoutConfirm'),
+      content: language === 'zh-CN' ? '退出后将返回终端登录页面。' : 'You will be redirected to the terminal login screen.',
+      okText: t('auth.logout'),
+      cancelText: t('common.cancel'),
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await logout();
+        navigate('/login', { replace: true });
+      },
+    });
+  };
+
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'user-info',
+      disabled: true,
+      label: (
+        <div style={{ padding: '4px 0', minWidth: 160 }}>
+          <div style={{ fontWeight: 600, color: '#1f2937' }}>
+            {user?.fullName || (language === 'zh-CN' ? '张厂长' : 'Director Zhang')}
+          </div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>
+            @{user?.username || 'admin'} • {user?.roles?.[0] || 'ROLE_ADMIN'}
+          </div>
+        </div>
+      ),
+    },
+    { type: 'divider' },
+    {
+      key: 'terminal-status',
+      disabled: true,
+      icon: <SafetyCertificateOutlined style={{ color: '#52c41a' }} />,
+      label: (
+        <span style={{ fontSize: 12 }}>
+          {language === 'zh-CN' ? '工控终端安全认证已激活' : 'Terminal TLS Verified'}
+        </span>
+      ),
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      danger: true,
+      icon: <LogoutOutlined />,
+      label: t('auth.logout'),
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <div
@@ -137,28 +194,33 @@ export const HeaderBar: React.FC = () => {
           />
         </Tooltip>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '2px 8px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: 4,
-            cursor: 'pointer',
-          }}
-        >
-          <Avatar size={24} icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
-          <div style={{ lineHeight: 1.2 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#1f2937' }}>
-              {language === 'zh-CN' ? '张厂长' : 'Director Zhang'}
-            </div>
-            <div style={{ fontSize: 10, color: '#6b7280' }}>
-              {t('header.userRole')}
+        <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '2px 8px',
+              backgroundColor: '#f3f4f6',
+              borderRadius: 4,
+              cursor: 'pointer',
+              border: '1px solid #e5e7eb',
+            }}
+          >
+            <Avatar size={24} icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#1f2937' }}>
+                {user?.fullName || (language === 'zh-CN' ? '张厂长' : 'Director Zhang')}
+              </div>
+              <div style={{ fontSize: 10, color: '#6b7280' }}>
+                {user?.roles?.[0] ? user.roles[0].replace('ROLE_', '') : t('header.userRole')}
+              </div>
             </div>
           </div>
-        </div>
+        </Dropdown>
       </Space>
     </div>
   );
 };
+
+export default HeaderBar;
