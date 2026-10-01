@@ -1,2 +1,2 @@
-// Purchasing feature module
-export {};
+export { PurchasingView } from './components/PurchasingView';
+export * from './types';
