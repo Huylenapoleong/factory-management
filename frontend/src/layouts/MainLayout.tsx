@@ -10,6 +10,8 @@ import {
   InboxOutlined,
   AuditOutlined,
   BuildFilled,
+  ShopOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +57,16 @@ export const MainLayout: React.FC = () => {
       key: '/items',
       icon: <AppstoreOutlined />,
       label: t('menu.items'),
+    },
+    {
+      key: '/suppliers',
+      icon: <ShopOutlined />,
+      label: t('menu.suppliers'),
+    },
+    {
+      key: '/customers',
+      icon: <TeamOutlined />,
+      label: t('menu.customers'),
     },
     {
       key: '/audit',

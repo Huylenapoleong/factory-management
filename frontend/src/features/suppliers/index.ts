@@ -1,2 +1,2 @@
-// Suppliers feature module
-export {};
+export { SuppliersView } from './components/SuppliersView';
+export * from './types';

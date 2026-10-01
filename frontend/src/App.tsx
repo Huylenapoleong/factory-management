@@ -13,6 +13,9 @@ import { ProductionView } from '@/features/production';
 import { InventoryView } from '@/features/inventory';
 import { PurchasingView } from '@/features/purchasing';
 import { SalesView } from '@/features/sales';
+import { ItemsView } from '@/features/items';
+import { SuppliersView } from '@/features/suppliers';
+import { CustomersView } from '@/features/customers';
 import { AuditView, SettingsView } from '@/features/settings';
 
 export const App: React.FC = () => {
@@ -37,9 +40,11 @@ export const App: React.FC = () => {
                 <Route path="/dashboard" element={<DashboardView />} />
                 <Route path="/production" element={<ProductionView />} />
                 <Route path="/inventory" element={<InventoryView />} />
-                <Route path="/items" element={<InventoryView />} />
                 <Route path="/purchasing" element={<PurchasingView />} />
                 <Route path="/sales" element={<SalesView />} />
+                <Route path="/items" element={<ItemsView />} />
+                <Route path="/suppliers" element={<SuppliersView />} />
+                <Route path="/customers" element={<CustomersView />} />
                 <Route path="/audit" element={<AuditView />} />
                 <Route path="/settings" element={<SettingsView />} />
               </Route>
