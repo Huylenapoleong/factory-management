@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, App as AntdApp } from 'antd';
 import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
-import { industrialTheme } from '@/app/theme';
+import { getIndustrialTheme } from '@/app/theme';
 import { useAppStore } from '@/stores/useAppStore';
 import { MainLayout } from '@/layouts/MainLayout';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
@@ -19,13 +19,34 @@ import { CustomersView } from '@/features/customers';
 import { AuditView, SettingsView } from '@/features/settings';
 
 export const App: React.FC = () => {
-  const { language } = useAppStore();
+  const { language, themeMode, displayDensity } = useAppStore();
   const antdLocale = language === 'zh-CN' ? zhCN : enUS;
+
+  const [systemDark, setSystemDark] = useState<boolean>(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && systemDark);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
+  const activeTheme = getIndustrialTheme(isDark, displayDensity);
 
   return (
     <ConfigProvider
       locale={antdLocale}
-      theme={industrialTheme}
+      theme={activeTheme}
     >
       <AntdApp>
         <BrowserRouter>

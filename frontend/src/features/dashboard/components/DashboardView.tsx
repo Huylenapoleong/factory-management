@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Row, Col, Spin, message } from 'antd';
 import { dashboardService } from '@/services/dashboardService';
+import { useAppStore } from '@/stores/useAppStore';
+import { playAlertChime } from '@/utils/audioAlert';
 import {
   DashboardSummary,
   WorkOrderProgressItem,
@@ -22,6 +24,9 @@ export const DashboardView: React.FC = () => {
   const [shortages, setShortages] = useState<MaterialShortageItem[]>([]);
   const [movements, setMovements] = useState<StockMovementItem[]>([]);
 
+  const { autoRefreshInterval, soundAlertsEnabled } = useAppStore();
+  const prevShortageCount = useRef<number>(0);
+
   const loadData = useCallback(async (isSilent = false) => {
     try {
       const [sumData, woData, tpData, shortData, movData] = await Promise.all([
@@ -37,6 +42,12 @@ export const DashboardView: React.FC = () => {
       setThroughput(tpData);
       setShortages(shortData);
       setMovements(movData);
+
+      // Play acoustic warning if new shortages detected while sound alerts are active
+      if (soundAlertsEnabled && shortData.length > 0 && isSilent && shortData.length !== prevShortageCount.current) {
+        playAlertChime();
+      }
+      prevShortageCount.current = shortData.length;
     } catch {
       message.error('Failed to load dashboard operational data');
     } finally {
@@ -44,7 +55,7 @@ export const DashboardView: React.FC = () => {
         setLoading(false);
       }
     }
-  }, []);
+  }, [soundAlertsEnabled]);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,15 +67,21 @@ export const DashboardView: React.FC = () => {
 
     void run();
 
+    if (autoRefreshInterval <= 0) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
     const interval = setInterval(() => {
       void loadData(true);
-    }, 10000);
+    }, autoRefreshInterval * 1000);
 
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [loadData]);
+  }, [loadData, autoRefreshInterval]);
 
   if (loading || !summary) {
     return (

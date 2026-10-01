@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Breadcrumb, Button, Space } from 'antd';
+import { Breadcrumb, Button, Space, theme } from 'antd';
 import { ReloadOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
@@ -10,7 +10,8 @@ interface BreadcrumbBarProps {
 
 export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
   const { t } = useTranslation();
-  const { language } = useAppStore();
+  const { token } = theme.useToken();
+  const { language, autoRefreshInterval } = useAppStore();
   const [timeString, setTimeString] = useState<string>('');
 
   useEffect(() => {
@@ -33,6 +34,11 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
     return () => clearInterval(interval);
   }, [language]);
 
+  const refreshText =
+    autoRefreshInterval > 0
+      ? `${t('header.autoRefresh')}: ${autoRefreshInterval}s`
+      : t('header.refreshOff');
+
   return (
     <div
       style={{
@@ -40,8 +46,8 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '6px 20px',
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e5e7eb',
+        backgroundColor: token.colorBgContainer,
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
         fontSize: 12,
       }}
     >
@@ -49,7 +55,7 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
         items={[
           {
             title: (
-              <span style={{ color: '#6b7280' }}>
+              <span style={{ color: token.colorTextSecondary }}>
                 <EnvironmentOutlined style={{ marginRight: 4 }} />
                 {language === 'zh-CN' ? '华东制造基地' : 'East China Facility'}
               </span>
@@ -60,7 +66,7 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
           },
           {
             title: (
-              <span style={{ fontWeight: 600, color: '#1677ff' }}>
+              <span style={{ fontWeight: 600, color: token.colorPrimary }}>
                 {t('header.liveConsole')}
               </span>
             ),
@@ -69,12 +75,18 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
       />
 
       <Space size="middle" align="center" className="tnum">
-        <span style={{ color: '#6b7280' }}>
-          {t('header.systemTime')}: <strong style={{ color: '#1f2937' }}>{timeString}</strong>
+        <span style={{ color: token.colorTextSecondary }}>
+          {t('header.systemTime')}: <strong style={{ color: token.colorText }}>{timeString}</strong>
         </span>
-        <span style={{ color: '#9ca3af' }}>|</span>
-        <span style={{ color: '#52c41a', fontSize: 11, fontWeight: 500 }}>
-          {t('header.autoRefresh')}
+        <span style={{ color: token.colorBorder }}>|</span>
+        <span
+          style={{
+            color: autoRefreshInterval > 0 ? token.colorSuccess : token.colorTextTertiary,
+            fontSize: 11,
+            fontWeight: 500,
+          }}
+        >
+          {refreshText}
         </span>
         <Button
           size="small"
@@ -88,3 +100,5 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
     </div>
   );
 };
+
+export default BreadcrumbBar;

@@ -56,32 +56,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       // 1. Try real enterprise backend gateway (/api/v1/auth/login)
-      const res = await apiClient.post<{
-        code: number;
-        message: string;
-        data: {
-          accessToken: string;
-          refreshToken: string;
-          tokenType: string;
-          expiresIn: number;
-          user: AuthUser;
-        };
-      }>('/auth/login', { username, password });
+      const res = await apiClient.post<
+        | { data?: { accessToken: string; refreshToken: string; user: AuthUser } }
+        | { accessToken: string; refreshToken: string; user: AuthUser }
+      >('/auth/login', { username, password });
+      const authData = (res as { data?: { accessToken: string; refreshToken: string; user: AuthUser } })?.data || res;
 
-      const { accessToken, refreshToken, user } = res.data.data;
-      localStorage.setItem('access_token', accessToken);
-      localStorage.setItem('refresh_token', refreshToken);
-      localStorage.setItem('auth_user', JSON.stringify(user));
+      if (authData && 'accessToken' in authData && authData.accessToken) {
+        const { accessToken, refreshToken, user } = authData as { accessToken: string; refreshToken: string; user: AuthUser };
+        localStorage.setItem('access_token', accessToken);
+        if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
+        if (user) localStorage.setItem('auth_user', JSON.stringify(user));
 
-      set({
-        token: accessToken,
-        refreshToken,
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+        set({
+          token: accessToken,
+          refreshToken: refreshToken || null,
+          user: user || null,
+          isAuthenticated: true,
+          isLoading: false,
+        });
 
-      return { success: true };
+        return { success: true };
+      }
+      throw new Error('Invalid authentication response structure');
     } catch {
       // 2. Standalone fallback for offline testing or demo environments
       if (

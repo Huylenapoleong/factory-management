@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Badge, Avatar, Button, Space, Tag, Tooltip, Dropdown, Modal } from 'antd';
+import { Select, Badge, Avatar, Button, Space, Tag, Tooltip, Dropdown, Modal, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   BankOutlined,
@@ -8,25 +8,56 @@ import {
   CheckCircleFilled,
   GlobalOutlined,
   FullscreenOutlined,
-  QuestionCircleOutlined,
   LogoutOutlined,
   SafetyCertificateOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  SunOutlined,
+  MoonOutlined,
+  DesktopOutlined,
+  FontSizeOutlined,
+  SyncOutlined,
+  SoundOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAppStore } from '@/stores/useAppStore';
+import { useAppStore, ThemeMode } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { playSuccessChime } from '@/utils/audioAlert';
 
 export const HeaderBar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { language, setLanguage } = useAppStore();
+  const { token } = theme.useToken();
+  const {
+    language,
+    setLanguage,
+    sidebarCollapsed,
+    toggleSidebar,
+    themeMode,
+    setThemeMode,
+    displayDensity,
+    setDisplayDensity,
+    autoRefreshInterval,
+    setAutoRefreshInterval,
+    soundAlertsEnabled,
+    toggleSoundAlerts,
+    setUserGuideVisible,
+  } = useAppStore();
   const { user, logout } = useAuthStore();
 
   const handleLanguageChange = () => {
     const nextLang = language === 'zh-CN' ? 'en' : 'zh-CN';
     setLanguage(nextLang);
     i18n.changeLanguage(nextLang);
+  };
+
+  const handleToggleSound = () => {
+    toggleSoundAlerts();
+    if (!soundAlertsEnabled) {
+      playSuccessChime();
+    }
   };
 
   const handleLogout = () => {
@@ -49,10 +80,10 @@ export const HeaderBar: React.FC = () => {
       disabled: true,
       label: (
         <div style={{ padding: '4px 0', minWidth: 160 }}>
-          <div style={{ fontWeight: 600, color: '#1f2937' }}>
+          <div style={{ fontWeight: 600, color: token.colorText }}>
             {user?.fullName || (language === 'zh-CN' ? '张厂长' : 'Director Zhang')}
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>
+          <div style={{ fontSize: 11, color: token.colorTextSecondary }}>
             @{user?.username || 'admin'} • {user?.roles?.[0] || 'ROLE_ADMIN'}
           </div>
         </div>
@@ -79,6 +110,85 @@ export const HeaderBar: React.FC = () => {
     },
   ];
 
+  const themeMenuItems: MenuProps['items'] = [
+    {
+      key: 'light',
+      icon: <SunOutlined style={{ color: '#faad14' }} />,
+      label: t('header.themeLight'),
+      onClick: () => setThemeMode('light'),
+    },
+    {
+      key: 'dark',
+      icon: <MoonOutlined style={{ color: '#1677ff' }} />,
+      label: t('header.themeDark'),
+      onClick: () => setThemeMode('dark'),
+    },
+    {
+      key: 'system',
+      icon: <DesktopOutlined />,
+      label: t('header.themeSystem'),
+      onClick: () => setThemeMode('system'),
+    },
+  ];
+
+  const densityMenuItems: MenuProps['items'] = [
+    {
+      key: 'compact',
+      label: t('header.densityCompact'),
+      onClick: () => setDisplayDensity('compact'),
+    },
+    {
+      key: 'standard',
+      label: t('header.densityStandard'),
+      onClick: () => setDisplayDensity('standard'),
+    },
+    {
+      key: 'large',
+      label: t('header.densityLarge'),
+      onClick: () => setDisplayDensity('large'),
+    },
+  ];
+
+  const refreshMenuItems: MenuProps['items'] = [
+    {
+      key: '10',
+      label: t('header.refresh10s'),
+      onClick: () => setAutoRefreshInterval(10),
+    },
+    {
+      key: '30',
+      label: t('header.refresh30s'),
+      onClick: () => setAutoRefreshInterval(30),
+    },
+    {
+      key: '60',
+      label: t('header.refresh60s'),
+      onClick: () => setAutoRefreshInterval(60),
+    },
+    {
+      key: '0',
+      label: t('header.refreshOff'),
+      onClick: () => setAutoRefreshInterval(0),
+    },
+  ];
+
+  const getThemeIcon = (mode: ThemeMode) => {
+    switch (mode) {
+      case 'light':
+        return <SunOutlined style={{ fontSize: 16, color: '#faad14' }} />;
+      case 'dark':
+        return <MoonOutlined style={{ fontSize: 16, color: '#1677ff' }} />;
+      case 'system':
+      default:
+        return <DesktopOutlined style={{ fontSize: 16 }} />;
+    }
+  };
+
+  const getRefreshLabel = (seconds: number) => {
+    if (seconds === 0) return 'Off';
+    return `${seconds}s`;
+  };
+
   return (
     <div
       style={{
@@ -86,22 +196,30 @@ export const HeaderBar: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         height: 50,
-        padding: '0 20px',
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e5e7eb',
+        padding: '0 16px',
+        backgroundColor: token.colorBgContainer,
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      {/* Left / Middle: Workshop selector and Shift Badge */}
+      {/* Left: Sidebar toggle, Workshop selector and Shift Badge */}
       <Space orientation="horizontal" size="middle" align="center">
+        <Button
+          type="text"
+          icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          onClick={toggleSidebar}
+          style={{ fontSize: 16, width: 34, height: 34 }}
+          title={sidebarCollapsed ? t('header.expandSidebar') : t('header.collapseSidebar')}
+        />
+
         <Space size="small">
-          <BankOutlined style={{ color: '#1677ff' }} />
-          <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>
+          <BankOutlined style={{ color: token.colorPrimary }} />
+          <span style={{ fontSize: 12, color: token.colorTextSecondary, fontWeight: 500 }}>
             {t('header.workshop')}:
           </span>
           <Select
             defaultValue="workshop-01"
             size="small"
-            style={{ width: 280 }}
+            style={{ width: 260 }}
             options={[
               {
                 value: 'workshop-01',
@@ -149,8 +267,76 @@ export const HeaderBar: React.FC = () => {
         </Tag>
       </Space>
 
-      {/* Right Controls: Language toggle, Notifications, Profile */}
-      <Space size="middle" align="center">
+      {/* Right Controls: Auto-refresh, Density, Theme, Sound Alert, Help SOP, Language, Notifications, Fullscreen, Profile */}
+      <Space size="small" align="center">
+        {/* Telemetry Refresh Selector */}
+        <Dropdown menu={{ items: refreshMenuItems, selectedKeys: [String(autoRefreshInterval)] }} trigger={['click']}>
+          <Tooltip title={t('header.autoRefreshInterval')}>
+            <Button
+              type="text"
+              size="small"
+              icon={<SyncOutlined spin={autoRefreshInterval > 0} style={{ fontSize: 13 }} />}
+              style={{ fontSize: 11, padding: '0 6px', height: 26 }}
+            >
+              {getRefreshLabel(autoRefreshInterval)}
+            </Button>
+          </Tooltip>
+        </Dropdown>
+
+        {/* Display Density Selector */}
+        <Dropdown menu={{ items: densityMenuItems, selectedKeys: [displayDensity] }} trigger={['click']}>
+          <Tooltip title={t('header.density')}>
+            <Button
+              type="text"
+              shape="circle"
+              size="small"
+              icon={<FontSizeOutlined style={{ fontSize: 14 }} />}
+            />
+          </Tooltip>
+        </Dropdown>
+
+        {/* Theme Mode Switcher */}
+        <Dropdown menu={{ items: themeMenuItems, selectedKeys: [themeMode] }} trigger={['click']}>
+          <Tooltip title={t('header.theme')}>
+            <Button
+              type="text"
+              shape="circle"
+              size="small"
+              icon={getThemeIcon(themeMode)}
+            />
+          </Tooltip>
+        </Dropdown>
+
+        {/* Sound Alert Toggle (Buzzer) */}
+        <Tooltip title={soundAlertsEnabled ? t('header.soundEnabled') : t('header.soundDisabled')}>
+          <Button
+            type="text"
+            shape="circle"
+            size="small"
+            icon={
+              <SoundOutlined
+                style={{
+                  fontSize: 15,
+                  color: soundAlertsEnabled ? '#52c41a' : token.colorTextTertiary,
+                }}
+              />
+            }
+            onClick={handleToggleSound}
+          />
+        </Tooltip>
+
+        {/* User Guide & Hotkeys Cheat Sheet Modal Button */}
+        <Tooltip title={t('header.userGuide')}>
+          <Button
+            type="text"
+            shape="circle"
+            size="small"
+            icon={<QuestionCircleOutlined style={{ fontSize: 15, color: token.colorTextSecondary }} />}
+            onClick={() => setUserGuideVisible(true)}
+          />
+        </Tooltip>
+
+        {/* Language switcher */}
         <Button
           type="text"
           size="small"
@@ -158,32 +344,28 @@ export const HeaderBar: React.FC = () => {
           onClick={handleLanguageChange}
           style={{ fontSize: 12, fontWeight: 500 }}
         >
-          {language === 'zh-CN' ? '简中 / EN' : 'EN / 简中'}
+          {language === 'zh-CN' ? '简中' : 'EN'}
         </Button>
 
+        {/* Alerts / Notifications */}
         <Tooltip title={t('dashboard.criticalDeficitsBadge')}>
           <Badge count={5} size="small" offset={[-2, 4]}>
             <Button
               type="text"
               shape="circle"
-              icon={<BellOutlined style={{ fontSize: 16, color: '#4b5563' }} />}
+              size="small"
+              icon={<BellOutlined style={{ fontSize: 15 }} />}
             />
           </Badge>
         </Tooltip>
 
-        <Tooltip title="Help / 帮助">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<QuestionCircleOutlined style={{ fontSize: 15, color: '#6b7280' }} />}
-          />
-        </Tooltip>
-
+        {/* Fullscreen */}
         <Tooltip title="Fullscreen / 全屏">
           <Button
             type="text"
             shape="circle"
-            icon={<FullscreenOutlined style={{ fontSize: 15, color: '#6b7280' }} />}
+            size="small"
+            icon={<FullscreenOutlined style={{ fontSize: 14 }} />}
             onClick={() => {
               if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen?.();
@@ -194,6 +376,7 @@ export const HeaderBar: React.FC = () => {
           />
         </Tooltip>
 
+        {/* User Profile */}
         <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
           <div
             style={{
@@ -201,18 +384,18 @@ export const HeaderBar: React.FC = () => {
               alignItems: 'center',
               gap: 8,
               padding: '2px 8px',
-              backgroundColor: '#f3f4f6',
+              backgroundColor: token.colorFillAlter,
               borderRadius: 4,
               cursor: 'pointer',
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${token.colorBorderSecondary}`,
             }}
           >
-            <Avatar size={24} icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
+            <Avatar size={24} icon={<UserOutlined />} style={{ backgroundColor: token.colorPrimary }} />
             <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#1f2937' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: token.colorText }}>
                 {user?.fullName || (language === 'zh-CN' ? '张厂长' : 'Director Zhang')}
               </div>
-              <div style={{ fontSize: 10, color: '#6b7280' }}>
+              <div style={{ fontSize: 10, color: token.colorTextSecondary }}>
                 {user?.roles?.[0] ? user.roles[0].replace('ROLE_', '') : t('header.userRole')}
               </div>
             </div>
