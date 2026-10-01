@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "智能工厂管理平台",
+    "logout": "退出登录",
+    "profile": "个人中心"
+  },
+  "menu": {
+    "dashboard": "仪表盘",
+    "masterdata": "主数据",
+    "items": "物料与产品",
+    "warehouses": "仓库管理",
+    "inventory": "库存管理",
+    "suppliers": "供应商管理",
+    "customers": "客户管理",
+    "purchasing": "采购管理",
+    "purchaseOrders": "采购订单",
+    "goodsReceipt": "采购入库",
+    "production": "生产管理",
+    "boms": "物料清单 (BOM)",
+    "routings": "工艺路线",
+    "productionOrders": "生产工单",
+    "sales": "销售管理",
+    "salesOrders": "销售订单",
+    "deliveries": "销售发货",
+    "reports": "报表中心",
+    "settings": "系统设置"
+  },
+  "common": {
+    "search": "搜索",
+    "create": "新建",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "status": "状态",
+    "action": "操作",
+    "loading": "加载中...",
+    "noData": "暂无数据"
+  }
+}

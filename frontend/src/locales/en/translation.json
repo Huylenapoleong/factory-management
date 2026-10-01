@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Factory Management Platform",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "masterdata": "Master Data",
+    "items": "Items & Products",
+    "warehouses": "Warehouses",
+    "inventory": "Inventory",
+    "suppliers": "Suppliers",
+    "customers": "Customers",
+    "purchasing": "Purchasing",
+    "purchaseOrders": "Purchase Orders",
+    "goodsReceipt": "Goods Receipt",
+    "production": "Production",
+    "boms": "Bill of Materials (BOM)",
+    "routings": "Routings",
+    "productionOrders": "Production Orders",
+    "sales": "Sales",
+    "salesOrders": "Sales Orders",
+    "deliveries": "Deliveries",
+    "reports": "Reports",
+    "settings": "System Settings"
+  },
+  "common": {
+    "search": "Search",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "status": "Status",
+    "action": "Actions",
+    "loading": "Loading...",
+    "noData": "No data available"
+  }
+}

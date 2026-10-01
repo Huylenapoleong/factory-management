@@ -1,0 +1,2 @@
+// Purchasing feature module
+export {};

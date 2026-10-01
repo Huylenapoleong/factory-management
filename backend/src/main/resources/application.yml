@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: factory-management
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/factory_db}
+    username: ${SPRING_DATASOURCE_USERNAME:factory_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:change_me_factory_password_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 50
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+app:
+  name: ${APP_NAME:Smart Factory}
+  company-name: ${COMPANY_NAME:ABC Manufacturing Co., Ltd.}
+  default-language: ${DEFAULT_LANGUAGE:en}
+  supported-languages: ${SUPPORTED_LANGUAGES:en,zh-CN}
+  default-currency: ${DEFAULT_CURRENCY:USD}
+  timezone: ${TIMEZONE:Asia/Shanghai}
+  jwt:
+    secret: ${APP_JWT_SECRET:change_me_super_secret_key_factory_management_2026_at_least_32_bytes_long!}
+    access-expiration: ${APP_JWT_ACCESS_EXPIRATION:900}
+    refresh-expiration: ${APP_JWT_REFRESH_EXPIRATION:604800}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:80,http://localhost:5173}
+  features:
+    inventory: ${FEATURE_INVENTORY:true}
+    purchasing: ${FEATURE_PURCHASING:true}
+    production: ${FEATURE_PRODUCTION:true}
+    sales: ${FEATURE_SALES:true}
+    reporting: ${FEATURE_REPORTING:true}
