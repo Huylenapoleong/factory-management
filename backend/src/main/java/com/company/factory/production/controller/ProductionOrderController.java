@@ -19,7 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/production-orders")
+@RequestMapping("/production-orders")
 @RequiredArgsConstructor
 @Tag(name = "Production Orders", description = "Manufacturing order lifecycle and operations")
 public class ProductionOrderController {

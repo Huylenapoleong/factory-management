@@ -52,6 +52,8 @@ springdoc:
     operations-sorter: method
 
 app:
+  api:
+    prefix: ${APP_API_PREFIX:/api/v1}
   name: ${APP_NAME:Smart Factory}
   company-name: ${COMPANY_NAME:ABC Manufacturing Co., Ltd.}
   default-language: ${DEFAULT_LANGUAGE:en}

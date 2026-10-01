@@ -35,6 +35,9 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins:http://localhost,http://localhost:80,http://localhost:5173}")
     private String allowedOrigins;
 
+    @Value("${app.api.prefix:/api/v1}")
+    private String apiPrefix;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -52,9 +55,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/v1/settings").permitAll()
+                        .requestMatchers(HttpMethod.GET, apiPrefix + "/settings").permitAll()
                         .requestMatchers(
-                                "/api/v1/auth/**",
+                                apiPrefix + "/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

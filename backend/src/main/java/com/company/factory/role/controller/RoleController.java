@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/roles")
+@RequestMapping("/roles")
 @RequiredArgsConstructor
 @Tag(name = "Roles", description = "Role management APIs")
 public class RoleController {

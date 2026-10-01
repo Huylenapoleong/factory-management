@@ -15,6 +15,7 @@ import { PriorityWorkOrdersCard } from './PriorityWorkOrdersCard';
 import { HourlyThroughputCard } from './HourlyThroughputCard';
 import { MaterialShortageCard } from './MaterialShortageCard';
 import { StockMovementsTimelineCard } from './StockMovementsTimelineCard';
+import { TaktTimeOeeCard } from '@/features/production/components/TaktTimeOeeCard';
 
 export const DashboardView: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -95,6 +96,11 @@ export const DashboardView: React.FC = () => {
     <div style={{ maxWidth: 1920, margin: '0 auto' }}>
       {/* Row 1: KPI Metrics Strip */}
       <KpiMetricsStrip summary={summary} />
+
+      {/* Real-Time Takt Time & Station Rhythm Monitor */}
+      <div style={{ marginTop: 12 }}>
+        <TaktTimeOeeCard />
+      </div>
 
       {/* Row 2: Operations & Warehouse Grid */}
       <Row gutter={[12, 12]} style={{ marginTop: 12 }}>

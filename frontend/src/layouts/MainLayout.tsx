@@ -20,6 +20,8 @@ import { useFactoryHotkeys } from '@/hooks/useFactoryHotkeys';
 import { HeaderBar } from './components/HeaderBar';
 import { BreadcrumbBar } from './components/BreadcrumbBar';
 import { UserGuideModal } from '@/components/guide/UserGuideModal';
+import { ShopFloorKioskHud } from '@/components/kiosk/ShopFloorKioskHud';
+import { ShiftHandoverModal } from '@/components/handover/ShiftHandoverModal';
 
 const { Sider, Content } = Layout;
 
@@ -28,7 +30,7 @@ export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
-  const { sidebarCollapsed, setSidebarCollapsed } = useAppStore();
+  const { sidebarCollapsed, setSidebarCollapsed, kioskMode } = useAppStore();
 
   // Register plant-floor quick keyboard navigation (Alt+D, Alt+P, F1, etc.)
   useFactoryHotkeys();
@@ -88,79 +90,97 @@ export const MainLayout: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: token.colorBgLayout }}>
-      <Sider
-        collapsible
-        collapsed={sidebarCollapsed}
-        onCollapse={(value) => setSidebarCollapsed(value)}
-        trigger={null}
-        width={210}
-        collapsedWidth={64}
-        style={{
-          backgroundColor: token.colorBgContainer,
-          borderRight: `1px solid ${token.colorBorderSecondary}`,
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        <div
+      {/* Hide sidebar completely in overhead TV Kiosk Mode */}
+      {!kioskMode && (
+        <Sider
+          collapsible
+          collapsed={sidebarCollapsed}
+          onCollapse={(value) => setSidebarCollapsed(value)}
+          trigger={null}
+          width={210}
+          collapsedWidth={64}
           style={{
-            height: 50,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-            padding: sidebarCollapsed ? 0 : '0 16px',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            gap: 8,
+            backgroundColor: token.colorBgContainer,
+            borderRight: `1px solid ${token.colorBorderSecondary}`,
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
           }}
         >
           <div
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 4,
-              backgroundColor: token.colorPrimary,
+              height: 50,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              flexShrink: 0,
+              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+              padding: sidebarCollapsed ? 0 : '0 16px',
+              borderBottom: `1px solid ${token.colorBorderSecondary}`,
+              gap: 8,
             }}
           >
-            <BuildFilled style={{ fontSize: 16 }} />
-          </div>
-          {!sidebarCollapsed && (
-            <div style={{ lineHeight: 1.2, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: token.colorText, letterSpacing: '0.02em' }}>
-                WIFIM MES
-              </div>
-              <div style={{ fontSize: 10, color: token.colorTextSecondary }}>
-                {t('app.shortName')}
-              </div>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 4,
+                backgroundColor: token.colorPrimary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                flexShrink: 0,
+              }}
+            >
+              <BuildFilled style={{ fontSize: 16 }} />
             </div>
-          )}
-        </div>
-        <Menu
-          selectedKeys={[location.pathname]}
-          mode="inline"
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{
-            borderRight: 0,
-            marginTop: 4,
-            backgroundColor: token.colorBgContainer,
-          }}
-        />
-      </Sider>
+            {!sidebarCollapsed && (
+              <div style={{ lineHeight: 1.2, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: token.colorText, letterSpacing: '0.02em' }}>
+                  WIFIM MES
+                </div>
+                <div style={{ fontSize: 10, color: token.colorTextSecondary }}>
+                  {t('app.shortName')}
+                </div>
+              </div>
+            )}
+          </div>
+          <Menu
+            selectedKeys={[location.pathname]}
+            mode="inline"
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{
+              borderRight: 0,
+              marginTop: 4,
+              backgroundColor: token.colorBgContainer,
+            }}
+          />
+        </Sider>
+      )}
 
       <Layout style={{ backgroundColor: token.colorBgLayout }}>
-        <HeaderBar />
-        <BreadcrumbBar />
-        <Content style={{ padding: '16px 20px', minHeight: 'calc(100vh - 86px)', backgroundColor: token.colorBgLayout }}>
+        {kioskMode ? (
+          <ShopFloorKioskHud />
+        ) : (
+          <>
+            <HeaderBar />
+            <BreadcrumbBar />
+          </>
+        )}
+        <Content
+          style={{
+            padding: kioskMode ? '12px 16px' : '16px 20px',
+            minHeight: kioskMode ? 'calc(100vh - 56px)' : 'calc(100vh - 86px)',
+            backgroundColor: token.colorBgLayout,
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
 
       {/* Global Plant Floor User Guide & SOP Modal */}
       <UserGuideModal />
+
+      {/* Global Electronic Shift Handover Docket Modal */}
+      <ShiftHandoverModal />
     </Layout>
   );
 };

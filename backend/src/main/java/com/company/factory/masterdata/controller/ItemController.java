@@ -18,7 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/items")
+@RequestMapping("/items")
 @RequiredArgsConstructor
 @Tag(name = "Items", description = "Item & Material master data")
 public class ItemController {

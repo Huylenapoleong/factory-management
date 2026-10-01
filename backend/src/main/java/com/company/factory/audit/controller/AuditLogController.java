@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/audit-logs")
+@RequestMapping("/audit-logs")
 @RequiredArgsConstructor
 @Tag(name = "Audit Logs", description = "System operational audit trail (Admin only)")
 public class AuditLogController {

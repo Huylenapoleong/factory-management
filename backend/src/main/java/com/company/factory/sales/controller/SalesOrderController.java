@@ -20,7 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/sales-orders")
+@RequestMapping("/sales-orders")
 @RequiredArgsConstructor
 @Tag(name = "Sales Orders", description = "Customer sales orders and quotation management")
 public class SalesOrderController {

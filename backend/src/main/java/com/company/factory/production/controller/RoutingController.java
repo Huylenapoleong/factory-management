@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/routings")
+@RequestMapping("/routings")
 @RequiredArgsConstructor
 @Tag(name = "Routings", description = "Manufacturing process sequences and steps")
 public class RoutingController {

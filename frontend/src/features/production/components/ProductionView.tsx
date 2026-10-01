@@ -17,6 +17,7 @@ import { WorkOrdersTable } from './WorkOrdersTable';
 import { OperationTrackingDrawer } from './OperationTrackingDrawer';
 import { CreateWorkOrderModal } from './CreateWorkOrderModal';
 import { BomViewerModal } from './BomViewerModal';
+import { TaktTimeOeeCard } from './TaktTimeOeeCard';
 
 export const ProductionView: React.FC = () => {
   const { language } = useAppStore();
@@ -149,6 +150,9 @@ export const ProductionView: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Real-Time Takt Time & Station Rhythm Monitor */}
+      <TaktTimeOeeCard />
 
       {/* 2. Filter & Action Toolbar */}
       <Card

@@ -20,7 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/purchase-orders")
+@RequestMapping("/purchase-orders")
 @RequiredArgsConstructor
 @Tag(name = "Purchase Orders", description = "Procurement orders management")
 public class PurchaseOrderController {

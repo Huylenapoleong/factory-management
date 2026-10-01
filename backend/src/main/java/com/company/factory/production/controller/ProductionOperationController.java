@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/production-operations")
+@RequestMapping("/production-operations")
 @RequiredArgsConstructor
 @Tag(name = "Production Operations", description = "Shop-floor operation reporting")
 public class ProductionOperationController {

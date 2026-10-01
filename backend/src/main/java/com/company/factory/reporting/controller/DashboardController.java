@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/dashboard")
+@RequestMapping("/dashboard")
 @RequiredArgsConstructor
 @Tag(name = "Dashboard", description = "Factory executive dashboard analytics & alerts")
 public class DashboardController {

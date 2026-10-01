@@ -29,10 +29,12 @@ export const UserGuideModal: React.FC = () => {
     { key: '4', shortcut: 'Alt + B', action: isZh ? '直达采购订单与物料到货' : 'Navigate to Purchasing Orders', module: isZh ? '采购供应链' : 'Purchasing' },
     { key: '5', shortcut: 'Alt + S', action: isZh ? '直达销售发货与出库管理' : 'Navigate to Sales & Outbound Deliveries', module: isZh ? '销售发运' : 'Sales' },
     { key: '6', shortcut: 'Alt + M', action: isZh ? '直达物料档案与基础数据' : 'Navigate to Item Master Data', module: isZh ? '主数据' : 'Master Data' },
-    { key: '7', shortcut: 'Alt + K', action: isZh ? '直达质量检验与系统审计' : 'Navigate to Quality & Audit Logs', module: isZh ? '质检验收' : 'Quality/Audit' },
-    { key: '8', shortcut: 'Alt + T', action: isZh ? '直达系统管理与终端配置' : 'Navigate to Terminal Settings', module: isZh ? '系统设置' : 'Settings' },
-    { key: '9', shortcut: 'Alt + X', action: isZh ? '快速折叠 / 展开侧边导航' : 'Toggle Sidebar Collapse/Expand', module: isZh ? '界面布局' : 'Layout' },
-    { key: '10', shortcut: 'F1 / Shift + ?', action: isZh ? '随时打开本操作指南与帮助' : 'Open User Guide & SOP Modal', module: isZh ? '全局帮助' : 'Help' },
+    { key: '7', shortcut: 'Alt + A', action: isZh ? '直达质量检验与系统审计' : 'Navigate to Quality & Audit Logs', module: isZh ? '质检验收' : 'Quality/Audit' },
+    { key: '8', shortcut: 'Alt + K', action: isZh ? '一键开启车间大屏 TV Kiosk 轮播' : 'Launch Shop-Floor TV Kiosk Mode (55-75")', module: isZh ? '大屏看板' : 'TV Kiosk' },
+    { key: '9', shortcut: 'Alt + H', action: isZh ? '打开电子班组交接记录单 (一键打印)' : 'Open Shift Handover Docket (1-Click Print)', module: isZh ? '班组交接' : 'Handover' },
+    { key: '10', shortcut: 'Alt + T', action: isZh ? '直达系统管理与终端配置' : 'Navigate to Terminal Settings', module: isZh ? '系统设置' : 'Settings' },
+    { key: '11', shortcut: 'Alt + X', action: isZh ? '快速折叠 / 展开侧边导航' : 'Toggle Sidebar Collapse/Expand', module: isZh ? '界面布局' : 'Layout' },
+    { key: '12', shortcut: 'F1 / Shift + ?', action: isZh ? '随时打开本操作指南与帮助' : 'Open User Guide & SOP Modal', module: isZh ? '全局帮助' : 'Help' },
   ];
 
   const hotkeyColumns = [

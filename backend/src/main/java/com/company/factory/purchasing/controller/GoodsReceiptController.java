@@ -20,7 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/goods-receipts")
+@RequestMapping("/goods-receipts")
 @RequiredArgsConstructor
 @Tag(name = "Goods Receipts", description = "Inbound goods receipt and inventory posting")
 public class GoodsReceiptController {

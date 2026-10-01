@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/item-categories")
+@RequestMapping("/item-categories")
 @RequiredArgsConstructor
 @Tag(name = "Item Categories", description = "Product category master data")
 public class ItemCategoryController {

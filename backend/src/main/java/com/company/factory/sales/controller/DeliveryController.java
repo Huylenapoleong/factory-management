@@ -20,7 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/deliveries")
+@RequestMapping("/deliveries")
 @RequiredArgsConstructor
 @Tag(name = "Deliveries", description = "Outbound sales delivery and inventory deductions")
 public class DeliveryController {

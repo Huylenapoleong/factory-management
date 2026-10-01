@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/customers")
+@RequestMapping("/customers")
 @RequiredArgsConstructor
 @Tag(name = "Customers", description = "Customer master data")
 public class CustomerController {

@@ -10,6 +10,10 @@ interface AppState {
   autoRefreshInterval: number; // seconds, 0 = disabled
   soundAlertsEnabled: boolean;
   userGuideVisible: boolean;
+  shiftHandoverVisible: boolean;
+  kioskMode: boolean;
+  kioskPlaying: boolean;
+  kioskInterval: number; // seconds, default 30
   language: 'en' | 'zh-CN';
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -18,6 +22,10 @@ interface AppState {
   setAutoRefreshInterval: (seconds: number) => void;
   toggleSoundAlerts: () => void;
   setUserGuideVisible: (visible: boolean) => void;
+  setShiftHandoverVisible: (visible: boolean) => void;
+  toggleKioskMode: () => void;
+  setKioskMode: (enabled: boolean) => void;
+  setKioskPlaying: (playing: boolean) => void;
   setLanguage: (lang: 'en' | 'zh-CN') => void;
 }
 
@@ -33,6 +41,10 @@ export const useAppStore = create<AppState>((set) => ({
   autoRefreshInterval: Number.isNaN(initialRefresh) ? 30 : initialRefresh,
   soundAlertsEnabled: initialSound,
   userGuideVisible: false,
+  shiftHandoverVisible: false,
+  kioskMode: false,
+  kioskPlaying: true,
+  kioskInterval: 30,
   language: (localStorage.getItem('i18nextLng') as 'en' | 'zh-CN') || 'en',
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
@@ -55,6 +67,10 @@ export const useAppStore = create<AppState>((set) => ({
       return { soundAlertsEnabled: next };
     }),
   setUserGuideVisible: (visible) => set({ userGuideVisible: visible }),
+  setShiftHandoverVisible: (visible) => set({ shiftHandoverVisible: visible }),
+  toggleKioskMode: () => set((state) => ({ kioskMode: !state.kioskMode })),
+  setKioskMode: (enabled) => set({ kioskMode: enabled }),
+  setKioskPlaying: (playing) => set({ kioskPlaying: playing }),
   setLanguage: (lang) => {
     localStorage.setItem('i18nextLng', lang);
     set({ language: lang });

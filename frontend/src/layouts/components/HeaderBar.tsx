@@ -19,6 +19,8 @@ import {
   SyncOutlined,
   SoundOutlined,
   QuestionCircleOutlined,
+  FundProjectionScreenOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -44,6 +46,8 @@ export const HeaderBar: React.FC = () => {
     soundAlertsEnabled,
     toggleSoundAlerts,
     setUserGuideVisible,
+    toggleKioskMode,
+    setShiftHandoverVisible,
   } = useAppStore();
   const { user, logout } = useAuthStore();
 
@@ -322,6 +326,33 @@ export const HeaderBar: React.FC = () => {
               />
             }
             onClick={handleToggleSound}
+          />
+        </Tooltip>
+
+        {/* Shop-Floor TV Kiosk Mode */}
+        <Tooltip title={t('header.kioskMode')}>
+          <Button
+            type="text"
+            shape="circle"
+            size="small"
+            icon={<FundProjectionScreenOutlined style={{ fontSize: 15, color: '#1677ff' }} />}
+            onClick={() => {
+              toggleKioskMode();
+              if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen?.();
+              }
+            }}
+          />
+        </Tooltip>
+
+        {/* Shift Handover Docket Modal */}
+        <Tooltip title={t('header.shiftHandover')}>
+          <Button
+            type="text"
+            shape="circle"
+            size="small"
+            icon={<FileDoneOutlined style={{ fontSize: 15, color: token.colorTextSecondary }} />}
+            onClick={() => setShiftHandoverVisible(true)}
           />
         </Tooltip>
 

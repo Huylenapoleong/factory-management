@@ -8,7 +8,7 @@ import { useAppStore } from '@/stores/useAppStore';
  */
 export function useFactoryHotkeys(): void {
   const navigate = useNavigate();
-  const { setUserGuideVisible, toggleSidebar } = useAppStore();
+  const { setUserGuideVisible, toggleSidebar, toggleKioskMode, setShiftHandoverVisible } = useAppStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,13 +58,21 @@ export function useFactoryHotkeys(): void {
             e.preventDefault();
             navigate('/items');
             break;
-          case 'k': // KCS / Quality & Audit
+          case 'a': // Audit Logs
             e.preventDefault();
             navigate('/audit');
             break;
           case 't': // Terminal Settings
             e.preventDefault();
             navigate('/settings');
+            break;
+          case 'k': // TV Kiosk Mode
+            e.preventDefault();
+            toggleKioskMode();
+            break;
+          case 'h': // Shift Handover Docket
+            e.preventDefault();
+            setShiftHandoverVisible(true);
             break;
           case 'x': // Toggle Sidebar
             e.preventDefault();
@@ -78,5 +86,5 @@ export function useFactoryHotkeys(): void {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, setUserGuideVisible, toggleSidebar]);
+  }, [navigate, setUserGuideVisible, toggleSidebar, toggleKioskMode, setShiftHandoverVisible]);
 }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/units-of-measurement")
+@RequestMapping("/units-of-measurement")
 @RequiredArgsConstructor
 @Tag(name = "Units of Measurement", description = "UoM master data")
 public class UnitOfMeasurementController {

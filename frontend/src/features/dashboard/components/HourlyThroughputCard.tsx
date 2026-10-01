@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Space, Badge } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useAppStore } from '@/stores/useAppStore';
 import { HourlyThroughputItem } from '../types';
 
 interface HourlyThroughputCardProps {
@@ -9,17 +10,21 @@ interface HourlyThroughputCardProps {
 
 export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data }) => {
   const { t } = useTranslation();
+  const { kioskMode } = useAppStore();
   const maxQty = Math.max(...data.map((d) => Math.max(d.targetQty, d.actualQty)), 250);
+
+  const chartHeight = kioskMode ? 240 : 160;
+  const maxBarHeight = kioskMode ? 180 : 120;
 
   return (
     <Card
       size="small"
       title={
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>
+          <span style={{ fontSize: kioskMode ? 16 : 14, fontWeight: 700, color: '#1f2937' }}>
             {t('dashboard.hourlyThroughput')}
           </span>
-          <Space size="middle" style={{ fontSize: 12 }}>
+          <Space size="middle" style={{ fontSize: kioskMode ? 13 : 12 }}>
             <Badge color="#e5e7eb" text={<span style={{ color: '#6b7280' }}>{t('dashboard.targetOutput')}</span>} />
             <Badge color="#1677ff" text={<span style={{ color: '#1f2937', fontWeight: 500 }}>{t('dashboard.actualOutput')}</span>} />
             <Badge color="#52c41a" text={<span style={{ color: '#52c41a', fontWeight: 600 }}>{t('dashboard.yieldRate')} (98.6%)</span>} />
@@ -32,18 +37,18 @@ export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data
         boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
         marginTop: 12,
       }}
-      styles={{ body: { padding: '12px 16px 8px 16px' } }}
+      styles={{ body: { padding: kioskMode ? '16px 20px 10px 20px' : '12px 16px 8px 16px' } }}
     >
       {/* Industrial SVG/CSS Bar + Line Chart */}
-      <div style={{ width: '100%', height: 160, display: 'flex', alignItems: 'flex-end', gap: 8, paddingBottom: 24, position: 'relative' }}>
+      <div style={{ width: '100%', height: chartHeight, display: 'flex', alignItems: 'flex-end', gap: 8, paddingBottom: 24, position: 'relative' }}>
         {/* Subtle horizontal grid lines */}
         <div style={{ position: 'absolute', left: 0, right: 0, top: '25%', height: 1, borderTop: '1px dashed #f0f0f0' }} />
         <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, borderTop: '1px dashed #f0f0f0' }} />
         <div style={{ position: 'absolute', left: 0, right: 0, top: '75%', height: 1, borderTop: '1px dashed #f0f0f0' }} />
 
         {data.map((item) => {
-          const actualHeight = Math.round((item.actualQty / maxQty) * 120);
-          const targetHeight = Math.round((item.targetQty / maxQty) * 120);
+          const actualHeight = Math.round((item.actualQty / maxQty) * maxBarHeight);
+          const targetHeight = Math.round((item.targetQty / maxQty) * maxBarHeight);
           const isExceeded = item.actualQty >= item.targetQty;
 
           return (
@@ -59,6 +64,21 @@ export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data
                 position: 'relative',
               }}
             >
+              {/* Optional data labels on kiosk mode */}
+              {kioskMode && (
+                <div
+                  className="tnum"
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: isExceeded ? '#1677ff' : '#6b7280',
+                    marginBottom: 2,
+                  }}
+                >
+                  {item.actualQty}
+                </div>
+              )}
+
               <div
                 style={{
                   display: 'flex',
@@ -100,9 +120,9 @@ export const HourlyThroughputCard: React.FC<HourlyThroughputCardProps> = ({ data
                 style={{
                   position: 'absolute',
                   bottom: 2,
-                  fontSize: 10,
+                  fontSize: kioskMode ? 11 : 10,
                   color: '#6b7280',
-                  fontWeight: 500,
+                  fontWeight: kioskMode ? 700 : 500,
                 }}
               >
                 {item.hourSlot}
