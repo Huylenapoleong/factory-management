@@ -11,6 +11,7 @@ import {
 import { useAppStore } from '@/stores/useAppStore';
 import { auditService } from '@/services/auditService';
 import { WorkshopConfig } from '../types';
+import { UserManagementTable } from './UserManagementTable';
 
 export const SettingsView: React.FC = () => {
   const { language, setLanguage } = useAppStore();
@@ -298,6 +299,8 @@ export const SettingsView: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  <UserManagementTable />
                 </div>
               ),
             },
