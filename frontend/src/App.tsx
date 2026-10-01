@@ -7,6 +7,7 @@ import { industrialTheme } from '@/app/theme';
 import { useAppStore } from '@/stores/useAppStore';
 import { MainLayout } from '@/layouts/MainLayout';
 import { DashboardView } from '@/features/dashboard/components/DashboardView';
+import { ProductionView } from '@/features/production';
 
 export const App: React.FC = () => {
   const { language } = useAppStore();
@@ -24,7 +25,7 @@ export const App: React.FC = () => {
             <Route path="/dashboard" element={<DashboardView />} />
             <Route path="/items" element={<div style={{ padding: 24 }}>Items Module</div>} />
             <Route path="/purchasing" element={<div style={{ padding: 24 }}>Purchasing Module</div>} />
-            <Route path="/production" element={<div style={{ padding: 24 }}>Production Module</div>} />
+            <Route path="/production" element={<ProductionView />} />
             <Route path="/sales" element={<div style={{ padding: 24 }}>Sales Module</div>} />
             <Route path="/settings" element={<div style={{ padding: 24 }}>Settings Module</div>} />
           </Route>

@@ -1,2 +1,2 @@
-// Production feature module
-export {};
+export { ProductionView } from './components/ProductionView';
+export * from './types';
