@@ -28,7 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -43,6 +46,18 @@ public class InventoryService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final StockMapper stockMapper;
+
+    @Transactional(readOnly = true)
+    public Map<Long, BigDecimal> getAvailableQuantities(Collection<Long> itemIds) {
+        if (itemIds == null || itemIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, BigDecimal> result = new HashMap<>();
+        for (Object[] row : balanceRepository.sumAvailableQuantityByItemIds(itemIds)) {
+            result.put((Long) row[0], (BigDecimal) row[1]);
+        }
+        return result;
+    }
 
     @Transactional
     public StockTransaction increaseStock(
