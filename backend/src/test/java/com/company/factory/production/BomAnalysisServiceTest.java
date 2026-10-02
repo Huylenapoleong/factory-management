@@ -5,10 +5,12 @@ import com.company.factory.inventory.service.InventoryService;
 import com.company.factory.masterdata.domain.Item;
 import com.company.factory.masterdata.domain.ItemType;
 import com.company.factory.masterdata.domain.UnitOfMeasurement;
+import com.company.factory.masterdata.repository.ItemImageRepository;
 import com.company.factory.production.domain.Bom;
 import com.company.factory.production.domain.BomItem;
 import com.company.factory.production.dto.BomAnalysisDto;
 import com.company.factory.production.dto.BomAnalysisLineDto;
+import com.company.factory.production.dto.BomStructureNodeDto;
 import com.company.factory.production.repository.BomRepository;
 import com.company.factory.production.service.BomAnalysisService;
 import com.company.factory.purchasing.dto.ItemSupplyDto;
@@ -30,6 +32,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +48,9 @@ class BomAnalysisServiceTest {
 
     @Mock
     private PurchaseOrderService purchaseOrderService;
+
+    @Mock
+    private ItemImageRepository itemImageRepository;
 
     @InjectMocks
     private BomAnalysisService bomAnalysisService;
@@ -106,7 +113,7 @@ class BomAnalysisServiceTest {
         assertThat(result.getLowCount()).isEqualTo(1);
         assertThat(result.getShortageCount()).isEqualTo(1);
         assertThat(result.getProductUnitCode()).isEqualTo("PCS");
-        assertThat(result.getBottleneckBomItemId()).isEqualTo(102L);
+        assertThat(result.getBottleneckMaterialId()).isEqualTo(3L);
         assertThat(result.getToOrderCount()).isEqualTo(1);
         assertThat(core.getProcurementStatus()).isEqualTo(BomAnalysisLineDto.PROCUREMENT_TO_ORDER);
         assertThat(core.getOrderQuantity()).isEqualByComparingTo("60");
@@ -174,7 +181,7 @@ class BomAnalysisServiceTest {
     void analyze_rejectsInvalidQuantity() {
         assertThatThrownBy(() -> bomAnalysisService.analyze(5L, BigDecimal.ZERO, null))
                 .isInstanceOf(BusinessException.class);
-        verifyNoInteractions(bomRepository, inventoryService, purchaseOrderService);
+        verifyNoInteractions(bomRepository, inventoryService, purchaseOrderService, itemImageRepository);
     }
 
     @Test
@@ -184,5 +191,82 @@ class BomAnalysisServiceTest {
 
         assertThatThrownBy(() -> bomAnalysisService.analyze(99L, BigDecimal.TEN, null))
                 .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("Explodes a sub-assembly with its own BOM, netting its stock before requiring its children")
+    void analyze_multiLevelExplosion() {
+        Item steel = bom.getItems().get(0).getMaterial();
+        Item core = bom.getItems().get(2).getMaterial();
+        Item alloy = Item.builder().id(4L).code("ALLOY").nameEn("Alloy").type(ItemType.RAW_MATERIAL)
+                .purchasePrice(new BigDecimal("3.00")).minStock(BigDecimal.ZERO).build();
+        Bom coreBom = Bom.builder().id(6L).code("BOM-CORE").product(core).status("ACTIVE").build();
+        coreBom.setItems(List.of(
+                BomItem.builder().id(200L).bom(coreBom).material(steel).quantity(new BigDecimal("0.5")).scrapRate(BigDecimal.ZERO).build(),
+                BomItem.builder().id(201L).bom(coreBom).material(alloy).quantity(BigDecimal.ONE).scrapRate(BigDecimal.ZERO).build()
+        ));
+
+        when(bomRepository.findById(5L)).thenReturn(Optional.of(bom));
+        when(bomRepository.findFirstByProductIdAndStatusOrderByVersionDesc(anyLong(), eq("ACTIVE"))).thenReturn(Optional.empty());
+        when(bomRepository.findFirstByProductIdAndStatusOrderByVersionDesc(3L, "ACTIVE")).thenReturn(Optional.of(coreBom));
+        when(inventoryService.getAvailableQuantities(anyCollection())).thenReturn(Map.of(
+                1L, new BigDecimal("500"),
+                2L, new BigDecimal("220"),
+                3L, new BigDecimal("40"),
+                4L, new BigDecimal("100")
+        ));
+
+        BomAnalysisDto result = bomAnalysisService.analyze(5L, new BigDecimal("100"), null);
+
+        Map<String, BomAnalysisLineDto> byCode = new java.util.HashMap<>();
+        result.getLines().forEach(l -> byCode.put(l.getMaterialCode(), l));
+
+        BomAnalysisLineDto coreLine = byCode.get("CORE");
+        assertThat(coreLine.getMakeOrBuy()).isEqualTo(BomAnalysisLineDto.SOURCE_MAKE);
+        assertThat(coreLine.getStatus()).isEqualTo(BomAnalysisLineDto.STATUS_MAKE);
+        assertThat(coreLine.getToMakeQuantity()).isEqualByComparingTo("60");
+        assertThat(coreLine.getProcurementStatus()).isEqualTo(BomAnalysisLineDto.PROCUREMENT_TO_MAKE);
+        assertThat(coreLine.getLineCost()).isEqualByComparingTo("400.00");
+
+        BomAnalysisLineDto steelLine = byCode.get("RM-STEEL");
+        assertThat(steelLine.getRequiredQuantity()).isEqualByComparingTo("250");
+        assertThat(steelLine.getUsedIn()).containsExactly("HV-204", "CORE");
+        assertThat(steelLine.getUnitQuantity()).isEqualByComparingTo("2.5");
+
+        BomAnalysisLineDto alloyLine = byCode.get("ALLOY");
+        assertThat(alloyLine.getLevel()).isEqualTo(2);
+        assertThat(alloyLine.getRequiredQuantity()).isEqualByComparingTo("60");
+        assertThat(alloyLine.getStatus()).isEqualTo(BomAnalysisLineDto.STATUS_SUFFICIENT);
+
+        assertThat(result.getLines().get(result.getLines().size() - 1).getMaterialCode()).isEqualTo("ALLOY");
+        assertThat(result.getShortageCount()).isZero();
+        assertThat(result.getMakeCount()).isEqualTo(1);
+        assertThat(result.getLevelCount()).isEqualTo(2);
+        assertThat(result.getTotalMaterialCost()).isEqualByComparingTo("1180.00");
+        assertThat(result.getMaxBuildableQuantity()).isEqualByComparingTo("110");
+        assertThat(result.getBottleneckMaterialId()).isEqualTo(2L);
+
+        BomStructureNodeDto coreNode = result.getStructure().getChildren().get(2);
+        assertThat(coreNode.getMakeOrBuy()).isEqualTo(BomAnalysisLineDto.SOURCE_MAKE);
+        assertThat(coreNode.getMakeQuantity()).isEqualByComparingTo("60");
+        assertThat(coreNode.getChildren()).extracting(BomStructureNodeDto::getRequiredQuantity)
+                .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .containsExactly(new BigDecimal("30"), new BigDecimal("60"));
+    }
+
+    @Test
+    @DisplayName("Rejects a BOM that contains its own product further down the structure")
+    void analyze_detectsCycle() {
+        Item core = bom.getItems().get(2).getMaterial();
+        Bom coreBom = Bom.builder().id(6L).code("BOM-CORE").product(core).status("ACTIVE").build();
+        coreBom.setItems(List.of(BomItem.builder().id(300L).bom(coreBom).material(bom.getProduct()).quantity(BigDecimal.ONE).build()));
+
+        when(bomRepository.findById(5L)).thenReturn(Optional.of(bom));
+        when(bomRepository.findFirstByProductIdAndStatusOrderByVersionDesc(anyLong(), eq("ACTIVE"))).thenReturn(Optional.empty());
+        when(bomRepository.findFirstByProductIdAndStatusOrderByVersionDesc(3L, "ACTIVE")).thenReturn(Optional.of(coreBom));
+
+        assertThatThrownBy(() -> bomAnalysisService.analyze(5L, BigDecimal.TEN, null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Circular BOM");
     }
 }

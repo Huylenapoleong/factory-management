@@ -23,9 +23,10 @@ public class BomAnalysisDto {
     private String productNameEn;
     private String productNameZh;
     private String productUnitCode;
+    private Long productImageVersion;
     private BigDecimal plannedQuantity;
     private LocalDate startDate;
-    private Long bottleneckBomItemId;
+    private Long bottleneckMaterialId;
     private String bottleneckMaterialNameEn;
     private String bottleneckMaterialNameZh;
     private int toOrderCount;
@@ -36,5 +37,8 @@ public class BomAnalysisDto {
     private int sufficientCount;
     private int lowCount;
     private int shortageCount;
+    private int makeCount;
+    private int levelCount;
     private List<BomAnalysisLineDto> lines;
+    private BomStructureNodeDto structure;
 }
