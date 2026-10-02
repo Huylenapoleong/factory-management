@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button, Card, DatePicker, InputNumber, Progress, Slider, theme } from 'antd';
-import { MinusOutlined, PlusOutlined, InfoCircleOutlined, CheckOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { MinusOutlined, PlusOutlined, InfoCircleOutlined, CheckOutlined, ShoppingCartOutlined, ToolOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import type { BomAnalysis, BomAnalysisLine } from '../types';
-import { formatDay, formatMoney, formatQty, materialName, procurementMeta, statusMeta } from '../utils';
+import { formatDay, formatMoney, formatQty, itemNameByCode, materialName, procurementMeta, statusMeta } from '../utils';
 
 interface PlanningInspectorProps {
   analysis: BomAnalysis | undefined;
@@ -178,7 +178,7 @@ const MaterialDetail: React.FC<{
   const proc = procurementMeta(line, token, isZh);
   const unit = line.unitCode ?? '';
   const productUnit = analysis.productUnitCode ?? 'pcs';
-  const index = analysis.lines.findIndex((l) => l.bomItemId === line.bomItemId) + 1;
+  const index = analysis.lines.findIndex((l) => l.materialId === line.materialId) + 1;
 
   const facts: Array<{ label: string; value: string; color?: string; strong?: boolean }> = [
     { label: isZh ? '定额' : 'Norm', value: `${formatQty(line.unitQuantity, 4)} ${unit}/${productUnit}` },
@@ -186,27 +186,35 @@ const MaterialDetail: React.FC<{
     { label: isZh ? '本单需求' : 'Needed for plan', value: `${formatQty(line.requiredQuantity)} ${unit}` },
     { label: isZh ? '库存' : 'In stock', value: `${formatQty(line.availableQuantity)} ${unit}` },
     {
-      label: isZh ? '缺口' : 'Short',
+      label: line.makeOrBuy === 'MAKE' ? (isZh ? '需自制' : 'To make') : isZh ? '缺口' : 'Short',
       value: `${formatQty(Math.ceil(line.shortageQuantity), 0)} ${unit}`,
-      color: line.shortageQuantity > 0 ? token.colorError : token.colorSuccess,
+      color: line.shortageQuantity > 0 ? (line.makeOrBuy === 'MAKE' ? token.colorPrimary : token.colorError) : token.colorSuccess,
       strong: true,
     },
     { label: isZh ? '单价' : 'Unit price', value: `${formatMoney(line.unitCost)} / ${unit}` },
   ];
 
+  const usedIn = line.usedIn.map((code) => itemNameByCode(analysis, code, isZh)).join(', ');
   const rows: Array<{ label: string; value: React.ReactNode }> = [
+    { label: isZh ? '用于' : 'Used in', value: usedIn },
     { label: isZh ? '需要日期' : 'Needed from', value: formatDay(analysis.startDate) },
-    {
-      label: isZh ? '采购期限' : 'Order deadline',
-      value: <span style={{ color: proc.color, fontWeight: 700 }}>{proc.label}</span>,
-    },
-    {
-      label: isZh ? '供应商' : 'Supplier',
-      value: line.supplierName
-        ? `${line.supplierName}${line.leadTimeDays != null ? ` · ${line.leadTimeDays} ${isZh ? '天' : 'days'}` : ''}`
-        : isZh ? '暂无采购记录' : 'No purchase history',
-    },
   ];
+  if (line.makeOrBuy === 'MAKE') {
+    rows.push({ label: isZh ? '来源' : 'Source', value: isZh ? '按子BOM自制' : 'Made in-house (sub-BOM)' });
+  } else {
+    rows.push(
+      {
+        label: isZh ? '采购期限' : 'Order deadline',
+        value: <span style={{ color: proc.color, fontWeight: 700 }}>{proc.label}</span>,
+      },
+      {
+        label: isZh ? '供应商' : 'Supplier',
+        value: line.supplierName
+          ? `${line.supplierName}${line.leadTimeDays != null ? ` · ${line.leadTimeDays} ${isZh ? '天' : 'days'}` : ''}`
+          : isZh ? '暂无采购记录' : 'No purchase history',
+      }
+    );
+  }
   if (line.onOrderQuantity > 0) {
     rows.push({ label: isZh ? '在途' : 'On order', value: `${formatQty(line.onOrderQuantity)} ${unit}` });
   }
@@ -282,6 +290,26 @@ const MaterialDetail: React.FC<{
         <Button type="primary" danger block size="large" icon={<ShoppingCartOutlined />} onClick={() => onOrder(line)}>
           {isZh ? '采购' : 'Order'} {formatQty(line.orderQuantity, 0)} {unit}
         </Button>
+      )}
+      {line.procurementStatus === 'TO_MAKE' && (
+        <div
+          style={{
+            minHeight: 40,
+            padding: '8px 12px',
+            borderRadius: token.borderRadius,
+            border: `1px solid ${token.colorPrimaryBorder}`,
+            background: token.colorPrimaryBg,
+            color: token.colorPrimary,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            textAlign: 'center',
+          }}
+        >
+          <ToolOutlined /> {proc.label}
+        </div>
       )}
       {line.procurementStatus === 'ORDERED' && (
         <div

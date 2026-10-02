@@ -1,6 +1,6 @@
 import type { GlobalToken } from 'antd';
 import dayjs from 'dayjs';
-import type { BomAnalysisLine, CoverageStatus } from './types';
+import type { BomAnalysis, BomAnalysisLine, CoverageStatus } from './types';
 
 export const COST_PALETTE = ['#1677ff', '#13c2c2', '#52c41a', '#faad14', '#722ed1', '#eb2f96', '#fa8c16', '#2f54eb'];
 
@@ -15,8 +15,16 @@ export const formatDay = (date?: string | null): string => (date ? dayjs(date).f
 export const materialName = (line: BomAnalysisLine, isZh: boolean): string =>
   (isZh && line.materialNameZh) || line.materialNameEn;
 
+export const itemNameByCode = (analysis: BomAnalysis, code: string, isZh: boolean): string => {
+  if (code === analysis.productCode) return (isZh && analysis.productNameZh) || analysis.productNameEn;
+  const line = analysis.lines.find((l) => l.materialCode === code);
+  return line ? materialName(line, isZh) : code;
+};
+
 export const statusMeta = (status: CoverageStatus, token: GlobalToken, isZh: boolean) => {
   switch (status) {
+    case 'MAKE':
+      return { color: token.colorPrimary, bg: token.colorPrimaryBg, label: isZh ? '需自制' : 'To make' };
     case 'SHORTAGE':
       return { color: token.colorError, bg: token.colorErrorBg, label: isZh ? '缺料' : 'Shortage' };
     case 'LOW':
@@ -29,6 +37,13 @@ export const statusMeta = (status: CoverageStatus, token: GlobalToken, isZh: boo
 export const procurementMeta = (line: BomAnalysisLine, token: GlobalToken, isZh: boolean) => {
   if (line.procurementStatus === 'COVERED') {
     return { label: isZh ? '库存充足' : 'In stock', color: token.colorSuccess, bg: token.colorSuccessBg };
+  }
+  if (line.procurementStatus === 'TO_MAKE') {
+    return {
+      label: isZh ? `自制 ${formatQty(line.toMakeQuantity, 0)} ${line.unitCode ?? ''}` : `Make ${formatQty(line.toMakeQuantity, 0)} ${line.unitCode ?? ''} in-house`,
+      color: token.colorPrimary,
+      bg: token.colorPrimaryBg,
+    };
   }
   if (line.procurementStatus === 'ORDERED') {
     const arrive = line.expectedArrivalDate ? ` · ${isZh ? '预计' : 'arrives'} ${formatDay(line.expectedArrivalDate)}` : '';

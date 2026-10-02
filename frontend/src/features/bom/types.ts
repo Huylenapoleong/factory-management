@@ -1,4 +1,5 @@
-export type CoverageStatus = 'SUFFICIENT' | 'LOW' | 'SHORTAGE';
+export type CoverageStatus = 'SUFFICIENT' | 'LOW' | 'SHORTAGE' | 'MAKE';
+export type MakeOrBuy = 'MAKE' | 'BUY';
 
 export interface BomSummary {
   id: number;
@@ -12,13 +13,15 @@ export interface BomSummary {
 }
 
 export interface BomAnalysisLine {
-  bomItemId: number;
   materialId: number;
   materialCode: string;
   materialNameEn: string;
   materialNameZh?: string;
   materialType?: string;
   unitCode?: string;
+  level: number;
+  makeOrBuy: MakeOrBuy;
+  usedIn: string[];
   unitQuantity: number;
   scrapRate: number;
   requiredQuantity: number;
@@ -31,6 +34,7 @@ export interface BomAnalysisLine {
   lineCost: number;
   scrapCost: number;
   surplusQuantity: number;
+  toMakeQuantity: number;
   onOrderQuantity: number;
   orderQuantity: number;
   procurementStatus: ProcurementStatus;
@@ -42,7 +46,7 @@ export interface BomAnalysisLine {
   leadTimeDays?: number | null;
 }
 
-export type ProcurementStatus = 'COVERED' | 'ORDERED' | 'TO_ORDER';
+export type ProcurementStatus = 'COVERED' | 'ORDERED' | 'TO_ORDER' | 'TO_MAKE';
 export type Urgency = 'LATE' | 'TODAY' | 'UPCOMING';
 
 export interface SupplierOption {
@@ -61,9 +65,10 @@ export interface BomAnalysis {
   productNameEn: string;
   productNameZh?: string;
   productUnitCode?: string;
+  productImageVersion?: number | null;
   plannedQuantity: number;
   startDate: string;
-  bottleneckBomItemId?: number | null;
+  bottleneckMaterialId?: number | null;
   bottleneckMaterialNameEn?: string | null;
   bottleneckMaterialNameZh?: string | null;
   toOrderCount: number;
@@ -74,7 +79,24 @@ export interface BomAnalysis {
   sufficientCount: number;
   lowCount: number;
   shortageCount: number;
+  makeCount: number;
+  levelCount: number;
   lines: BomAnalysisLine[];
+  structure: BomStructureNode;
+}
+
+export interface BomStructureNode {
+  itemId: number;
+  itemCode: string;
+  itemNameEn: string;
+  itemNameZh?: string | null;
+  unitCode?: string | null;
+  makeOrBuy: MakeOrBuy;
+  quantityPer: number;
+  scrapRate: number;
+  requiredQuantity: number;
+  makeQuantity?: number | null;
+  children: BomStructureNode[];
 }
 
 export type CoverageFilter = 'ALL' | CoverageStatus;

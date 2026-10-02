@@ -23,7 +23,7 @@ const defaultSelection = (analysis: BomAnalysis): number | null => {
   const toOrder = analysis.lines
     .filter((line) => line.procurementStatus === 'TO_ORDER')
     .sort((a, b) => (a.orderByDate ?? '').localeCompare(b.orderByDate ?? ''));
-  return toOrder[0]?.bomItemId ?? analysis.bottleneckBomItemId ?? analysis.lines[0]?.bomItemId ?? null;
+  return toOrder[0]?.materialId ?? analysis.bottleneckMaterialId ?? analysis.lines[0]?.materialId ?? null;
 };
 
 export const BomWorkbenchView: React.FC = () => {
@@ -61,12 +61,12 @@ export const BomWorkbenchView: React.FC = () => {
     placeholderData: keepPreviousData,
   });
   const analysis = analysisQuery.data;
-  const effectiveSelectedId = analysis?.lines.some((line) => line.bomItemId === selectedId)
+  const effectiveSelectedId = analysis?.lines.some((line) => line.materialId === selectedId)
     ? selectedId
     : analysis
       ? defaultSelection(analysis)
       : null;
-  const selectedLine = analysis?.lines.find((line) => line.bomItemId === effectiveSelectedId) ?? null;
+  const selectedLine = analysis?.lines.find((line) => line.materialId === effectiveSelectedId) ?? null;
 
   const selectBom = (id: number) => {
     setSearchParams({ bomId: String(id) });

@@ -7,6 +7,7 @@ import {
   ScissorOutlined,
   CalendarOutlined,
   ArrowRightOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import type { BomAnalysis, BomAnalysisLine } from '../types';
 import { formatDay, formatQty, materialName } from '../utils';
@@ -14,7 +15,7 @@ import { formatDay, formatQty, materialName } from '../utils';
 interface BomActionCardsProps {
   analysis: BomAnalysis;
   isZh: boolean;
-  onSelect: (bomItemId: number) => void;
+  onSelect: (materialId: number) => void;
   onOrder: (line: BomAnalysisLine) => void;
   onUseMaxQuantity: () => void;
   onShowAllShortages: () => void;
@@ -57,7 +58,7 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
   const cards: TodoCard[] = [];
 
   analysis.lines
-    .filter((line) => line.shortageQuantity > 0)
+    .filter((line) => line.makeOrBuy === 'BUY' && line.shortageQuantity > 0)
     .sort(byUrgency)
     .forEach((line) => {
       const ordered = line.procurementStatus === 'ORDERED';
@@ -69,7 +70,7 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
           : { text: formatDay(line.orderByDate), color: token.colorWarning, bg: token.colorWarningBg };
 
       cards.push({
-        key: `buy-${line.bomItemId}`,
+        key: `buy-${line.materialId}`,
         icon: <ShoppingCartOutlined />,
         color: ordered ? token.colorSuccess : token.colorError,
         soft: ordered ? token.colorSuccessBg : token.colorErrorBg,
@@ -80,7 +81,24 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
         chip,
         action: ordered ? undefined : { text: isZh ? '下单采购' : 'Order', onClick: () => onOrder(line), primary: true },
         doneText: ordered ? (isZh ? '已下单' : 'Ordered') : undefined,
-        onClick: () => onSelect(line.bomItemId),
+        onClick: () => onSelect(line.materialId),
+      });
+    });
+
+  analysis.lines
+    .filter((line) => line.procurementStatus === 'TO_MAKE')
+    .forEach((line) => {
+      cards.push({
+        key: `make-${line.materialId}`,
+        icon: <ToolOutlined />,
+        color: token.colorPrimary,
+        soft: token.colorPrimaryBg,
+        highlight: false,
+        value: formatQty(line.toMakeQuantity, 0),
+        unit: line.unitCode ?? '',
+        label: materialName(line, isZh),
+        idleText: isZh ? '按子BOM自制' : 'Make in-house from sub-BOM',
+        onClick: () => onSelect(line.materialId),
       });
     });
 
@@ -102,7 +120,7 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
     .filter((line) => line.status === 'LOW')
     .forEach((line) => {
       cards.push({
-        key: `watch-${line.bomItemId}`,
+        key: `watch-${line.materialId}`,
         icon: <EyeOutlined />,
         color: token.colorWarning,
         soft: token.colorWarningBg,
@@ -111,7 +129,7 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
         unit: line.unitCode ?? '',
         label: `${materialName(line, isZh)} · ${isZh ? '剩余' : 'left after use'}`,
         idleText: isZh ? '关注（低于安全库存）' : 'Watch — below safety stock',
-        onClick: () => onSelect(line.bomItemId),
+        onClick: () => onSelect(line.materialId),
       });
     });
 

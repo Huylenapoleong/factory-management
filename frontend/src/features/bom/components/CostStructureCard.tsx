@@ -18,7 +18,7 @@ export const CostStructureCard: React.FC<CostStructureCardProps> = ({ analysis, 
   const sorted = [...analysis.lines]
     .sort((a, b) => b.lineCost - a.lineCost)
     .map((line, index) => ({
-      key: line.bomItemId,
+      key: line.materialId,
       name: materialName(line, isZh),
       cost: line.lineCost,
       share: total > 0 ? (line.lineCost / total) * 100 : 0,

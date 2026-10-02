@@ -1,5 +1,5 @@
 import apiClient from './api';
-import type { BomAnalysis, BomAnalysisLine, BomSummary, SupplierOption } from '@/features/bom/types';
+import type { BomAnalysis, BomAnalysisLine, BomStructureNode, BomSummary, SupplierOption } from '@/features/bom/types';
 
 interface ApiEnvelope<T> {
   data: T;
@@ -33,6 +33,16 @@ const normalizeLine = (line: BomAnalysisLine): BomAnalysisLine => ({
   surplusQuantity: toNumber(line.surplusQuantity),
   onOrderQuantity: toNumber(line.onOrderQuantity),
   orderQuantity: toNumber(line.orderQuantity),
+  toMakeQuantity: toNumber(line.toMakeQuantity),
+});
+
+const normalizeNode = (node: BomStructureNode): BomStructureNode => ({
+  ...node,
+  quantityPer: toNumber(node.quantityPer),
+  scrapRate: toNumber(node.scrapRate),
+  requiredQuantity: toNumber(node.requiredQuantity),
+  makeQuantity: node.makeQuantity == null ? null : toNumber(node.makeQuantity),
+  children: (node.children ?? []).map(normalizeNode),
 });
 
 export const bomService = {
@@ -61,7 +71,23 @@ export const bomService = {
       costPerUnit: toNumber(a.costPerUnit),
       maxBuildableQuantity: toNumber(a.maxBuildableQuantity),
       lines: (a.lines ?? []).map(normalizeLine),
+      structure: normalizeNode(a.structure),
     };
+  },
+
+  async getItemImage(itemId: number): Promise<Blob> {
+    return (await apiClient.get(`/items/${itemId}/image`, { responseType: 'blob' })) as Blob;
+  },
+
+  async uploadItemImage(itemId: number, file: File): Promise<void> {
+    const form = new FormData();
+    form.append('file', file);
+    // The client defaults to JSON, which makes axios serialize FormData as JSON.
+    await apiClient.put(`/items/${itemId}/image`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+
+  async deleteItemImage(itemId: number): Promise<void> {
+    await apiClient.delete(`/items/${itemId}/image`);
   },
 
   async getSuppliers(): Promise<SupplierOption[]> {
