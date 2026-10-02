@@ -1,9 +1,10 @@
 package com.company.factory.inventory;
 
 import com.company.factory.common.exception.BusinessException;
-import com.company.factory.inventory.domain.*;
-import com.company.factory.inventory.dto.StockAdjustmentRequest;
-import com.company.factory.inventory.dto.StockTransactionDto;
+import com.company.factory.inventory.domain.InventoryBalance;
+import com.company.factory.inventory.domain.StockTransaction;
+import com.company.factory.inventory.domain.TransactionType;
+import com.company.factory.inventory.domain.Warehouse;
 import com.company.factory.inventory.mapper.StockMapper;
 import com.company.factory.inventory.repository.InventoryBalanceRepository;
 import com.company.factory.inventory.repository.StockTransactionRepository;
@@ -28,7 +29,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InventoryServiceTest {
