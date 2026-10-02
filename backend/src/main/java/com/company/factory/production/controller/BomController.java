@@ -1,8 +1,10 @@
 package com.company.factory.production.controller;
 
 import com.company.factory.common.response.ApiResponse;
+import com.company.factory.production.dto.BomAnalysisDto;
 import com.company.factory.production.dto.BomDto;
 import com.company.factory.production.dto.CreateBomRequest;
+import com.company.factory.production.service.BomAnalysisService;
 import com.company.factory.production.service.BomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -20,6 +26,7 @@ import java.util.List;
 public class BomController {
 
     private final BomService bomService;
+    private final BomAnalysisService bomAnalysisService;
 
     @GetMapping
     @Operation(summary = "Get BOMs by product or status")
@@ -34,6 +41,16 @@ public class BomController {
     @Operation(summary = "Get BOM by ID")
     public ApiResponse<BomDto> getBomById(@PathVariable Long id) {
         return ApiResponse.success(bomService.getBomById(id));
+    }
+
+    @GetMapping("/{id}/analysis")
+    @Operation(summary = "Material requirement, stock coverage and cost breakdown for a planned quantity")
+    public ApiResponse<BomAnalysisDto> analyzeBom(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") BigDecimal quantity,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate
+    ) {
+        return ApiResponse.success(bomAnalysisService.analyze(id, quantity, startDate));
     }
 
     @PostMapping
