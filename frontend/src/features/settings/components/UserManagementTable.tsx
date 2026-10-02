@@ -220,7 +220,8 @@ export const UserManagementTable: React.FC = () => {
         onCancel={() => setCreateModalVisible(false)}
         onOk={handleCreateUser}
         centered
-        destroyOnClose
+        destroyOnHidden
+        forceRender
         okText={isZh ? '确认创建' : 'Create'}
         cancelText={isZh ? '取消' : 'Cancel'}
       >
@@ -284,7 +285,8 @@ export const UserManagementTable: React.FC = () => {
         }}
         onOk={handleResetPassword}
         centered
-        destroyOnClose
+        destroyOnHidden
+        forceRender
         okText={isZh ? '确认重置' : 'Reset'}
         cancelText={isZh ? '取消' : 'Cancel'}
       >

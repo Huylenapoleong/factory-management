@@ -61,6 +61,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
       okText={isZh ? '确认下达采购单' : 'Issue Purchase Order'}
       cancelText={isZh ? '取消' : 'Cancel'}
       width={680}
+      forceRender
       styles={{ body: { paddingTop: 10 } }}
     >
       <Form
@@ -204,7 +205,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             isZh
               ? '采购单下达后将自动同步至 ERP 主台账并向供方发送 EDI 订单通知。'
               : 'PO will synchronize to ERP and trigger vendor EDI notification.'

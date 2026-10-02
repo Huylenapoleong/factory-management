@@ -75,7 +75,7 @@ export const InventoryView: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <Spin size="large" tip="Loading warehouse inventory ledger..." />
+        <Spin size="large" description="Loading warehouse inventory ledger..." />
       </div>
     );
   }

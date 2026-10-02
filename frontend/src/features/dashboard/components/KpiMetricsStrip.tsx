@@ -63,7 +63,7 @@ export const KpiMetricsStrip: React.FC<KpiMetricsStripProps> = ({ summary }) => 
               <Progress
                 percent={summary.dailyPlanCompletionRate}
                 strokeColor="#52c41a"
-                trailColor={token.colorFillAlter}
+                railColor={token.colorFillAlter}
                 size={['100%', 6]}
                 showInfo={false}
                 style={{ margin: 0, width: '100%' }}
@@ -173,7 +173,7 @@ export const KpiMetricsStrip: React.FC<KpiMetricsStripProps> = ({ summary }) => 
               <Progress
                 percent={Math.round((summary.dispatchedSalesOrdersToday / summary.openSalesOrders) * 100)}
                 strokeColor="#1677ff"
-                trailColor={token.colorFillAlter}
+                railColor={token.colorFillAlter}
                 size={['100%', 6]}
                 showInfo={false}
                 style={{ margin: 0, width: '100%' }}

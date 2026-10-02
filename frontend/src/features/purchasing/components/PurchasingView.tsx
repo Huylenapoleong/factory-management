@@ -83,7 +83,7 @@ export const PurchasingView: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <Spin size="large" tip="Loading purchasing & inbound dock console..." />
+        <Spin size="large" description="Loading purchasing & inbound dock console..." />
       </div>
     );
   }

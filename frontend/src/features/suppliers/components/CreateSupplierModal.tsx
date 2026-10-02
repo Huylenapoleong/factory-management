@@ -61,7 +61,8 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
       width={680}
       okText={isZh ? '确认保存' : 'Save Supplier'}
       cancelText={isZh ? '取消' : 'Cancel'}
-      destroyOnClose
+      destroyOnHidden
+      forceRender
     >
       <Form form={form} layout="vertical" size="small" initialValues={{ ratingGrade: 'A', paymentTerms: 'Net 30' }}>
         <Row gutter={16}>

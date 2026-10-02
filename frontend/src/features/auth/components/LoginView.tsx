@@ -156,7 +156,7 @@ export const LoginView: React.FC = () => {
 
         {authError && (
           <Alert
-            message={authError}
+            title={authError}
             type="error"
             showIcon
             closable

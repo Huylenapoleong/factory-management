@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Tag, Progress, Button, Space, Tooltip, Modal, message } from 'antd';
+import { Table, Tag, Progress, Button, Space, Tooltip, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   InboxOutlined,
@@ -29,9 +29,10 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
 }) => {
   const { t } = useTranslation();
   const { language } = useAppStore();
+  const { modal, message } = App.useApp();
 
   const handleFinishReceipt = (order: ProductionOrder) => {
-    Modal.confirm({
+    modal.confirm({
       title: language === 'zh-CN' ? `确认完工入库: ${order.orderNo}` : `Confirm Finished Goods Receipt: ${order.orderNo}`,
       icon: <ExclamationCircleOutlined style={{ color: '#1677ff' }} />,
       content: (
@@ -182,7 +183,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
             percent={record.progressPercent}
             size="small"
             strokeColor={record.status === 'COMPLETED' ? '#52c41a' : '#1677ff'}
-            trailColor="#e5e7eb"
+            railColor="#e5e7eb"
           />
         </div>
       ),

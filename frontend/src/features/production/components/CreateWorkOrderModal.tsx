@@ -57,6 +57,7 @@ export const CreateWorkOrderModal: React.FC<CreateWorkOrderModalProps> = ({
       okText={t('common.confirm')}
       cancelText={t('common.cancel')}
       width={560}
+      forceRender
       styles={{ body: { paddingTop: 12 } }}
     >
       <Form form={form} layout="vertical" size="small" initialValues={{ isUrgent: false, plannedQty: 500 }}>
@@ -100,7 +101,7 @@ export const CreateWorkOrderModal: React.FC<CreateWorkOrderModalProps> = ({
             label={language === 'zh-CN' ? '计划投产数量 (Planned Qty)' : 'Target Quantity'}
             rules={[{ required: true, message: 'Please enter planned quantity' }]}
           >
-            <InputNumber min={1} max={100000} style={{ width: '100%' }} addonAfter="pcs" />
+            <InputNumber min={1} max={100000} style={{ width: '100%' }} suffix="pcs" />
           </Form.Item>
 
           <Form.Item

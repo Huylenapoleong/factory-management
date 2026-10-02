@@ -79,7 +79,7 @@ export const ProductionView: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <Spin size="large" tip="Loading production dispatch console..." />
+        <Spin size="large" description="Loading production dispatch console..." />
       </div>
     );
   }
@@ -93,7 +93,7 @@ export const ProductionView: React.FC = () => {
             <Statistic
               title={<span style={{ fontSize: 11, color: '#6b7280' }}>{language === 'zh-CN' ? '调度工单数' : 'Active Dispatch'}</span>}
               value={18}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1677ff' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#1677ff' } }}
               prefix={<ToolOutlined />}
               suffix={<span style={{ fontSize: 11, color: '#faad14', marginLeft: 6 }}>2 {language === 'zh-CN' ? '临期' : 'Due'}</span>}
             />
@@ -106,7 +106,7 @@ export const ProductionView: React.FC = () => {
               title={<span style={{ fontSize: 11, color: '#6b7280' }}>{language === 'zh-CN' ? '按期开工率' : 'On-Schedule Rate'}</span>}
               value={94.4}
               precision={1}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#52c41a' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#52c41a' } }}
               prefix={<FieldTimeOutlined />}
               suffix="%"
             />
@@ -118,7 +118,7 @@ export const ProductionView: React.FC = () => {
             <Statistic
               title={<span style={{ fontSize: 11, color: '#6b7280' }}>{language === 'zh-CN' ? '车间在制品 (WIP)' : 'Shop Floor WIP'}</span>}
               value={3420}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1f2937' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#1f2937' } }}
               suffix={<span style={{ fontSize: 12, color: '#6b7280' }}>pcs</span>}
             />
           </Card>
@@ -130,7 +130,7 @@ export const ProductionView: React.FC = () => {
               title={<span style={{ fontSize: 11, color: '#6b7280' }}>{language === 'zh-CN' ? '一次合格率 (Yield)' : 'First Pass Yield'}</span>}
               value={98.6}
               precision={1}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#52c41a' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#52c41a' } }}
               prefix={<CheckCircleOutlined />}
               suffix="%"
             />
@@ -143,7 +143,7 @@ export const ProductionView: React.FC = () => {
               title={<span style={{ fontSize: 11, color: '#6b7280' }}>{language === 'zh-CN' ? '综合报废率 (Scrap)' : 'Scrap Rate'}</span>}
               value={0.8}
               precision={1}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#cf1322' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#cf1322' } }}
               prefix={<AlertOutlined />}
               suffix={<span style={{ fontSize: 11, color: '#6b7280', marginLeft: 4 }}>(&lt;1.2%)</span>}
             />

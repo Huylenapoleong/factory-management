@@ -32,8 +32,6 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         reasonType: isZh ? '周期盘点差异调整' : 'Cycle count discrepancy',
         note: '',
       });
-    } else {
-      form.resetFields();
     }
   }, [open, item, form, isZh]);
 
@@ -68,13 +66,19 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
       title={isZh ? '库存盘点与台账调整 (Stocktake Adjustment)' : 'Stocktake Adjustment'}
-      onCancel={onClose}
+      onCancel={handleCancel}
       onOk={handleSubmit}
       centered
+      forceRender
       confirmLoading={submitting}
       okText={isZh ? '确认调账' : 'Confirm Adjustment'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -169,7 +173,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         <Alert
           type="warning"
           showIcon
-          message={
+          title={
             isZh
               ? '调账操作将记入实时审计台账，影响当期物料成本核算。'
               : 'Adjustment will be logged into the permanent stock audit ledger.'

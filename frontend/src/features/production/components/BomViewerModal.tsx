@@ -168,7 +168,7 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
     >
       {loading ? (
         <div style={{ textAlign: 'center', padding: 32 }}>
-          <Spin tip="Calculating BOM material requirements..." />
+          <Spin description="Calculating BOM material requirements..." />
         </div>
       ) : (
         <Table

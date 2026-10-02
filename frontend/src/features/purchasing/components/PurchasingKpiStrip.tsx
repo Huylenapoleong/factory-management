@@ -33,7 +33,7 @@ export const PurchasingKpiStrip: React.FC = () => {
               </div>
             }
             value={28}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
                 +4.2% MoM
@@ -63,7 +63,7 @@ export const PurchasingKpiStrip: React.FC = () => {
               </div>
             }
             value={6}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span
                 style={{
@@ -103,7 +103,7 @@ export const PurchasingKpiStrip: React.FC = () => {
               </div>
             }
             value={2}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#dc2626' } }}
             suffix={
               <span
                 style={{
@@ -143,7 +143,7 @@ export const PurchasingKpiStrip: React.FC = () => {
               </div>
             }
             value={3}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>
                 {isZh ? '批 (140托盘)' : 'Batches (140p)'}
@@ -180,7 +180,7 @@ export const PurchasingKpiStrip: React.FC = () => {
                 M <span style={{ color: '#10b981' }}>78.4%</span>
               </span>
             }
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
           />
           <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
             Optimal Cost Index | FY26-Q4

@@ -222,7 +222,7 @@ export const ShopFloorKioskHud: React.FC = () => {
             percent={progressPercent}
             showInfo={false}
             strokeColor="#38bdf8"
-            trailColor="#334155"
+            railColor="#334155"
             size="small"
             style={{ width: 60, margin: 0 }}
           />

@@ -87,7 +87,7 @@ export const DashboardView: React.FC = () => {
   if (loading || !summary) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <Spin size="large" tip="Loading real-time operational telemetry..." />
+        <Spin size="large" description="Loading real-time operational telemetry..." />
       </div>
     );
   }

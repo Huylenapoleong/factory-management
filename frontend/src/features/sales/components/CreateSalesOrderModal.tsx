@@ -61,6 +61,7 @@ export const CreateSalesOrderModal: React.FC<CreateSalesOrderModalProps> = ({
       okText={isZh ? '确认生成订单' : 'Create Order'}
       cancelText={isZh ? '取消' : 'Cancel'}
       width={680}
+      forceRender
       styles={{ body: { paddingTop: 10 } }}
     >
       <Form
@@ -204,7 +205,7 @@ export const CreateSalesOrderModal: React.FC<CreateSalesOrderModalProps> = ({
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             isZh
               ? '确认订单后，系统将自动检查成品在库数并驱动车间工单排产调度。'
               : 'Order confirmation triggers inventory allocation and production order scheduling.'

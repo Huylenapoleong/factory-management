@@ -83,7 +83,7 @@ export const SalesView: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <Spin size="large" tip="Loading sales & outbound logistics console..." />
+        <Spin size="large" description="Loading sales & outbound logistics console..." />
       </div>
     );
   }

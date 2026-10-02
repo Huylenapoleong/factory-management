@@ -119,7 +119,7 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
         </div>
 
         <Steps
-          direction="vertical"
+          orientation="vertical"
           size="small"
           current={order.stepNumber - 1}
           items={steps.map((st) => ({
@@ -182,7 +182,7 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
               label={language === 'zh-CN' ? '本次合格数 (Qualified)' : 'Qualified Output'}
               rules={[{ required: true }]}
             >
-              <InputNumber min={0} max={1000} style={{ width: '100%' }} addonAfter="pcs" />
+              <InputNumber min={0} max={1000} style={{ width: '100%' }} suffix="pcs" />
             </Form.Item>
 
             <Form.Item
@@ -190,7 +190,7 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
               label={language === 'zh-CN' ? '报废数 (Defect/Scrap)' : 'Scrap Qty'}
               rules={[{ required: true }]}
             >
-              <InputNumber min={0} max={500} style={{ width: '100%' }} addonAfter="pcs" />
+              <InputNumber min={0} max={500} style={{ width: '100%' }} suffix="pcs" />
             </Form.Item>
           </div>
 
@@ -214,7 +214,7 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
               label={language === 'zh-CN' ? '设备工时 (Hours)' : 'Run Hours'}
               rules={[{ required: true }]}
             >
-              <InputNumber min={0.1} max={24} step={0.5} style={{ width: '100%' }} addonAfter="h" />
+              <InputNumber min={0.1} max={24} step={0.5} style={{ width: '100%' }} suffix="h" />
             </Form.Item>
           </div>
 

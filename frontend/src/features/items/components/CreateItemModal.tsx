@@ -62,7 +62,8 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
       width={680}
       okText={isZh ? '确认创建' : 'Create Item'}
       cancelText={isZh ? '取消' : 'Cancel'}
-      destroyOnClose
+      destroyOnHidden
+      forceRender
     >
       <Form form={form} layout="vertical" size="small" initialValues={{ type: 'RAW_MATERIAL' }}>
         <Row gutter={16}>

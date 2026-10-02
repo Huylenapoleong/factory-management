@@ -167,7 +167,7 @@ export const AuditView: React.FC = () => {
             <Statistic
               title={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>{isZh ? '今日审计事件总数' : 'TOTAL AUDIT EVENTS'}</span>}
               value={1492}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#1677ff' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#1677ff' } }}
               prefix={<AuditOutlined />}
             />
           </Card>
@@ -179,7 +179,7 @@ export const AuditView: React.FC = () => {
               title={<span style={{ fontSize: 11, color: '#15803d' }}>{isZh ? '合规溯源达成度' : 'COMPLIANCE INTEGRITY'}</span>}
               value={100}
               suffix="%"
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#15803d' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#15803d' } }}
               prefix={<SafetyCertificateOutlined />}
             />
           </Card>
@@ -190,7 +190,7 @@ export const AuditView: React.FC = () => {
             <Statistic
               title={<span style={{ fontSize: 11, color: '#d97706' }}>{isZh ? '质量异常评审 (NCR)' : 'FLAGGED NCRs'}</span>}
               value={1}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: '#d97706' }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: '#d97706' } }}
               prefix={<AlertOutlined />}
               suffix={<span style={{ fontSize: 11, color: '#b45309', marginLeft: 4 }}>Pending Review</span>}
             />
@@ -202,7 +202,7 @@ export const AuditView: React.FC = () => {
             <Statistic
               title={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>{isZh ? '在线车间工控机 / PDA' : 'ONLINE TERMINALS'}</span>}
               value={24}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+              styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
               suffix={<span style={{ fontSize: 11, color: '#10b981', marginLeft: 6 }}>TLS 1.3 Active</span>}
             />
           </Card>

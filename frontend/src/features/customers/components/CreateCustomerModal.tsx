@@ -61,7 +61,8 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
       width={680}
       okText={isZh ? '确认保存' : 'Save Customer'}
       cancelText={isZh ? '取消' : 'Cancel'}
-      destroyOnClose
+      destroyOnHidden
+      forceRender
     >
       <Form form={form} layout="vertical" size="small" initialValues={{ paymentTerms: 'Net 30', creditLimit: 2000000 }}>
         <Row gutter={16}>

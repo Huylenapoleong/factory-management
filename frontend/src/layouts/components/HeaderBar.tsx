@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Badge, Avatar, Button, Space, Tag, Tooltip, Dropdown, Modal, theme } from 'antd';
+import { Select, Badge, Avatar, Button, Space, Tag, Tooltip, Dropdown, App, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   BankOutlined,
@@ -33,6 +33,7 @@ export const HeaderBar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { token } = theme.useToken();
+  const { modal } = App.useApp();
   const {
     language,
     setLanguage,
@@ -68,7 +69,7 @@ export const HeaderBar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    Modal.confirm({
+    modal.confirm({
       title: t('auth.logoutConfirm'),
       content: language === 'zh-CN' ? '退出后将返回终端登录页面。' : 'You will be redirected to the terminal login screen.',
       okText: t('auth.logout'),

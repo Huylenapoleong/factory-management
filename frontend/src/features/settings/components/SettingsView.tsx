@@ -82,15 +82,16 @@ export const SettingsView: React.FC = () => {
         }
         style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
       >
-        <Tabs
-          defaultActiveKey="workshop"
-          items={[
-            {
-              key: 'workshop',
-              icon: <GlobalOutlined />,
-              label: isZh ? '车间基础参数' : 'Workshop Parameters',
-              children: (
-                <Form form={form} layout="vertical" size="small" disabled={loading}>
+        <Form form={form} layout="vertical" size="small" disabled={loading}>
+          <Tabs
+            defaultActiveKey="workshop"
+            items={[
+              {
+                key: 'workshop',
+                icon: <GlobalOutlined />,
+                label: isZh ? '车间基础参数' : 'Workshop Parameters',
+                children: (
+                  <div>
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item
@@ -175,7 +176,7 @@ export const SettingsView: React.FC = () => {
                       ]}
                     />
                   </div>
-                </Form>
+                </div>
               ),
             },
             {
@@ -183,11 +184,11 @@ export const SettingsView: React.FC = () => {
               icon: <ApiOutlined />,
               label: isZh ? '工业总线与 SCADA 网关' : 'Industrial SCADA & ERP Gateway',
               children: (
-                <Form form={form} layout="vertical" size="small" disabled={loading}>
+                <div>
                   <Alert
                     type="info"
                     showIcon
-                    message={
+                    title={
                       isZh
                         ? 'OPC-UA 与 SAP S/4HANA 实时总线服务保持长连接，生产遥测数据与出入库单据实时双向校验。'
                         : 'OPC-UA and SAP S/4HANA enterprise service bus maintain high-availability connectivity.'
@@ -232,7 +233,7 @@ export const SettingsView: React.FC = () => {
                       {isZh ? '测试 SAP S/4HANA 网关' : 'Test SAP Gateway'}
                     </Button>
                   </div>
-                </Form>
+                </div>
               ),
             },
             {
@@ -294,7 +295,8 @@ export const SettingsView: React.FC = () => {
               ),
             },
           ]}
-        />
+          />
+        </Form>
       </Card>
     </div>
   );

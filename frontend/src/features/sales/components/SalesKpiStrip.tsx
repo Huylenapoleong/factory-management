@@ -33,7 +33,7 @@ export const SalesKpiStrip: React.FC = () => {
               </div>
             }
             value={45}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
                 +8.4% MoM
@@ -63,7 +63,7 @@ export const SalesKpiStrip: React.FC = () => {
               </div>
             }
             value={12}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span
                 style={{
@@ -105,7 +105,7 @@ export const SalesKpiStrip: React.FC = () => {
             value={96.8}
             precision={1}
             suffix="%"
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#15803d' }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#15803d' } }}
           />
           <div style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
             {isZh ? '基线: ≥96.0% (A+评级)' : 'Target: ≥96.0% (Grade A+)'}
@@ -130,7 +130,7 @@ export const SalesKpiStrip: React.FC = () => {
               </div>
             }
             value={4}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>
                 {isZh ? '批出海产品' : 'Export Batches'}
@@ -167,7 +167,7 @@ export const SalesKpiStrip: React.FC = () => {
                 M <span style={{ color: '#10b981' }}>88.2%</span>
               </span>
             }
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
           />
           <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
             {isZh ? '约¥27.7M | 达成率 88.2%' : '¥27.7M | 88.2% Q4 Target'}

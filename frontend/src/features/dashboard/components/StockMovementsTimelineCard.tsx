@@ -84,8 +84,8 @@ export const StockMovementsTimelineCard: React.FC<StockMovementsTimelineCardProp
       <Timeline
         style={{ marginTop: 6 }}
         items={filteredMovements.map((mov) => ({
-          dot: getMovementDot(mov.type),
-          children: (
+          icon: getMovementDot(mov.type),
+          content: (
             <div style={{ paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                 <span className="tnum" style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>

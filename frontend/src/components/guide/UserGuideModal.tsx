@@ -129,7 +129,7 @@ export const UserGuideModal: React.FC = () => {
       children: (
         <div style={{ padding: '8px 0' }}>
           <Alert
-            message={isZh ? 'WIFIM MES 工业制造闭环管理规范' : 'WIFIM MES Closed-Loop Manufacturing Execution'}
+            title={isZh ? 'WIFIM MES 工业制造闭环管理规范' : 'WIFIM MES Closed-Loop Manufacturing Execution'}
             description={
               isZh
                 ? '从生产计划下发到成品出库，所有物料流与工序流需严格遵循工序交接扫描与批次条码追踪。'
@@ -141,41 +141,41 @@ export const UserGuideModal: React.FC = () => {
           />
 
           <Steps
-            direction="vertical"
+            orientation="vertical"
             size="small"
             current={-1}
             items={[
               {
                 title: isZh ? '1. 计划下达与工单排程 (Work Order Scheduling)' : '1. Work Order Scheduling & Dispatch',
-                description: isZh
+                content: isZh
                   ? '调度员在 [生产工单] 模块中依据销售订单与BOM结构下达工单，系统自动核验关键物料齐套率并绑定生产机台。'
                   : 'Dispatch orders linked to sales demands and verified BOM components.',
                 icon: <ToolOutlined style={{ color: token.colorPrimary }} />,
               },
               {
                 title: isZh ? '2. 齐套物料领用与配送 (Material Kitting & Issue)' : '2. Material Kitting & Staging',
-                description: isZh
+                content: isZh
                   ? '仓库管理员在 [库存管理] 模块中根据工单领料单拣配原材料，核对批次号并执行扣库，配送至线边仓缓存区。'
                   : 'Warehouse kits raw materials and stages parts at line-side buffer storage.',
                 icon: <InboxOutlined style={{ color: '#faad14' }} />,
               },
               {
                 title: isZh ? '3. 产线加工与现场报工 (Shop-Floor Production & Reporting)' : '3. Floor Execution & Machine Reporting',
-                description: isZh
+                content: isZh
                   ? '机台操作工在工位机端认领工单，记录首件检验、加工良品数与报废数量，系统实时刷新 Hourly Throughput 产能趋势。'
                   : 'Operators claim orders, report良品 counts, and update hourly throughput telemetries.',
                 icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
               },
               {
                 title: isZh ? '4. 质量终检与入库质保 (FQC & Finished Goods Stock In)' : '4. Quality Sign-off & Warehouse Receipt',
-                description: isZh
+                content: isZh
                   ? '质检工程师核验完工尺寸与性能指标，签发合格证，成品自动入库上架，系统同步写回全局审计日志。'
                   : 'Inspectors sign off quality certificates, stock in finished goods, and update audit trail.',
                 icon: <SafetyCertificateOutlined style={{ color: token.colorPrimary }} />,
               },
               {
                 title: isZh ? '5. 销售出库与物流装运 (Outbound Dispatch & Shipping)' : '5. Outbound Shipping & Delivery Tracking',
-                description: isZh
+                content: isZh
                   ? '物流人员按待发货出库单打包装托，承运商取货并更新提货单据，完成闭环。'
                   : 'Logistics packages staging units, dispatches carriers, and closes the delivery cycle.',
                 icon: <ShoppingCartOutlined style={{ color: '#13c2c2' }} />,
@@ -229,7 +229,7 @@ export const UserGuideModal: React.FC = () => {
       children: (
         <div style={{ padding: '8px 0' }}>
           <Alert
-            message={isZh ? '三级安灯响应机制 (3-Level Andon Response)' : 'Three-Level Andon Protocol'}
+            title={isZh ? '三级安灯响应机制 (3-Level Andon Response)' : 'Three-Level Andon Protocol'}
             description={
               isZh
                 ? '当发生机床刀具破损、安全传感器触发或关键伺服停机时，车间蜂鸣音响报警将自动响起。'
@@ -292,7 +292,7 @@ export const UserGuideModal: React.FC = () => {
       }
       width={840}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       styles={{ body: { maxHeight: '70vh', overflowY: 'auto', paddingRight: 8 } }}
     >
       <Tabs defaultActiveKey="flow" items={tabItems} />

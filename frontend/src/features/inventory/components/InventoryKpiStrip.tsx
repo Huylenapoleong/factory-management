@@ -33,7 +33,7 @@ export const InventoryKpiStrip: React.FC = () => {
               </div>
             }
             value={1482}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
                 +12 {isZh ? '本周新增' : 'this week'}
@@ -70,7 +70,7 @@ export const InventoryKpiStrip: React.FC = () => {
                 M <span style={{ color: token.colorTextSecondary }}>({isZh ? '约¥30.8M' : '¥30.8M'})</span>
               </span>
             }
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
           />
           <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
             MoM -2.4% | {isZh ? '周转率 14.2天' : 'Turnover 14.2d'}
@@ -95,7 +95,7 @@ export const InventoryKpiStrip: React.FC = () => {
               </div>
             }
             value={14}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#dc2626' } }}
             suffix={
               <span
                 style={{
@@ -135,7 +135,7 @@ export const InventoryKpiStrip: React.FC = () => {
               </div>
             }
             value={180}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={<span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>{isZh ? '托盘' : 'pallets'}</span>}
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
@@ -161,7 +161,7 @@ export const InventoryKpiStrip: React.FC = () => {
               </div>
             }
             value={42}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span
                 style={{

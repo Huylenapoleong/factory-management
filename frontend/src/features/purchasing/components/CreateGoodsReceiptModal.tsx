@@ -43,8 +43,6 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
           locationCode: 'WH-01 / A-03-02',
         });
       }
-    } else {
-      form.resetFields();
     }
   }, [open, po, form]);
 
@@ -79,13 +77,19 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
       title={isZh ? '办理采购到货收货 (Create Goods Receipt)' : 'Create Goods Receipt'}
-      onCancel={onClose}
+      onCancel={handleCancel}
       onOk={handleSubmit}
       centered
+      forceRender
       confirmLoading={submitting}
       okText={isZh ? '确认到货建单' : 'Submit Receipt'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -158,7 +162,7 @@ export const CreateGoodsReceiptModal: React.FC<CreateGoodsReceiptModalProps> = (
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             isZh
               ? '创建收货单后，质检员在码头抽检通过即可一键上架入库，库存与财务应付账款同步增加。'
               : 'QC inspection at bay is required before posting to stock and AP accrual.'

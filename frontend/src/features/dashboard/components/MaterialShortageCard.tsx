@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Modal, message } from 'antd';
+import { Card, Table, Tag, Button, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   AlertFilled,
@@ -23,10 +23,11 @@ export const MaterialShortageCard: React.FC<MaterialShortageCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const { language } = useAppStore();
+  const { modal, message } = App.useApp();
   const [loadingCode, setLoadingCode] = useState<string | null>(null);
 
   const handleQuickPo = (item: MaterialShortageItem) => {
-    Modal.confirm({
+    modal.confirm({
       title: `${t('dashboard.quickPo')} - ${language === 'zh-CN' ? item.materialNameZh : item.materialName}`,
       icon: <ShoppingCartOutlined style={{ color: '#1677ff' }} />,
       content: (

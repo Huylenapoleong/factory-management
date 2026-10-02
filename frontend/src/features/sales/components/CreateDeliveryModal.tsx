@@ -23,23 +23,19 @@ export const CreateDeliveryModal: React.FC<CreateDeliveryModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      if (order) {
-        form.setFieldsValue({
-          salesOrderId: order.id,
-          warehouseId: 3, // finished goods warehouse
-          shippingBay: 'Dock Bay 07 - Outbound Export',
-          carrierName: 'SF Heavy Freight Express (顺丰重货专运)',
-          carrierTrackingNo: 'SF-LOG-8849201948',
-          truckPlate: '苏E-98K21',
-          driverContact: 'Master Liu (刘师傅) · +86 138-1920-3341',
-          palletsCount: 4,
-          grossWeightKg: 1840,
-          volumeCbm: 5.6,
-        });
-      }
-    } else {
-      form.resetFields();
+    if (open && order) {
+      form.setFieldsValue({
+        salesOrderId: order.id,
+        warehouseId: 3, // finished goods warehouse
+        shippingBay: 'Dock Bay 07 - Outbound Export',
+        carrierName: 'SF Heavy Freight Express (顺丰重货专运)',
+        carrierTrackingNo: 'SF-LOG-8849201948',
+        truckPlate: '苏E-98K21',
+        driverContact: 'Master Liu (刘师傅) · +86 138-1920-3341',
+        palletsCount: 4,
+        grossWeightKg: 1840,
+        volumeCbm: 5.6,
+      });
     }
   }, [open, order, form]);
 
@@ -77,13 +73,19 @@ export const CreateDeliveryModal: React.FC<CreateDeliveryModalProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
       title={isZh ? '办理销售出库发运 (Stage Outbound Delivery)' : 'Stage Outbound Delivery'}
-      onCancel={onClose}
+      onCancel={handleCancel}
       onOk={handleSubmit}
       centered
+      forceRender
       confirmLoading={submitting}
       okText={isZh ? '生成发货单' : 'Stage Delivery'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -179,7 +181,7 @@ export const CreateDeliveryModal: React.FC<CreateDeliveryModalProps> = ({
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             isZh
               ? '生成发货单后，现场调度点击【确认发货出库】将自动扣减对应仓库的可用与现有库存。'
               : 'Posting outbound dispatch will deduct inventory stock balance atomically.'

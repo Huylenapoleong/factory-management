@@ -37,8 +37,6 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
           reason: isZh ? '车间产线领用调拨' : 'Line replenishment transfer',
         });
       }
-    } else {
-      form.resetFields();
     }
   }, [open, item, form, isZh]);
 
@@ -70,13 +68,19 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
       title={isZh ? '库位物料调拨单 (Stock Transfer)' : 'Stock Transfer Order'}
-      onCancel={onClose}
+      onCancel={handleCancel}
       onOk={handleSubmit}
       centered
+      forceRender
       confirmLoading={submitting}
       okText={isZh ? '确认调拨' : 'Confirm Transfer'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -172,7 +176,7 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             isZh
               ? '调拨确认后，系统将自动核减源库位可用数，并在目标库位生成在途接收凭证。'
               : 'Transfer will instantly adjust available balance and create receipt ledger record.'
