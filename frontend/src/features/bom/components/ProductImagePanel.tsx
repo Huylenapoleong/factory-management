@@ -27,13 +27,20 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
     staleTime: Infinity,
   });
 
-  const objectUrl = useMemo(() => (imageQuery.data ? URL.createObjectURL(imageQuery.data) : null), [imageQuery.data]);
-  useEffect(() => () => {
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-  }, [objectUrl]);
+  const objectUrl = useMemo(
+    () => (imageQuery.data ? URL.createObjectURL(imageQuery.data) : null),
+    [imageQuery.data],
+  );
+  useEffect(
+    () => () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    },
+    [objectUrl],
+  );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['bom-analysis'] });
-  const errorText = (err: unknown, fallback: string) => (err as { message?: string })?.message || fallback;
+  const errorText = (err: unknown, fallback: string) =>
+    (err as { message?: string })?.message || fallback;
 
   const upload = useMutation({
     mutationFn: (file: File) => bomService.uploadItemImage(productId, file),
@@ -41,7 +48,8 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
       message.success(isZh ? '已保存产品图片' : 'Product image saved');
       refresh();
     },
-    onError: (err) => message.error(errorText(err, isZh ? '图片上传失败' : 'Could not upload image')),
+    onError: (err) =>
+      message.error(errorText(err, isZh ? '图片上传失败' : 'Could not upload image')),
   });
 
   const remove = useMutation({
@@ -55,7 +63,9 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
 
   const beforeUpload = (file: File) => {
     if (!ACCEPT.split(',').includes(file.type)) {
-      message.error(isZh ? '仅支持 PNG、JPG、WEBP 图片' : 'Only PNG, JPG or WEBP images are supported');
+      message.error(
+        isZh ? '仅支持 PNG、JPG、WEBP 图片' : 'Only PNG, JPG or WEBP images are supported',
+      );
       return Upload.LIST_IGNORE;
     }
     if (file.size > MAX_BYTES) {
@@ -70,7 +80,10 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
 
   if (version !== null && (imageQuery.isLoading || !objectUrl)) {
     return (
-      <div className="bom-image-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        className="bom-image-panel"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
         <Skeleton.Image active style={{ width: 200, height: 200 }} />
       </div>
     );
@@ -78,7 +91,10 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
 
   if (objectUrl) {
     return (
-      <div className="bom-image-panel" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div
+        className="bom-image-panel"
+        style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+      >
         <div
           style={{
             flexGrow: 1,
@@ -92,10 +108,19 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
             overflow: 'hidden',
           }}
         >
-          <img src={objectUrl} alt={productName} style={{ maxWidth: '100%', maxHeight: 280, objectFit: 'contain', display: 'block' }} />
+          <img
+            src={objectUrl}
+            alt={productName}
+            style={{ maxWidth: '100%', maxHeight: 280, objectFit: 'contain', display: 'block' }}
+          />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Upload accept={ACCEPT} showUploadList={false} beforeUpload={beforeUpload} style={{ flexGrow: 1 }}>
+          <Upload
+            accept={ACCEPT}
+            showUploadList={false}
+            beforeUpload={beforeUpload}
+            style={{ flexGrow: 1 }}
+          >
             <Button size="small" icon={<SwapOutlined />} loading={upload.isPending} block>
               {isZh ? '更换图片' : 'Replace'}
             </Button>
@@ -107,7 +132,13 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
             okButtonProps={{ danger: true }}
             onConfirm={() => remove.mutate()}
           >
-            <Button size="small" danger icon={<DeleteOutlined />} loading={remove.isPending} aria-label={isZh ? '删除图片' : 'Remove image'} />
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              loading={remove.isPending}
+              aria-label={isZh ? '删除图片' : 'Remove image'}
+            />
           </Popconfirm>
         </div>
       </div>
@@ -144,12 +175,16 @@ export const ProductImagePanel: React.FC<ProductImagePanelProps> = ({ analysis, 
             {isZh ? '添加产品图片' : 'Add a product image'}
           </span>
           <span style={{ fontSize: 12, color: token.colorTextSecondary, lineHeight: 1.5 }}>
-            {isZh ? '照片或图纸 · PNG、JPG、WEBP · 最大 5 MB' : 'Photo or drawing · PNG, JPG, WEBP · up to 5 MB'}
+            {isZh
+              ? '照片或图纸 · PNG、JPG、WEBP · 最大 5 MB'
+              : 'Photo or drawing · PNG, JPG, WEBP · up to 5 MB'}
           </span>
           <Button type="primary" size="small" icon={<UploadOutlined />} loading={upload.isPending}>
             {isZh ? '上传图片' : 'Upload'}
           </Button>
-          <span style={{ fontSize: 11, color: token.colorTextTertiary }}>{isZh ? '或拖放到此处' : 'or drop a file here'}</span>
+          <span style={{ fontSize: 11, color: token.colorTextTertiary }}>
+            {isZh ? '或拖放到此处' : 'or drop a file here'}
+          </span>
         </div>
       </Upload.Dragger>
     </div>

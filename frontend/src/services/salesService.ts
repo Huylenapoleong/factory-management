@@ -12,47 +12,51 @@ class SalesService {
       const res = await apiClient.get('/sales-orders', {
         params: { search, status: status !== 'ALL' ? status : undefined, size: 50 },
       });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            soNo: string;
-            customerId: number;
-            customerCode?: string;
-            customerName?: string;
-            orderDate?: string;
-            expectedDeliveryDate?: string;
-            status: string;
-            currency?: string;
-            totalAmount?: number;
-            note?: string;
-            items?: Array<{ quantity: number }>;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              soNo: string;
+              customerId: number;
+              customerCode?: string;
+              customerName?: string;
+              orderDate?: string;
+              expectedDeliveryDate?: string;
+              status: string;
+              currency?: string;
+              totalAmount?: number;
+              note?: string;
+              items?: Array<{ quantity: number }>;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
         return rawList.map((so) => ({
           id: so.id,
           orderNo: so.soNo,
-          erpSoNumber: `SAP SD# 504900${so.id}`,
+          erpSoNumber: so.soNo,
           customerId: so.customerId,
-          customerNameEn: so.customerName || 'Enterprise Customer',
-          customerNameZh: so.customerName || '企业客户',
-          customerRegion: `${so.customerCode || 'CUST'} Logistics Gateway`,
-          itemLinesCount: so.items?.length || 1,
-          itemOverviewEn: so.note || 'Contract Manufacturing Delivery',
-          itemOverviewZh: so.note || '定制工业交付',
+          customerNameEn: so.customerName || '—',
+          customerNameZh: so.customerName || '—',
+          customerRegion: so.customerCode ? `CUST-${so.customerCode}` : '—',
+          itemLinesCount: so.items?.length ?? 0,
+          itemOverviewEn: so.note || '—',
+          itemOverviewZh: so.note || '—',
           totalAmount: Number(so.totalAmount || 0),
           currency: so.currency || 'USD',
-          paymentTerms: 'T/T 60 Days',
-          orderDate: so.orderDate || '2026-10-01',
-          deliveryDate: so.expectedDeliveryDate || '2026-10-05',
-          deliveryStatusLabel: so.status === 'CONFIRMED' ? 'Confirmed (In Queue)' : so.status,
-          fulfillmentPercent: 85,
-          status: (so.status === 'CONFIRMED' ? 'CONFIRMED' : 'READY_TO_SHIP') as SalesOrderSummary['status'],
-          isUrgent: so.id === 1,
+          paymentTerms: '—',
+          orderDate: so.orderDate || '',
+          deliveryDate: so.expectedDeliveryDate || '',
+          deliveryStatusLabel: so.status === 'CONFIRMED' ? 'Confirmed' : so.status,
+          fulfillmentPercent: 0,
+          status: (so.status === 'CONFIRMED'
+            ? 'CONFIRMED'
+            : 'READY_TO_SHIP') as SalesOrderSummary['status'],
+          isUrgent: false,
         }));
       }
       return [];
@@ -64,26 +68,28 @@ class SalesService {
   public async getDeliveries(): Promise<OutboundDeliverySummary[]> {
     try {
       const res = await apiClient.get('/deliveries', { params: { size: 50 } });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            deliveryNo: string;
-            salesOrderId: number;
-            soNo: string;
-            customerId: number;
-            customerName?: string;
-            warehouseId: number;
-            warehouseCode?: string;
-            warehouseNameEn?: string;
-            deliveryDate?: string;
-            status: string;
-            note?: string;
-            createdByUsername?: string;
-            items?: Array<{ quantity: number }>;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              deliveryNo: string;
+              salesOrderId: number;
+              soNo: string;
+              customerId: number;
+              customerName?: string;
+              warehouseId: number;
+              warehouseCode?: string;
+              warehouseNameEn?: string;
+              deliveryDate?: string;
+              status: string;
+              note?: string;
+              createdByUsername?: string;
+              items?: Array<{ quantity: number }>;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
@@ -92,20 +98,22 @@ class SalesService {
           deliveryNo: del.deliveryNo,
           salesOrderId: del.salesOrderId,
           salesOrderNo: del.soNo,
-          customerNameEn: del.customerName || 'Enterprise Customer',
-          customerNameZh: del.customerName || '企业客户',
-          shippingBay: `Bay 0${del.warehouseId || 7}`,
-          carrierName: 'SF Heavy Logistics (顺丰重运)',
-          carrierTrackingNo: 'SF149204-88',
-          truckPlate: '苏E-98K21',
-          driverContact: 'Captain Zhou (周师傅) · 139-0192-8821',
-          palletsCount: 6,
-          grossWeightKg: 2450,
-          volumeCbm: 8.5,
-          customsSeal: `SEAL-CN-202610-0${del.id}`,
-          itemOverview: del.note || 'Outbound cargo verified',
-          status: (del.status === 'POSTED' ? 'DISPATCHED' : 'STAGED') as OutboundDeliverySummary['status'],
-          dispatchedAt: del.deliveryDate || 'Today',
+          customerNameEn: del.customerName || '—',
+          customerNameZh: del.customerName || '—',
+          shippingBay: del.warehouseCode ? `WH-${del.warehouseCode}` : '—',
+          carrierName: '—',
+          carrierTrackingNo: '—',
+          truckPlate: '—',
+          driverContact: '—',
+          palletsCount: 0,
+          grossWeightKg: 0,
+          volumeCbm: 0,
+          customsSeal: '',
+          itemOverview: del.note || '—',
+          status: (del.status === 'POSTED'
+            ? 'DISPATCHED'
+            : 'STAGED') as OutboundDeliverySummary['status'],
+          dispatchedAt: del.deliveryDate || '',
         }));
       }
       return [];
@@ -136,7 +144,25 @@ class SalesService {
 
   public async createDelivery(payload: CreateDeliveryPayload): Promise<boolean> {
     try {
-      await apiClient.post('/deliveries', payload);
+      const noteDetails = [
+        payload.shippingBay,
+        payload.carrierName,
+        payload.carrierTrackingNo ? `Tracking: ${payload.carrierTrackingNo}` : undefined,
+        payload.truckPlate ? `Plate: ${payload.truckPlate}` : undefined,
+        payload.driverContact ? `Driver: ${payload.driverContact}` : undefined,
+        payload.note,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
+      const body = {
+        salesOrderId: payload.salesOrderId,
+        warehouseId: payload.warehouseId,
+        deliveryDate: payload.deliveryDate || new Date().toISOString().split('T')[0],
+        note: noteDetails || undefined,
+        items: payload.items,
+      };
+      await apiClient.post('/deliveries', body);
       return true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create delivery order';
@@ -150,6 +176,16 @@ class SalesService {
       return true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to post delivery dispatch';
+      throw new Error(message, { cause: err });
+    }
+  }
+
+  public async cancelDelivery(id: number): Promise<boolean> {
+    try {
+      await apiClient.post(`/deliveries/${id}/cancel`);
+      return true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to cancel delivery';
       throw new Error(message, { cause: err });
     }
   }

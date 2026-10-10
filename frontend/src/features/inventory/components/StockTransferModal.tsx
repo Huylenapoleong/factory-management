@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, message, Descriptions, Alert } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Descriptions, Alert } from 'antd';
+import { message } from '@/utils/antdApp';
 import { useAppStore } from '@/stores/useAppStore';
 import { inventoryService } from '@/services/inventoryService';
 import { InventoryBalanceItem, WarehouseSummary } from '../types';
@@ -33,14 +34,12 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
           fromLocationCode: item.locationCode,
           quantity: 1,
           toWarehouseId: item.warehouseId === 1 ? 2 : 1,
-          toLocationCode: item.warehouseId === 1 ? 'WH-02 / B-02-01' : 'WH-01 / A-02-05',
-          reason: isZh ? '车间产线领用调拨' : 'Line replenishment transfer',
+          toLocationCode: '',
+          reason: '',
         });
       }
-    } else {
-      form.resetFields();
     }
-  }, [open, item, form, isZh]);
+  }, [open, item, form]);
 
   const handleSubmit = async () => {
     try {
@@ -57,7 +56,9 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
       });
 
       if (success) {
-        message.success(isZh ? '物料调拨成功，台账已实时同步' : 'Stock transfer completed successfully');
+        message.success(
+          isZh ? '物料调拨成功，台账已实时同步' : 'Stock transfer completed successfully',
+        );
         onSuccess();
         onClose();
       } else {
@@ -70,13 +71,19 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      title={isZh ? '库位物料调拨单 (Stock Transfer)' : 'Stock Transfer Order'}
-      onCancel={onClose}
+      title={isZh ? '库位物料调拨单' : 'Stock Transfer Order'}
+      onCancel={handleCancel}
       onOk={handleSubmit}
       centered
+      forceRender
       confirmLoading={submitting}
       okText={isZh ? '确认调拨' : 'Confirm Transfer'}
       cancelText={isZh ? '取消' : 'Cancel'}
@@ -85,25 +92,48 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
     >
       {item && (
         <div style={{ marginBottom: 14 }}>
-          <Descriptions size="small" column={2} bordered>
-            <Descriptions.Item label={isZh ? '调拨物料' : 'Item'}>
-              <span style={{ fontWeight: 600, color: '#1677ff' }}>{item.itemCode}</span>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>
-                {isZh ? item.itemNameZh : item.itemNameEn}
-              </div>
-            </Descriptions.Item>
-            <Descriptions.Item label={isZh ? '当前批次' : 'Lot No'}>
-              <span className="tnum" style={{ fontFamily: 'monospace' }}>{item.lotNumber}</span>
-            </Descriptions.Item>
-            <Descriptions.Item label={isZh ? '源库位' : 'From Location'}>
-              {item.locationCode}
-            </Descriptions.Item>
-            <Descriptions.Item label={isZh ? '当前可用' : 'Available Qty'}>
-              <span className="tnum" style={{ fontWeight: 700, color: '#15803d' }}>
-                {item.availableQuantity} {item.itemUnitCode}
-              </span>
-            </Descriptions.Item>
-          </Descriptions>
+          <Descriptions
+            size="small"
+            column={2}
+            bordered
+            items={[
+              {
+                key: 'item',
+                label: isZh ? '调拨物料' : 'Item',
+                children: (
+                  <div>
+                    <span style={{ fontWeight: 600, color: '#1677ff' }}>{item.itemCode}</span>
+                    <div style={{ fontSize: 11, color: '#6b7280' }}>
+                      {isZh ? item.itemNameZh : item.itemNameEn}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'lot',
+                label: isZh ? '当前批次' : 'Lot No',
+                children: (
+                  <span className="tnum" style={{ fontFamily: 'monospace' }}>
+                    {item.lotNumber}
+                  </span>
+                ),
+              },
+              {
+                key: 'from',
+                label: isZh ? '源库位' : 'From Location',
+                children: item.locationCode,
+              },
+              {
+                key: 'available',
+                label: isZh ? '当前可用' : 'Available Qty',
+                children: (
+                  <span className="tnum" style={{ fontWeight: 700, color: '#15803d' }}>
+                    {item.availableQuantity} {item.itemUnitCode}
+                  </span>
+                ),
+              },
+            ]}
+          />
         </div>
       )}
 
@@ -124,7 +154,7 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
 
           <Form.Item
             name="toLocationCode"
-            label={isZh ? '目的库位 (Bin Code)' : 'Destination Bin'}
+            label={isZh ? '目的库位' : 'Destination Bin'}
             rules={[{ required: true, message: 'Please input target bin code' }]}
           >
             <Input placeholder="e.g. WH-02 / B-02-01" />
@@ -140,7 +170,11 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
               {
                 validator: (_, val) => {
                   if (item && val > item.availableQuantity) {
-                    return Promise.reject(new Error(isZh ? '调拨数量不可超过当前可用库存' : 'Exceeds available quantity'));
+                    return Promise.reject(
+                      new Error(
+                        isZh ? '调拨数量不可超过当前可用库存' : 'Exceeds available quantity',
+                      ),
+                    );
                   }
                   return Promise.resolve();
                 },
@@ -161,9 +195,18 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
           >
             <Select
               options={[
-                { value: isZh ? '车间产线领用调拨' : 'Line replenishment transfer', label: isZh ? '车间产线领用调拨' : 'Line Replenishment' },
-                { value: isZh ? '仓库库容均衡移库' : 'Warehouse balancing', label: isZh ? '仓库库容均衡移库' : 'Warehouse Balancing' },
-                { value: isZh ? '不良品隔离入库' : 'Defect quarantine', label: isZh ? '不良品隔离入库' : 'Defect Quarantine' },
+                {
+                  value: isZh ? '车间产线领用调拨' : 'Line replenishment transfer',
+                  label: isZh ? '车间产线领用调拨' : 'Line Replenishment',
+                },
+                {
+                  value: isZh ? '仓库库容均衡移库' : 'Warehouse balancing',
+                  label: isZh ? '仓库库容均衡移库' : 'Warehouse Balancing',
+                },
+                {
+                  value: isZh ? '不良品隔离入库' : 'Defect quarantine',
+                  label: isZh ? '不良品隔离入库' : 'Defect Quarantine',
+                },
               ]}
             />
           </Form.Item>
@@ -172,7 +215,7 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             isZh
               ? '调拨确认后，系统将自动核减源库位可用数，并在目标库位生成在途接收凭证。'
               : 'Transfer will instantly adjust available balance and create receipt ledger record.'

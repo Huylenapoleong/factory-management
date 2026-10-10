@@ -15,6 +15,10 @@ interface AppState {
   kioskPlaying: boolean;
   kioskInterval: number; // seconds, default 30
   language: 'en' | 'zh-CN';
+  activeWarehouseId: number | null;
+  refreshKey: number;
+  triggerRefresh: () => void;
+  setActiveWarehouseId: (id: number | null) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -30,7 +34,8 @@ interface AppState {
 }
 
 const initialTheme = (localStorage.getItem('wifim_theme_mode') as ThemeMode) || 'light';
-const initialDensity = (localStorage.getItem('wifim_display_density') as DisplayDensity) || 'standard';
+const initialDensity =
+  (localStorage.getItem('wifim_display_density') as DisplayDensity) || 'standard';
 const initialRefresh = Number(localStorage.getItem('wifim_refresh_interval') || '30');
 const initialSound = localStorage.getItem('wifim_sound_alerts') !== 'false'; // default enabled
 
@@ -46,6 +51,19 @@ export const useAppStore = create<AppState>((set) => ({
   kioskPlaying: true,
   kioskInterval: 30,
   language: (localStorage.getItem('i18nextLng') as 'en' | 'zh-CN') || 'en',
+  activeWarehouseId: localStorage.getItem('wifim_active_warehouse_id')
+    ? Number(localStorage.getItem('wifim_active_warehouse_id'))
+    : null,
+  refreshKey: 0,
+  triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
+  setActiveWarehouseId: (id) => {
+    if (id !== null) {
+      localStorage.setItem('wifim_active_warehouse_id', String(id));
+    } else {
+      localStorage.removeItem('wifim_active_warehouse_id');
+    }
+    set({ activeWarehouseId: id });
+  },
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   setThemeMode: (mode) => {

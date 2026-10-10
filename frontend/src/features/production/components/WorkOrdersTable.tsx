@@ -1,11 +1,12 @@
 import React from 'react';
-import { Table, Tag, Progress, Button, Space, Tooltip, Modal, message } from 'antd';
+import { Table, Tag, Progress, Button, Space, Tooltip, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   InboxOutlined,
   ThunderboltOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
@@ -29,10 +30,14 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
 }) => {
   const { t } = useTranslation();
   const { language } = useAppStore();
+  const { modal, message } = App.useApp();
 
   const handleFinishReceipt = (order: ProductionOrder) => {
-    Modal.confirm({
-      title: language === 'zh-CN' ? `确认完工入库: ${order.orderNo}` : `Confirm Finished Goods Receipt: ${order.orderNo}`,
+    modal.confirm({
+      title:
+        language === 'zh-CN'
+          ? `确认完工入库: ${order.orderNo}`
+          : `Confirm Finished Goods Receipt: ${order.orderNo}`,
       icon: <ExclamationCircleOutlined style={{ color: '#1677ff' }} />,
       content: (
         <div>
@@ -41,8 +46,18 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
               ? `确认将工单 ${order.orderNo} 的合格产品 (${order.completedQty} ${order.uom}) 办理入库到成品库？`
               : `Confirm receipt of ${order.completedQty} ${order.uom} into Finished Goods Warehouse?`}
           </p>
-          <div style={{ fontSize: 12, color: '#6b7280', padding: 8, backgroundColor: '#f9fafb', borderRadius: 4 }}>
-            <div>Product: {order.productCode} - {order.productName}</div>
+          <div
+            style={{
+              fontSize: 12,
+              color: '#6b7280',
+              padding: 8,
+              backgroundColor: '#f9fafb',
+              borderRadius: 4,
+            }}
+          >
+            <div>
+              Product: {order.productCode} - {order.productName}
+            </div>
             <div>Batch: {order.batchNo}</div>
           </div>
         </div>
@@ -51,11 +66,42 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       cancelText: t('common.cancel'),
       onOk: async () => {
         try {
-          const res = await productionService.finishReceipt(order.id);
+          const targetQty = order.completedQty > 0 ? order.completedQty : order.plannedQty;
+          const res = await productionService.finishReceipt(order.id, targetQty);
           message.success(`Finished Goods Receipt generated: ${res.lotNo}`);
           onRefresh();
         } catch {
           message.error('Failed to process finished receipt');
+        }
+      },
+    });
+  };
+
+  const handleCancelOrder = (order: ProductionOrder) => {
+    modal.confirm({
+      title:
+        language === 'zh-CN'
+          ? `确认取消工单: ${order.orderNo}`
+          : `Confirm Cancel Work Order: ${order.orderNo}`,
+      icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+      content:
+        language === 'zh-CN'
+          ? `取消后工单将停止排产与领料。确认要取消此工单吗？`
+          : `Cancelling will stop production dispatch and material issue. Are you sure you want to cancel this order?`,
+      okText: language === 'zh-CN' ? '确认取消' : 'Cancel Order',
+      okButtonProps: { danger: true },
+      cancelText: t('common.cancel'),
+      onOk: async () => {
+        try {
+          await productionService.cancelOrder(order.id);
+          message.success(
+            language === 'zh-CN'
+              ? `工单 ${order.orderNo} 已成功取消`
+              : `Order ${order.orderNo} cancelled successfully`,
+          );
+          onRefresh();
+        } catch {
+          message.error('Failed to cancel order');
         }
       },
     });
@@ -98,7 +144,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
 
   const columns: ColumnsType<ProductionOrder> = [
     {
-      title: language === 'zh-CN' ? '工单号 (WO#)' : 'Work Order No.',
+      title: language === 'zh-CN' ? '工单号' : 'Work Order No.',
       dataIndex: 'orderNo',
       key: 'orderNo',
       width: 145,
@@ -109,7 +155,16 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
               {text}
             </span>
             {record.isUrgent && (
-              <Tag color="error" style={{ fontSize: 9, padding: '0 3px', borderRadius: 2, margin: 0, fontWeight: 700 }}>
+              <Tag
+                color="error"
+                style={{
+                  fontSize: 9,
+                  padding: '0 3px',
+                  borderRadius: 2,
+                  margin: 0,
+                  fontWeight: 700,
+                }}
+              >
                 {language === 'zh-CN' ? '加急' : 'URGENT'}
               </Tag>
             )}
@@ -119,7 +174,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       ),
     },
     {
-      title: language === 'zh-CN' ? '产品型号与图号 (Product & Part)' : 'Product & Part No.',
+      title: language === 'zh-CN' ? '产品型号与图号' : 'Product & Part No.',
       key: 'product',
       render: (_, record) => (
         <div>
@@ -133,7 +188,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       ),
     },
     {
-      title: language === 'zh-CN' ? '产线工位 (Station)' : 'Station / Line',
+      title: language === 'zh-CN' ? '产线工位' : 'Station / Line',
       key: 'workstation',
       width: 150,
       render: (_, record) => (
@@ -143,7 +198,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       ),
     },
     {
-      title: language === 'zh-CN' ? '计划/完成 (Plan/Done)' : 'Plan / Done',
+      title: language === 'zh-CN' ? '计划 / 完成' : 'Plan / Done',
       key: 'qtys',
       width: 110,
       align: 'right',
@@ -155,7 +210,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       ),
     },
     {
-      title: language === 'zh-CN' ? '报废 (Scrap)' : 'Scrap',
+      title: language === 'zh-CN' ? '报废数量' : 'Scrap',
       dataIndex: 'scrapQty',
       key: 'scrap',
       width: 70,
@@ -170,7 +225,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
         ),
     },
     {
-      title: language === 'zh-CN' ? '工序进度 (Route Progress)' : 'Route Progress',
+      title: language === 'zh-CN' ? '工序进度' : 'Route Progress',
       key: 'progress',
       width: 150,
       render: (_, record) => (
@@ -182,13 +237,13 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
             percent={record.progressPercent}
             size="small"
             strokeColor={record.status === 'COMPLETED' ? '#52c41a' : '#1677ff'}
-            trailColor="#e5e7eb"
+            railColor="#e5e7eb"
           />
         </div>
       ),
     },
     {
-      title: language === 'zh-CN' ? '状态 (Status)' : 'Status',
+      title: language === 'zh-CN' ? '状态' : 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 90,
@@ -196,7 +251,7 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       render: (status) => getStatusBadge(status),
     },
     {
-      title: language === 'zh-CN' ? '操作 (Actions)' : 'Actions',
+      title: language === 'zh-CN' ? '操作' : 'Actions',
       key: 'actions',
       width: 180,
       align: 'center',
@@ -237,6 +292,20 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
               </Button>
             </Tooltip>
           )}
+          {record.status !== 'COMPLETED' && record.status !== 'CANCELLED' && (
+            <Tooltip title={language === 'zh-CN' ? '取消工单' : 'Cancel Order'}>
+              <Button
+                type="text"
+                danger
+                size="small"
+                icon={<CloseCircleOutlined />}
+                onClick={() => handleCancelOrder(record)}
+                style={{ fontSize: 11, padding: '0 4px' }}
+              >
+                {language === 'zh-CN' ? '取消' : 'Cancel'}
+              </Button>
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -251,7 +320,8 @@ export const WorkOrdersTable: React.FC<WorkOrdersTableProps> = ({
       pagination={{
         pageSize: 5,
         size: 'small',
-        showTotal: (total) => `Total ${total} orders / 共 ${total} 条工单`,
+        showTotal: (total) =>
+          language === 'zh-CN' ? `共 ${total} 条工单` : `Total ${total} orders`,
       }}
       rowClassName={(record) => (record.id === selectedOrderId ? 'ant-table-row-selected' : '')}
       bordered

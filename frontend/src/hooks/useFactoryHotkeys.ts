@@ -8,7 +8,8 @@ import { useAppStore } from '@/stores/useAppStore';
  */
 export function useFactoryHotkeys(): void {
   const navigate = useNavigate();
-  const { setUserGuideVisible, toggleSidebar, toggleKioskMode, setShiftHandoverVisible } = useAppStore();
+  const { setUserGuideVisible, toggleSidebar, toggleKioskMode, setShiftHandoverVisible } =
+    useAppStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

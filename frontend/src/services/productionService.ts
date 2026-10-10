@@ -31,36 +31,36 @@ export const productionService = {
       };
       const rawList = res?.data?.data;
       if (Array.isArray(rawList)) {
-        return rawList.map((mo, idx) => {
-          const planned = Number(mo.plannedQuantity || 1);
+        return rawList.map((mo) => {
+          const planned = Number(mo.plannedQuantity || 0);
           const completed = Number(mo.completedQuantity || 0);
-          const pct = Math.min(100, Math.round((completed / planned) * 100));
+          const pct = planned > 0 ? Math.min(100, Math.round((completed / planned) * 100)) : 0;
           return {
             id: String(mo.id),
             orderNo: mo.moNo,
             productCode: mo.productCode,
             productName: mo.productNameEn || mo.productCode,
             productNameZh: mo.productNameZh || mo.productNameEn || mo.productCode,
-            spec: `${mo.productCode} / Batch: ${mo.moNo.replace('WO-', '')}`,
-            batchNo: `26Q4-LOT0${mo.id}`,
-            workstation: `Line ${idx === 0 ? 'A-02 (CNC 5-Axis)' : idx === 1 ? 'B-01 (DMG Lathe)' : 'C-04 (Final Assembly)'}`,
-            workstationZh: `产线 ${idx === 0 ? 'A-02 (五轴加工中心)' : idx === 1 ? 'B-01 (德马吉数控车)' : 'C-04 (总装流水线)'}`,
+            spec: mo.productCode,
+            batchNo: mo.moNo,
+            workstation: 'Standard Line',
+            workstationZh: '标准产线',
             plannedQty: planned,
             completedQty: completed,
             scrapQty: Number(mo.scrapQuantity || 0),
             uom: mo.productUnitCode || 'pcs',
-            currentStep: mo.status === 'COMPLETED' ? 'Final QC Passed' : 'Machining & Assembly',
-            currentStepZh: mo.status === 'COMPLETED' ? '完工质检合格' : '精加工与组装',
-            stepNumber: mo.status === 'COMPLETED' ? 4 : 2,
-            totalSteps: 4,
+            currentStep: mo.status === 'COMPLETED' ? 'Completed' : 'In Production',
+            currentStepZh: mo.status === 'COMPLETED' ? '已完工' : '生产中',
+            stepNumber: mo.status === 'COMPLETED' ? 1 : 1,
+            totalSteps: 1,
             progressPercent: pct,
-            scheduledStart: mo.startDate || '2026-10-01 08:00',
-            scheduledEnd: mo.dueDate || '2026-10-03 18:00',
+            scheduledStart: mo.startDate || '',
+            scheduledEnd: mo.dueDate || '',
             status: (mo.status === 'IN_PROGRESS'
               ? 'IN_PRODUCTION'
               : mo.status === 'COMPLETED'
-              ? 'COMPLETED'
-              : 'IN_PRODUCTION') as ProductionOrder['status'],
+                ? 'COMPLETED'
+                : 'IN_PRODUCTION') as ProductionOrder['status'],
             isUrgent: mo.status === 'IN_PROGRESS' && pct < 80,
           };
         });
@@ -91,26 +91,26 @@ export const productionService = {
       const ops = res?.data?.operations;
       if (Array.isArray(ops) && ops.length > 0) {
         return ops.map((op) => {
-          const target = Number(op.targetQuantity || 1);
+          const target = Number(op.targetQuantity ?? 0);
           const completed = Number(op.completedQuantity || 0);
           return {
             id: String(op.id),
-            stepCode: op.operationCode || `Op ${op.sequenceNo * 10}`,
-            stepName: op.operationNameEn || op.operationCode,
-            stepNameZh: op.operationNameZh || op.operationNameEn,
-            machineId: `Line Workstation ${op.sequenceNo || 1}`,
+            stepCode: op.operationCode || (op.sequenceNo ? `Op ${op.sequenceNo * 10}` : ''),
+            stepName: op.operationNameEn || op.operationCode || '',
+            stepNameZh: op.operationNameZh || op.operationNameEn || op.operationCode || '',
+            machineId: op.sequenceNo ? `Line Workstation ${op.sequenceNo}` : 'Assembly Workstation',
             workerName: 'Operator On Duty',
             workerNameZh: '当班操作员',
             targetQty: target,
             completedQty: completed,
             scrapQty: Number(op.scrapQuantity || 0),
-            progressPercent: Math.min(100, Math.round((completed / target) * 100)),
+            progressPercent: target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0,
             status: (op.status === 'COMPLETED'
               ? 'COMPLETED'
               : op.status === 'IN_PROGRESS'
-              ? 'ACTIVE'
-              : 'PENDING') as OperationStep['status'],
-            standardHours: 2.0,
+                ? 'ACTIVE'
+                : 'PENDING') as OperationStep['status'],
+            standardHours: 0,
           };
         });
       }
@@ -123,7 +123,7 @@ export const productionService = {
   async submitOperationReport(
     _orderId: string,
     operationId: string,
-    payload: OperationReportPayload
+    payload: OperationReportPayload,
   ): Promise<{ success: boolean }> {
     try {
       await apiClient.post(`/production-operations/${operationId}/report`, {
@@ -148,16 +148,33 @@ export const productionService = {
     }
   },
 
-  async finishReceipt(orderId: string): Promise<{ success: boolean; lotNo: string }> {
+  async finishReceipt(
+    orderId: string,
+    quantity: number,
+    warehouseId?: number,
+    note?: string,
+  ): Promise<{ success: boolean; lotNo: string }> {
     try {
+      let targetWhId = warehouseId;
+      if (!targetWhId) {
+        const whRes = (await apiClient.get('/warehouses')) as {
+          data?: Array<{ id: number; type: string }>;
+        };
+        const whList = whRes?.data || [];
+        const fgWh =
+          whList.find((w) => w.type === 'FINISHED_GOODS' || w.type === 'FINISHED_GOOD') ||
+          whList[0];
+        targetWhId = fgWh ? fgWh.id : 1;
+      }
       const res = (await apiClient.post(`/production-orders/${orderId}/complete`, {
-        warehouseId: 3,
-        completedQuantity: 100,
-        acceptedQuantity: 100,
+        warehouseId: targetWhId,
+        completedQuantity: quantity,
+        acceptedQuantity: quantity,
+        note,
       })) as {
         data?: { lotNo?: string };
       };
-      return { success: true, lotNo: res?.data?.lotNo || `LOT-${Date.now().toString().slice(-6)}` };
+      return { success: true, lotNo: res?.data?.lotNo || `LOT-${orderId}` };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to complete production order';
       throw new Error(message, { cause: err });
@@ -201,18 +218,43 @@ export const productionService = {
     }
   },
 
-  async createOrder(payload: CreateProductionOrderRequest): Promise<{ success: boolean; orderNo: string }> {
+  async createOrder(
+    payload: CreateProductionOrderRequest,
+  ): Promise<{ success: boolean; orderNo: string }> {
     try {
+      if (!payload.productId) {
+        throw new Error('Product ID is required to create production order');
+      }
       const res = (await apiClient.post('/production-orders', {
-        productId: 6, // default finished valve
-        bomId: 1,
-        routingId: 1,
+        productId: payload.productId,
+        bomId: payload.bomId,
+        routingId: payload.routingId,
         plannedQuantity: payload.plannedQty,
         dueDate: payload.scheduledEnd,
       })) as { data?: { moNo?: string } };
-      return { success: true, orderNo: res?.data?.moNo || `WO-${Date.now().toString().slice(-8)}` };
+      return { success: true, orderNo: res?.data?.moNo || '' };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create production order';
+      throw new Error(message, { cause: err });
+    }
+  },
+
+  async cancelOrder(orderId: string): Promise<{ success: boolean }> {
+    try {
+      await apiClient.post(`/production-orders/${orderId}/cancel`, {});
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to cancel production order';
+      throw new Error(message, { cause: err });
+    }
+  },
+
+  async deleteOrder(orderId: string): Promise<{ success: boolean }> {
+    try {
+      await apiClient.delete(`/production-orders/${orderId}`);
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete production order';
       throw new Error(message, { cause: err });
     }
   },

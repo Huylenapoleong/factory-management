@@ -22,6 +22,7 @@ public interface StockMapper {
     @Mapping(target = "itemNameEn", source = "item.nameEn")
     @Mapping(target = "itemUnitCode", source = "item.unit.code")
     @Mapping(target = "minStock", source = "item.minStock")
+    @Mapping(target = "unitCost", source = "item.purchasePrice")
     @Mapping(target = "availableQuantity", expression = "java(balance.computeAvailableQuantity())")
     @Mapping(target = "isLowStock", expression = "java(isLowStock(balance))")
     InventoryBalanceDto toBalanceDto(InventoryBalance balance);

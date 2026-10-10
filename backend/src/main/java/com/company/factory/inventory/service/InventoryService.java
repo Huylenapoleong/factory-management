@@ -303,4 +303,42 @@ public class InventoryService {
                 .map(stockMapper::toTransactionDto)
                 .toList();
     }
+
+    @Transactional
+    public List<StockTransactionDto> transferStock(com.company.factory.inventory.dto.StockTransferRequest request, Long userId) {
+        if (request.getFromWarehouseId().equals(request.getToWarehouseId())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_TRANSFER",
+                    "Source and destination warehouses cannot be the same");
+        }
+
+        String transferRef = "TRF-" + System.currentTimeMillis();
+
+        StockTransaction outTx = decreaseStock(
+                request.getFromWarehouseId(),
+                request.getFromLocationId(),
+                request.getItemId(),
+                request.getQuantity(),
+                BigDecimal.ZERO,
+                TransactionType.TRANSFER_OUT,
+                "TRANSFER",
+                transferRef,
+                request.getNote(),
+                userId
+        );
+
+        StockTransaction inTx = increaseStock(
+                request.getToWarehouseId(),
+                request.getToLocationId(),
+                request.getItemId(),
+                request.getQuantity(),
+                BigDecimal.ZERO,
+                TransactionType.TRANSFER_IN,
+                "TRANSFER",
+                transferRef,
+                request.getNote(),
+                userId
+        );
+
+        return List.of(stockMapper.toTransactionDto(outTx), stockMapper.toTransactionDto(inTx));
+    }
 }

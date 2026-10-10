@@ -42,4 +42,11 @@ public class RoutingController {
     public ApiResponse<RoutingDto> createRouting(@Valid @RequestBody CreateRoutingRequest request) {
         return ApiResponse.success(routingService.createRouting(request), "Routing created successfully");
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PRODUCTION')")
+    @Operation(summary = "Update routing status (ACTIVE/INACTIVE)")
+    public ApiResponse<RoutingDto> updateRoutingStatus(@PathVariable Long id, @RequestParam String status) {
+        return ApiResponse.success(routingService.updateRoutingStatus(id, status), "Routing status updated");
+    }
 }

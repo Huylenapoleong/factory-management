@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Tag, Input, Select, Button, Space, Row, Col, Statistic, message } from 'antd';
+import {
+  Card,
+  Table,
+  Tag,
+  Input,
+  Select,
+  Button,
+  Space,
+  Row,
+  Col,
+  Statistic,
+  Drawer,
+  Descriptions,
+} from 'antd';
+import { message } from '@/utils/antdApp';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ShopOutlined,
@@ -9,13 +23,16 @@ import {
   SafetyCertificateOutlined,
   FieldTimeOutlined,
   CheckCircleOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
 import { masterDataService } from '@/services/masterDataService';
 import { SupplierRecord, SupplierStatus } from '../types';
 import { CreateSupplierModal } from './CreateSupplierModal';
 
 export const SuppliersView: React.FC = () => {
+  const navigate = useNavigate();
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
 
@@ -24,6 +41,7 @@ export const SuppliersView: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<SupplierStatus | 'ALL'>('ALL');
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierRecord | null>(null);
 
   const fetchSuppliers = React.useCallback(async () => {
     setLoading(true);
@@ -58,6 +76,27 @@ export const SuppliersView: React.FC = () => {
   });
 
   const strategicGradeACount = suppliers.filter((s) => s.ratingGrade === 'A').length;
+  const suppliersWithOtd = suppliers.filter((s) => s.onTimeDeliveryRate != null);
+  const meanOtd =
+    suppliersWithOtd.length > 0
+      ? Number(
+          (
+            suppliersWithOtd.reduce((acc, s) => acc + (s.onTimeDeliveryRate || 0), 0) /
+            suppliersWithOtd.length
+          ).toFixed(1),
+        )
+      : 0;
+
+  const suppliersWithQc = suppliers.filter((s) => s.qualityPassRate != null);
+  const meanIqc =
+    suppliersWithQc.length > 0
+      ? Number(
+          (
+            suppliersWithQc.reduce((acc, s) => acc + (s.qualityPassRate || 0), 0) /
+            suppliersWithQc.length
+          ).toFixed(1),
+        )
+      : 0;
 
   const columns: ColumnsType<SupplierRecord> = [
     {
@@ -66,9 +105,7 @@ export const SuppliersView: React.FC = () => {
       key: 'code',
       width: 140,
       render: (val: string) => (
-        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff' }}>
-          {val}
-        </span>
+        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff' }}>{val}</span>
       ),
     },
     {
@@ -102,7 +139,8 @@ export const SuppliersView: React.FC = () => {
       key: 'ratingGrade',
       width: 90,
       align: 'center',
-      render: (grade: string) => {
+      render: (grade?: string | null) => {
+        if (!grade) return <span style={{ color: '#9ca3af' }}>—</span>;
         const color = grade === 'A' ? 'green' : grade === 'B' ? 'blue' : 'orange';
         return <Tag color={color}>Grade {grade}</Tag>;
       },
@@ -113,11 +151,14 @@ export const SuppliersView: React.FC = () => {
       key: 'onTimeDeliveryRate',
       width: 110,
       align: 'right',
-      render: (val: number) => (
-        <span style={{ fontWeight: 600, color: val >= 95 ? '#15803d' : '#b45309' }}>
-          {val.toFixed(1)}%
-        </span>
-      ),
+      render: (val?: number | null) =>
+        val != null ? (
+          <span style={{ fontWeight: 600, color: val >= 95 ? '#15803d' : '#b45309' }}>
+            {val.toFixed(1)}%
+          </span>
+        ) : (
+          <span style={{ color: '#9ca3af' }}>—</span>
+        ),
     },
     {
       title: isZh ? '来料合格率' : 'IQC Pass',
@@ -125,11 +166,14 @@ export const SuppliersView: React.FC = () => {
       key: 'qualityPassRate',
       width: 110,
       align: 'right',
-      render: (val: number) => (
-        <span style={{ fontWeight: 600, color: val >= 99 ? '#15803d' : '#b45309' }}>
-          {val.toFixed(1)}%
-        </span>
-      ),
+      render: (val?: number | null) =>
+        val != null ? (
+          <span style={{ fontWeight: 600, color: val >= 99 ? '#15803d' : '#b45309' }}>
+            {val.toFixed(1)}%
+          </span>
+        ) : (
+          <span style={{ color: '#9ca3af' }}>—</span>
+        ),
     },
     {
       title: isZh ? '账期' : 'Payment Terms',
@@ -143,7 +187,8 @@ export const SuppliersView: React.FC = () => {
       key: 'leadTimeDays',
       width: 90,
       align: 'center',
-      render: (val: number) => `${val}d`,
+      render: (val?: number | null) =>
+        val != null && val > 0 ? `${val}d` : <span style={{ color: '#9ca3af' }}>—</span>,
     },
     {
       title: isZh ? '状态' : 'Status',
@@ -151,21 +196,15 @@ export const SuppliersView: React.FC = () => {
       key: 'status',
       width: 100,
       render: (status: string) => (
-        <Tag color={status === 'ACTIVE' ? 'success' : 'warning'}>
-          {status}
-        </Tag>
+        <Tag color={status === 'ACTIVE' ? 'success' : 'warning'}>{status}</Tag>
       ),
     },
     {
       title: isZh ? '操作' : 'Action',
       key: 'action',
       width: 80,
-      render: () => (
-        <Button
-          type="link"
-          size="small"
-          onClick={() => message.info(isZh ? '正在调取供应商审计与往来采购流水...' : 'Loading vendor history...')}
-        >
+      render: (_, record) => (
+        <Button type="link" size="small" onClick={() => setSelectedSupplier(record)}>
           {isZh ? '档案' : 'Profile'}
         </Button>
       ),
@@ -179,7 +218,11 @@ export const SuppliersView: React.FC = () => {
         <Col xs={12} sm={6} md={6}>
           <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
             <Statistic
-              title={<span style={{ fontSize: 12 }}>{isZh ? '在册合格供应商' : 'Total Qualified Vendors'}</span>}
+              title={
+                <span style={{ fontSize: 12 }}>
+                  {isZh ? '在册合格供应商' : 'Total Qualified Vendors'}
+                </span>
+              }
               value={suppliers.length}
               prefix={<ShopOutlined style={{ color: '#1677ff' }} />}
             />
@@ -188,7 +231,11 @@ export const SuppliersView: React.FC = () => {
         <Col xs={12} sm={6} md={6}>
           <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
             <Statistic
-              title={<span style={{ fontSize: 12 }}>{isZh ? 'A级战略供应商' : 'Strategic Tier-1 (Grade A)'}</span>}
+              title={
+                <span style={{ fontSize: 12 }}>
+                  {isZh ? 'A级战略供应商' : 'Strategic Tier-1 (Grade A)'}
+                </span>
+              }
               value={strategicGradeACount}
               prefix={<SafetyCertificateOutlined style={{ color: '#52c41a' }} />}
             />
@@ -197,8 +244,13 @@ export const SuppliersView: React.FC = () => {
         <Col xs={12} sm={6} md={6}>
           <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
             <Statistic
-              title={<span style={{ fontSize: 12 }}>{isZh ? '综合准时交货率' : 'Mean On-Time Delivery'}</span>}
-              value={96.6}
+              title={
+                <span style={{ fontSize: 12 }}>
+                  {isZh ? '综合准时交货率' : 'Mean On-Time Delivery'}
+                </span>
+              }
+              value={meanOtd}
+              precision={1}
               suffix="%"
               prefix={<FieldTimeOutlined style={{ color: '#13c2c2' }} />}
             />
@@ -207,8 +259,13 @@ export const SuppliersView: React.FC = () => {
         <Col xs={12} sm={6} md={6}>
           <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
             <Statistic
-              title={<span style={{ fontSize: 12 }}>{isZh ? '来料抽检平均良率' : 'Mean IQC Pass Rate'}</span>}
-              value={99.4}
+              title={
+                <span style={{ fontSize: 12 }}>
+                  {isZh ? '来料抽检平均良率' : 'Mean IQC Pass Rate'}
+                </span>
+              }
+              value={meanIqc}
+              precision={1}
               suffix="%"
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
             />
@@ -222,7 +279,15 @@ export const SuppliersView: React.FC = () => {
         style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
         styles={{ body: { padding: '10px 14px' } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
           <Space wrap size="small">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: '#6b7280' }}>
@@ -235,7 +300,7 @@ export const SuppliersView: React.FC = () => {
                 style={{ width: 160 }}
                 options={[
                   { value: 'ALL', label: isZh ? '全部供应商' : 'All Vendors' },
-                  { value: 'ACTIVE', label: isZh ? '正常供货 (Active)' : 'Active' },
+                  { value: 'ACTIVE', label: isZh ? '正常供货' : 'Active' },
                   { value: 'UNDER_REVIEW', label: isZh ? '考察评审中' : 'Under Review' },
                   { value: 'SUSPENDED', label: isZh ? '暂停交易' : 'Suspended' },
                 ]}
@@ -243,7 +308,9 @@ export const SuppliersView: React.FC = () => {
             </div>
 
             <Input
-              placeholder={isZh ? '搜索厂商编码、企业名称、对接人...' : 'Search vendor code, name, contact...'}
+              placeholder={
+                isZh ? '搜索厂商编码、企业名称、对接人...' : 'Search vendor code, name, contact...'
+              }
               prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
               size="small"
               value={searchText}
@@ -266,7 +333,33 @@ export const SuppliersView: React.FC = () => {
             <Button
               size="small"
               icon={<DownloadOutlined />}
-              onClick={() => message.success(isZh ? '正在导出供应商主数据...' : 'Exporting Vendors CSV...')}
+              onClick={() => {
+                if (filteredSuppliers.length === 0) {
+                  message.warning(isZh ? '无供应商数据可导出' : 'No data to export');
+                  return;
+                }
+                const headers = [
+                  'Code,Name,NameZh,ContactPerson,Phone,RatingGrade,OnTimeDeliveryRate,QualityPassRate,PaymentTerms,LeadTimeDays,Status',
+                ];
+                const rows = filteredSuppliers.map(
+                  (s) =>
+                    `"${s.code}","${s.name}","${s.nameZh}","${s.contactPerson}","${s.phone}","${s.ratingGrade || ''}",${s.onTimeDeliveryRate ?? ''},${s.qualityPassRate ?? ''},"${s.paymentTerms}",${s.leadTimeDays ?? ''},"${s.status}"`,
+                );
+                const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute(
+                  'download',
+                  `suppliers_${new Date().toISOString().slice(0, 10)}.csv`,
+                );
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                message.success(isZh ? '供应商主数据已成功导出' : 'Suppliers exported');
+              }}
             >
               {isZh ? '导出台账' : 'Export CSV'}
             </Button>
@@ -289,7 +382,8 @@ export const SuppliersView: React.FC = () => {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `${isZh ? '共' : 'Total'} ${total} ${isZh ? '家供应商' : 'vendors'}`,
+            showTotal: (total) =>
+              `${isZh ? '共' : 'Total'} ${total} ${isZh ? '家供应商' : 'vendors'}`,
           }}
         />
       </Card>
@@ -299,6 +393,153 @@ export const SuppliersView: React.FC = () => {
         onClose={() => setModalVisible(false)}
         onSuccess={fetchSuppliers}
       />
+
+      {/* Real Supplier Profile Drawer */}
+      <Drawer
+        title={
+          selectedSupplier ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ShopOutlined style={{ color: '#1677ff' }} />
+              <span>{isZh ? '供应商详细档案' : 'Supplier Dossier & Profile'}</span>
+              <Tag color="blue">{selectedSupplier.code}</Tag>
+            </div>
+          ) : (
+            ''
+          )
+        }
+        size={560}
+        open={Boolean(selectedSupplier)}
+        onClose={() => setSelectedSupplier(null)}
+      >
+        {selectedSupplier && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Descriptions
+              bordered
+              size="small"
+              column={1}
+              items={[
+                {
+                  key: 'code',
+                  label: isZh ? '供应商编码' : 'Vendor Code',
+                  children: <strong>{selectedSupplier.code}</strong>,
+                },
+                {
+                  key: 'nameZh',
+                  label: isZh ? '中文名称' : 'Vendor Name (ZH)',
+                  children: selectedSupplier.nameZh,
+                },
+                {
+                  key: 'name',
+                  label: isZh ? '法定英文名称' : 'Legal Name (EN)',
+                  children: selectedSupplier.name,
+                },
+                {
+                  key: 'ratingGrade',
+                  label: isZh ? '供应商资质等级' : 'Rating Grade',
+                  children: (
+                    <Tag
+                      color={
+                        selectedSupplier.ratingGrade === 'A'
+                          ? 'success'
+                          : selectedSupplier.ratingGrade === 'B'
+                            ? 'blue'
+                            : 'warning'
+                      }
+                    >
+                      Grade {selectedSupplier.ratingGrade || 'N/A'}
+                    </Tag>
+                  ),
+                },
+                {
+                  key: 'status',
+                  label: isZh ? '合作状态' : 'Status',
+                  children: (
+                    <Tag color={selectedSupplier.status === 'ACTIVE' ? 'success' : 'warning'}>
+                      {selectedSupplier.status}
+                    </Tag>
+                  ),
+                },
+                {
+                  key: 'contactPerson',
+                  label: isZh ? '主要对接人' : 'Contact Person',
+                  children: selectedSupplier.contactPerson,
+                },
+                {
+                  key: 'phone',
+                  label: isZh ? '联系电话' : 'Phone',
+                  children: selectedSupplier.phone,
+                },
+                {
+                  key: 'email',
+                  label: isZh ? '电子邮箱' : 'Email',
+                  children: selectedSupplier.email,
+                },
+                {
+                  key: 'address',
+                  label: isZh ? '经营注册地址' : 'Address',
+                  children: selectedSupplier.address,
+                },
+                {
+                  key: 'taxNumber',
+                  label: isZh ? '统一税号 / 信用代码' : 'Tax Number',
+                  children: selectedSupplier.taxNumber,
+                },
+                {
+                  key: 'paymentTerms',
+                  label: isZh ? '结算账期' : 'Payment Terms',
+                  children: selectedSupplier.paymentTerms,
+                },
+                {
+                  key: 'leadTime',
+                  label: isZh ? '标准交付周期' : 'Lead Time',
+                  children: selectedSupplier.leadTimeDays
+                    ? `${selectedSupplier.leadTimeDays} days`
+                    : '—',
+                },
+                {
+                  key: 'otd',
+                  label: isZh ? '历史准时交货率 (OTD)' : 'OTD Rate',
+                  children:
+                    selectedSupplier.onTimeDeliveryRate != null
+                      ? `${selectedSupplier.onTimeDeliveryRate.toFixed(1)}%`
+                      : '—',
+                },
+                {
+                  key: 'iqc',
+                  label: isZh ? '来料检验合格率 (IQC)' : 'Quality Pass Rate',
+                  children:
+                    selectedSupplier.qualityPassRate != null
+                      ? `${selectedSupplier.qualityPassRate.toFixed(1)}%`
+                      : '—',
+                },
+                ...(selectedSupplier.updatedAt
+                  ? [
+                      {
+                        key: 'updatedAt',
+                        label: isZh ? '最近审计更新' : 'Last Audited',
+                        children: selectedSupplier.updatedAt,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <Button onClick={() => setSelectedSupplier(null)}>{isZh ? '关闭' : 'Close'}</Button>
+              <Button
+                type="primary"
+                icon={<ShoppingCartOutlined />}
+                onClick={() => {
+                  setSelectedSupplier(null);
+                  navigate('/purchasing');
+                }}
+              >
+                {isZh ? '发起采购协同' : 'Initiate Purchase Order'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };

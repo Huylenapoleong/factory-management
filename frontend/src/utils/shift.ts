@@ -25,7 +25,7 @@ export const getFactoryShift = (date: Date = new Date()): FactoryShift => {
     return {
       code: 'A',
       nameEn: 'Shift A (Morning)',
-      nameZh: '早班 (A班)',
+      nameZh: '早班',
       timeRange: '08:00 - 16:30',
       badgeEn: 'Shift A (08:00 - 16:30)',
       badgeZh: '早班 (08:00 - 16:30)',
@@ -41,7 +41,7 @@ export const getFactoryShift = (date: Date = new Date()): FactoryShift => {
     return {
       code: 'B',
       nameEn: 'Shift B (Evening)',
-      nameZh: '中班 (B班)',
+      nameZh: '中班',
       timeRange: '16:30 - 00:30',
       badgeEn: 'Shift B (16:30 - 00:30)',
       badgeZh: '中班 (16:30 - 00:30)',
@@ -56,7 +56,7 @@ export const getFactoryShift = (date: Date = new Date()): FactoryShift => {
   return {
     code: 'C',
     nameEn: 'Shift C (Night)',
-    nameZh: '夜班 (C班)',
+    nameZh: '夜班',
     timeRange: '00:30 - 08:00',
     badgeEn: 'Shift C (00:30 - 08:00)',
     badgeZh: '夜班 (00:30 - 08:00)',

@@ -8,11 +8,40 @@ import {
   DollarOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
+import { SalesOrderSummary, OutboundDeliverySummary } from '../types';
 
-export const SalesKpiStrip: React.FC = () => {
+interface SalesKpiStripProps {
+  orders: SalesOrderSummary[];
+  deliveries: OutboundDeliverySummary[];
+}
+
+export const SalesKpiStrip: React.FC<SalesKpiStripProps> = ({ orders, deliveries }) => {
   const { language } = useAppStore();
   const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
+
+  const activeOrders = orders.filter((o) => o.status !== 'CANCELLED');
+  const activeOrdersCount = activeOrders.length;
+  const totalSalesAmount = activeOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const uniqueCustomersCount = new Set(orders.map((o) => o.customerId).filter(Boolean)).size;
+
+  const stagedDeliveries = deliveries.filter((d) => d.status === 'STAGED');
+  const stagedDeliveriesCount = stagedDeliveries.length;
+
+  const deliveredCount = deliveries.filter(
+    (d) => d.status === 'DISPATCHED' || d.status === 'DELIVERED',
+  ).length;
+  const otifRate =
+    deliveries.length > 0 ? Number(((deliveredCount / deliveries.length) * 100).toFixed(1)) : 0.0;
+
+  const pendingOrdersCount = orders.filter(
+    (o) => o.status === 'QUOTATION' || o.status === 'CONFIRMED',
+  ).length;
+
+  const revenueDisplay =
+    totalSalesAmount >= 1_000_000
+      ? `$${(totalSalesAmount / 1_000_000).toFixed(2)}M`
+      : `$${totalSalesAmount.toLocaleString()}`;
 
   return (
     <Row gutter={[10, 10]} style={{ marginBottom: 12 }}>
@@ -20,50 +49,60 @@ export const SalesKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '在手销售订单' : 'ACTIVE SALES ORDERS'}
                 </span>
                 <ShoppingCartOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
-            value={45}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
-            suffix={
-              <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
-                +8.4% MoM
-              </span>
-            }
+            value={activeOrdersCount}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            <span className="tnum" style={{ fontWeight: 600, color: token.colorText }}>$2.18M</span> {isZh ? '| 28家大客户管道' : '| 28 Key Accounts'}
+            <span className="tnum" style={{ fontWeight: 600, color: token.colorText }}>
+              ${totalSalesAmount.toLocaleString()}
+            </span>{' '}
+            {isZh ? `| ${uniqueCustomersCount} 家客户` : `| ${uniqueCustomersCount} Accounts`}
           </div>
         </Card>
       </Col>
 
-      {/* 2. Staged for Shipping Today */}
+      {/* 2. Staged for Shipping */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '今日待发货' : 'STAGED FOR SHIPPING TODAY'}
+                  {isZh ? '待发运出库单' : 'STAGED FOR SHIPPING'}
                 </span>
                 <SendOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
-            value={12}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            value={stagedDeliveriesCount}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span
                 style={{
@@ -76,12 +115,12 @@ export const SalesKpiStrip: React.FC = () => {
                   fontWeight: 600,
                 }}
               >
-                Bays 05-08
+                {stagedDeliveriesCount} {isZh ? '批待运' : 'Queued'}
               </span>
             }
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            480 {isZh ? '箱 / 32托盘 | 14:30 顺丰接驳' : 'Cartons / 32p | 14:30 SF Freight'}
+            {deliveries.length} {isZh ? '总发运批次' : 'Total Deliveries'}
           </div>
         </Card>
       </Col>
@@ -90,87 +129,98 @@ export const SalesKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={4} xl={4}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #86efac', backgroundColor: token.colorFillAlter }}
+          style={{
+            borderRadius: 4,
+            border: '1px solid #86efac',
+            backgroundColor: token.colorFillAlter,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: '#15803d', fontWeight: 600 }}>
-                  {isZh ? '准时交付率 (OTIF)' : 'ON-TIME DELIVERY RATE'}
+                  {isZh ? '履约完成率' : 'FULFILLMENT RATE'}
                 </span>
                 <CheckCircleOutlined style={{ color: '#15803d', fontSize: 13 }} />
               </div>
             }
-            value={96.8}
+            value={otifRate}
             precision={1}
             suffix="%"
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: '#15803d' }}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#15803d' } }}
           />
           <div style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
-            {isZh ? '基线: ≥96.0% (A+评级)' : 'Target: ≥96.0% (Grade A+)'}
+            {deliveredCount} / {deliveries.length} {isZh ? '已完成出库' : 'Dispatched'}
           </div>
         </Card>
       </Col>
 
-      {/* 4. Pending Customer QC Approval */}
+      {/* 4. Pending Production / QC */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '待客检确认' : 'PENDING CUSTOMER QC'}
+                  {isZh ? '待排产/确认订单' : 'PENDING ORDERS'}
                 </span>
                 <SafetyCertificateOutlined style={{ color: '#d97706', fontSize: 13 }} />
               </div>
             }
-            value={4}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            value={pendingOrdersCount}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
             suffix={
               <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>
-                {isZh ? '批出海产品' : 'Export Batches'}
+                {isZh ? '笔在途' : 'Orders'}
               </span>
             }
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            {isZh ? 'Bay 06 暂存 | 平均客检耗时 45分' : 'Bay 06 Staging | Avg 45 mins'}
+            {isZh ? '等待工程排产或审核' : 'Awaiting dispatch / review'}
           </div>
         </Card>
       </Col>
 
-      {/* 5. Monthly Invoiced Revenue */}
+      {/* 5. Total Order Value */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '本月累计开票交付' : 'MONTHLY INVOICED REVENUE'}
+                  {isZh ? '销售合同总额' : 'TOTAL SALES REVENUE'}
                 </span>
                 <DollarOutlined style={{ color: '#0f766e', fontSize: 13 }} />
               </div>
             }
-            value={3.85}
-            precision={2}
-            prefix="$"
-            suffix={
-              <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>
-                M <span style={{ color: '#10b981' }}>88.2%</span>
-              </span>
-            }
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: token.colorText }}
+            value={revenueDisplay}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
           />
           <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
-            {isZh ? '约¥27.7M | 达成率 88.2%' : '¥27.7M | 88.2% Q4 Target'}
+            {isZh ? '已生效合同与在制总计' : 'Active contract valuation'}
           </div>
         </Card>
       </Col>

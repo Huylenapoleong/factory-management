@@ -100,7 +100,8 @@ class DashboardServiceTest {
                 .status("IN_PROGRESS")
                 .build();
 
-        when(moRepository.findAll(any(Specification.class))).thenReturn(List.of(mo));
+        Specification<ProductionOrder> anySpec = any();
+        when(moRepository.findAll(anySpec)).thenReturn(List.of(mo));
 
         List<ProductionProgressDto> progress = dashboardService.getProductionProgress();
 

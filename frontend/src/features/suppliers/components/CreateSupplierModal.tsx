@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Row, Col, message } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Row, Col } from 'antd';
+import { message } from '@/utils/antdApp';
 import { useAppStore } from '@/stores/useAppStore';
 import { masterDataService } from '@/services/masterDataService';
 import { CreateSupplierPayload } from '../types';
@@ -35,7 +36,7 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
         taxNumber: values.taxNumber || '',
         paymentTerms: values.paymentTerms || 'Net 30',
         ratingGrade: values.ratingGrade || 'A',
-        leadTimeDays: values.leadTimeDays || 7,
+        leadTimeDays: Number(values.leadTimeDays ?? 0),
       };
 
       await masterDataService.createSupplier(payload);
@@ -61,14 +62,20 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
       width={680}
       okText={isZh ? '确认保存' : 'Save Supplier'}
       cancelText={isZh ? '取消' : 'Cancel'}
-      destroyOnClose
+      destroyOnHidden
+      forceRender
     >
-      <Form form={form} layout="vertical" size="small" initialValues={{ ratingGrade: 'A', paymentTerms: 'Net 30' }}>
+      <Form
+        form={form}
+        layout="vertical"
+        size="small"
+        initialValues={{ ratingGrade: 'A', paymentTerms: 'Net 30' }}
+      >
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="code"
-              label={isZh ? '供应商编码 (Supplier Code)' : 'Supplier Code'}
+              label={isZh ? '供应商编码' : 'Supplier Code'}
               rules={[{ required: true, message: isZh ? '请输入编码' : 'Required' }]}
             >
               <Input placeholder="e.g. SUP-ANSTEEL-06" />
@@ -82,9 +89,9 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
             >
               <Select
                 options={[
-                  { value: 'A', label: isZh ? 'A级 (战略合格供应商)' : 'Grade A (Strategic)' },
-                  { value: 'B', label: isZh ? 'B级 (标准供货商)' : 'Grade B (Standard)' },
-                  { value: 'C', label: isZh ? 'C级 (考察期备选商)' : 'Grade C (Probation)' },
+                  { value: 'A', label: isZh ? 'A级 战略合格供应商' : 'Grade A (Strategic)' },
+                  { value: 'B', label: isZh ? 'B级 标准供货商' : 'Grade B (Standard)' },
+                  { value: 'C', label: isZh ? 'C级 考察期备选商' : 'Grade C (Probation)' },
                 ]}
               />
             </Form.Item>
@@ -95,7 +102,7 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
           <Col span={12}>
             <Form.Item
               name="nameZh"
-              label={isZh ? '企业全称 (中文)' : 'Vendor Name (Chinese)'}
+              label={isZh ? '企业中文全称' : 'Vendor Name (Chinese)'}
               rules={[{ required: true, message: isZh ? '请输入企业名称' : 'Required' }]}
             >
               <Input placeholder="e.g. 鞍钢特种精密钢管有限公司" />
@@ -104,10 +111,10 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
           <Col span={12}>
             <Form.Item
               name="name"
-              label={isZh ? '企业全称 (英文)' : 'Vendor Name (English)'}
+              label={isZh ? '企业英文全称' : 'Vendor Name (English)'}
               rules={[{ required: true, message: isZh ? '请输入英文名称' : 'Required' }]}
             >
-              <Input placeholder="e.g. Ansteel Precision Tubes Ltd." />
+              <Input placeholder={isZh ? '请输入供应商英文/全称' : 'Enter supplier legal name'} />
             </Form.Item>
           </Col>
         </Row>
@@ -119,7 +126,7 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
               label={isZh ? '业务对接人' : 'Contact Person'}
               rules={[{ required: true }]}
             >
-              <Input placeholder="e.g. Manager Chen (陈经理)" />
+              <Input placeholder={isZh ? '请输入联系人姓名' : 'Enter contact person name'} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -140,7 +147,10 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="taxNumber" label={isZh ? '统一社会信用代码/税号' : 'Tax / Registration No.'}>
+            <Form.Item
+              name="taxNumber"
+              label={isZh ? '统一社会信用代码/税号' : 'Tax / Registration No.'}
+            >
               <Input placeholder="9131..." />
             </Form.Item>
           </Col>

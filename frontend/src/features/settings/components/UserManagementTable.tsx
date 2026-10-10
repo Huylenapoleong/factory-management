@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Space, Modal, Form, Input, Select, message, Popconfirm, theme } from 'antd';
+import { Table, Tag, Button, Space, Modal, Form, Input, Select, Popconfirm, theme } from 'antd';
+import { message } from '@/utils/antdApp';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  UserAddOutlined,
-  KeyOutlined,
-  StopOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+import { UserAddOutlined, KeyOutlined, StopOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
+import { useRbac } from '@/hooks/useRbac';
 import { userService, UserAccount, CreateUserPayload } from '@/services/userService';
 
 export const UserManagementTable: React.FC = () => {
   const { language } = useAppStore();
   const { token } = theme.useToken();
+  const { isAdmin } = useRbac();
   const isZh = language === 'zh-CN';
 
   const [users, setUsers] = useState<UserAccount[]>([]);
@@ -56,7 +54,9 @@ export const UserManagementTable: React.FC = () => {
         roleNames: values.roles || ['VIEWER'],
       };
       await userService.createUser(payload);
-      message.success(isZh ? '新用户账号已成功创建并分配权限' : 'User account created successfully');
+      message.success(
+        isZh ? '新用户账号已成功创建并分配权限' : 'User account created successfully',
+      );
       createForm.resetFields();
       setCreateModalVisible(false);
       void fetchUsers();
@@ -85,16 +85,14 @@ export const UserManagementTable: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<UserAccount> = [
+  const baseColumns: ColumnsType<UserAccount> = [
     {
       title: isZh ? '用户名' : 'Username',
       dataIndex: 'username',
       key: 'username',
       width: 140,
       render: (val: string) => (
-        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff' }}>
-          @{val}
-        </span>
+        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff' }}>@{val}</span>
       ),
     },
     {
@@ -119,7 +117,11 @@ export const UserManagementTable: React.FC = () => {
               SALES: 'purple',
               VIEWER: 'default',
             };
-            return <Tag color={colorMap[r] || 'blue'} key={r}>{r}</Tag>;
+            return (
+              <Tag color={colorMap[r] || 'blue'} key={r}>
+                {r}
+              </Tag>
+            );
           })}
         </Space>
       ),
@@ -137,12 +139,13 @@ export const UserManagementTable: React.FC = () => {
       key: 'status',
       width: 90,
       render: (status: string) => (
-        <Tag color={status === 'ACTIVE' ? 'success' : 'default'}>
-          {status}
-        </Tag>
+        <Tag color={status === 'ACTIVE' ? 'success' : 'default'}>{status}</Tag>
       ),
     },
-    {
+  ];
+
+  if (isAdmin) {
+    baseColumns.push({
       title: isZh ? '操作' : 'Actions',
       key: 'actions',
       width: 170,
@@ -171,36 +174,59 @@ export const UserManagementTable: React.FC = () => {
                 danger={r.status === 'ACTIVE'}
                 icon={r.status === 'ACTIVE' ? <StopOutlined /> : <CheckCircleOutlined />}
               >
-                {r.status === 'ACTIVE' ? (isZh ? '停用' : 'Deactivate') : (isZh ? '启用' : 'Activate')}
+                {r.status === 'ACTIVE'
+                  ? isZh
+                    ? '停用'
+                    : 'Deactivate'
+                  : isZh
+                    ? '启用'
+                    : 'Activate'}
               </Button>
             </Popconfirm>
           )}
         </Space>
       ),
-    },
-  ];
+    });
+  }
+
+  const columns = baseColumns;
 
   return (
     <div style={{ marginTop: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 12,
+        }}
+      >
         <div>
           <div style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}>
             {isZh ? '系统操作员账号与访问权限列表' : 'Authorized Operator Accounts & Credentials'}
           </div>
           <div style={{ fontSize: 11, color: token.colorTextSecondary }}>
-            {isZh ? '统一控制车间终端操作员登录、岗位角色与安全权限' : 'Centralized RBAC management for workshop operators and credentials'}
+            {isZh
+              ? '统一控制车间终端操作员登录、岗位角色与安全权限'
+              : 'Centralized RBAC management for workshop operators and credentials'}
           </div>
         </div>
 
-        <Button
-          type="primary"
-          size="small"
-          icon={<UserAddOutlined />}
-          onClick={() => setCreateModalVisible(true)}
-          style={{ backgroundColor: '#1677ff' }}
-        >
-          {isZh ? '新增系统用户' : 'New User'}
-        </Button>
+        {isAdmin ? (
+          <Button
+            type="primary"
+            size="small"
+            icon={<UserAddOutlined />}
+            onClick={() => setCreateModalVisible(true)}
+            style={{ backgroundColor: '#1677ff' }}
+          >
+            {isZh ? '新增系统用户' : 'New User'}
+          </Button>
+        ) : (
+          <Tag color="orange">
+            {isZh ? '只读 (需系统管理员权限)' : 'Read-Only (Admin Required)'}
+          </Tag>
+        )}
       </div>
 
       <Table
@@ -220,7 +246,8 @@ export const UserManagementTable: React.FC = () => {
         onCancel={() => setCreateModalVisible(false)}
         onOk={handleCreateUser}
         centered
-        destroyOnClose
+        destroyOnHidden
+        forceRender
         okText={isZh ? '确认创建' : 'Create'}
         cancelText={isZh ? '取消' : 'Cancel'}
       >
@@ -230,7 +257,7 @@ export const UserManagementTable: React.FC = () => {
             label={isZh ? '登录工号 / 用户名' : 'Username / Staff ID'}
             rules={[{ required: true, message: isZh ? '请输入工号' : 'Required' }]}
           >
-            <Input placeholder="e.g. operator_li" />
+            <Input placeholder="operator_01" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -244,13 +271,13 @@ export const UserManagementTable: React.FC = () => {
             label={isZh ? '真实姓名' : 'Full Name'}
             rules={[{ required: true, message: isZh ? '请输入真实姓名' : 'Required' }]}
           >
-            <Input placeholder="e.g. Li Jun (李军)" />
+            <Input placeholder={isZh ? '请输入真实姓名' : 'Enter full name'} />
           </Form.Item>
           <Form.Item name="email" label={isZh ? '工作邮箱' : 'Work Email'}>
-            <Input placeholder="li.jun@factory.com" />
+            <Input placeholder="operator@company.com" />
           </Form.Item>
           <Form.Item name="phone" label={isZh ? '联系电话' : 'Contact Phone'}>
-            <Input placeholder="+86-138..." />
+            <Input placeholder={isZh ? '电话号码' : 'Phone number'} />
           </Form.Item>
           <Form.Item
             name="roles"
@@ -261,13 +288,13 @@ export const UserManagementTable: React.FC = () => {
               mode="multiple"
               placeholder={isZh ? '选择角色' : 'Select roles'}
               options={[
-                { value: 'ADMIN', label: 'ADMIN (系统管理)' },
-                { value: 'MANAGER', label: 'MANAGER (厂长总监)' },
-                { value: 'PRODUCTION', label: 'PRODUCTION (车间操作)' },
-                { value: 'WAREHOUSE', label: 'WAREHOUSE (仓储物流)' },
-                { value: 'PURCHASING', label: 'PURCHASING (采购质检)' },
-                { value: 'SALES', label: 'SALES (销售发货)' },
-                { value: 'VIEWER', label: 'VIEWER (审计只读)' },
+                { value: 'ADMIN', label: isZh ? '系统管理' : 'System Admin' },
+                { value: 'MANAGER', label: isZh ? '厂长总监' : 'Plant Manager' },
+                { value: 'PRODUCTION', label: isZh ? '车间操作' : 'Production' },
+                { value: 'WAREHOUSE', label: isZh ? '仓储物流' : 'Warehouse' },
+                { value: 'PURCHASING', label: isZh ? '采购质检' : 'Purchasing' },
+                { value: 'SALES', label: isZh ? '销售发货' : 'Sales' },
+                { value: 'VIEWER', label: isZh ? '审计只读' : 'Auditor' },
               ]}
             />
           </Form.Item>
@@ -284,7 +311,8 @@ export const UserManagementTable: React.FC = () => {
         }}
         onOk={handleResetPassword}
         centered
-        destroyOnClose
+        destroyOnHidden
+        forceRender
         okText={isZh ? '确认重置' : 'Reset'}
         cancelText={isZh ? '取消' : 'Cancel'}
       >

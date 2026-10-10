@@ -1,10 +1,5 @@
 export type SalesOrderStatus =
-  | 'QUOTATION'
-  | 'CONFIRMED'
-  | 'IN_PRODUCTION'
-  | 'READY_TO_SHIP'
-  | 'SHIPPED'
-  | 'CANCELLED';
+  'QUOTATION' | 'CONFIRMED' | 'IN_PRODUCTION' | 'READY_TO_SHIP' | 'SHIPPED' | 'CANCELLED';
 
 export interface SalesOrderSummary {
   id: number;
@@ -64,19 +59,25 @@ export interface CreateSalesOrderPayload {
   isUrgent?: boolean;
 }
 
+export interface CreateDeliveryItemPayload {
+  itemId: number;
+  quantity: number;
+  locationId?: number;
+  unitPrice?: number;
+}
+
 export interface CreateDeliveryPayload {
   salesOrderId: number;
   warehouseId: number;
-  shippingBay: string;
-  carrierName: string;
-  carrierTrackingNo: string;
-  truckPlate: string;
-  driverContact: string;
+  deliveryDate?: string;
+  shippingBay?: string;
+  carrierName?: string;
+  carrierTrackingNo?: string;
+  truckPlate?: string;
+  driverContact?: string;
   palletsCount?: number;
   grossWeightKg?: number;
   volumeCbm?: number;
-  items: {
-    soItemId: number;
-    quantity: number;
-  }[];
+  note?: string;
+  items: CreateDeliveryItemPayload[];
 }

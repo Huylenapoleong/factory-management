@@ -1,4 +1,11 @@
-export type ItemType = 'RAW_MATERIAL' | 'WIP' | 'FINISHED_GOODS' | 'SPARE_PART';
+export type ItemType =
+  | 'RAW_MATERIAL'
+  | 'SEMI_FINISHED'
+  | 'FINISHED_GOOD'
+  | 'CONSUMABLE'
+  | 'WIP'
+  | 'FINISHED_GOODS'
+  | 'SPARE_PART';
 export type ItemStatus = 'ACTIVE' | 'DISCONTINUED' | 'UNDER_REVIEW';
 
 export interface ItemRecord {

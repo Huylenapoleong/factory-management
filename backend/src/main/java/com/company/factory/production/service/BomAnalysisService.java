@@ -158,14 +158,14 @@ public class BomAnalysisService {
 
     private void visit(Graph graph, Bom bom, Long parentId, int depth, Set<Long> path, Map<Long, Optional<Bom>> bomCache) {
         if (depth > MAX_DEPTH) {
-            throw new BusinessException(HttpStatus.UNPROCESSABLE_ENTITY, "BOM_TOO_DEEP",
+            throw new BusinessException(HttpStatus.UNPROCESSABLE_CONTENT, "BOM_TOO_DEEP",
                     "BOM nesting exceeds " + MAX_DEPTH + " levels under " + bom.getCode());
         }
         for (BomItem bomItem : bom.getItems()) {
             Item child = bomItem.getMaterial();
             Long childId = child.getId();
             if (path.contains(childId)) {
-                throw new BusinessException(HttpStatus.UNPROCESSABLE_ENTITY, "BOM_CYCLE",
+                throw new BusinessException(HttpStatus.UNPROCESSABLE_CONTENT, "BOM_CYCLE",
                         "Circular BOM reference: " + child.getCode() + " is used inside its own structure");
             }
             graph.items.putIfAbsent(childId, child);

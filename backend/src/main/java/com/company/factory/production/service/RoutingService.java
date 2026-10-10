@@ -90,4 +90,16 @@ public class RoutingService {
         dto.setSteps(savedRouting.getSteps().stream().map(productionMapper::toRoutingStepDto).toList());
         return dto;
     }
+
+    @Transactional
+    public RoutingDto updateRoutingStatus(Long id, String status) {
+        Routing routing = routingRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "ROUTING_NOT_FOUND", "Routing not found: " + id));
+
+        routing.setStatus(status.toUpperCase());
+        Routing savedRouting = routingRepository.save(routing);
+        RoutingDto dto = productionMapper.toRoutingDto(savedRouting);
+        dto.setSteps(savedRouting.getSteps().stream().map(productionMapper::toRoutingStepDto).toList());
+        return dto;
+    }
 }

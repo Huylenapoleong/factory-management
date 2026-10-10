@@ -4,7 +4,8 @@ export interface AuditLogItem {
   userRoleZh: string;
   userRoleEn: string;
   action: 'CREATE' | 'UPDATE' | 'CONFIRM' | 'POST' | 'SHIP' | 'DELETE' | 'LOGIN';
-  entityType: 'PRODUCTION_ORDER' | 'STOCK_MOVEMENT' | 'PURCHASE_ORDER' | 'SALES_ORDER' | 'SYSTEM_AUTH';
+  entityType:
+    'PRODUCTION_ORDER' | 'STOCK_MOVEMENT' | 'PURCHASE_ORDER' | 'SALES_ORDER' | 'SYSTEM_AUTH';
   entityId: string;
   detailsZh: string;
   detailsEn: string;

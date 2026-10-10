@@ -3,7 +3,7 @@ import type { DisplayDensity } from '@/stores/useAppStore';
 
 export const getIndustrialTheme = (
   isDark: boolean,
-  density: DisplayDensity = 'standard'
+  density: DisplayDensity = 'standard',
 ): ThemeConfig => {
   const fontSize = density === 'compact' ? 12 : density === 'large' ? 16 : 14;
   const algorithms = [isDark ? theme.darkAlgorithm : theme.defaultAlgorithm];
@@ -22,7 +22,8 @@ export const getIndustrialTheme = (
       colorInfo: '#1677ff',
       fontSize,
       borderRadius: 4,
-      fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      fontFamily:
+        "Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif",
     },
     components: {
       Card: {

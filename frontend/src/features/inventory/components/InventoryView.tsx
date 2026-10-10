@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Spin, message } from 'antd';
+import { Row, Col, Spin } from 'antd';
+import { message } from '@/utils/antdApp';
 import { inventoryService } from '@/services/inventoryService';
-import {
-  InventoryBalanceItem,
-  StockAuditLogItem,
-  StockStatus,
-} from '../types';
+import { useAppStore } from '@/stores/useAppStore';
+import { InventoryBalanceItem, StockAuditLogItem, StockStatus } from '../types';
 import { InventoryKpiStrip } from './InventoryKpiStrip';
 import { InventoryFilterBar } from './InventoryFilterBar';
 import { InventoryLedgerTable } from './InventoryLedgerTable';
@@ -14,12 +12,14 @@ import { StockTransferModal } from './StockTransferModal';
 import { StockAdjustmentModal } from './StockAdjustmentModal';
 
 export const InventoryView: React.FC = () => {
+  const { activeWarehouseId, refreshKey } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [balances, setBalances] = useState<InventoryBalanceItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<StockAuditLogItem[]>([]);
 
   // Filters
-  const [selectedWarehouse, setSelectedWarehouse] = useState<number | 'ALL'>('ALL');
+  const [selectedWarehouse, setSelectedWarehouse] = useState<number | 'ALL' | null>(null);
+  const effectiveWarehouse: number | 'ALL' = selectedWarehouse ?? activeWarehouseId ?? 'ALL';
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<StockStatus | 'ALL'>('ALL');
   const [searchText, setSearchText] = useState<string>('');
@@ -28,13 +28,15 @@ export const InventoryView: React.FC = () => {
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferTargetItem, setTransferTargetItem] = useState<InventoryBalanceItem | null>(null);
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
-  const [adjustmentTargetItem, setAdjustmentTargetItem] = useState<InventoryBalanceItem | null>(null);
+  const [adjustmentTargetItem, setAdjustmentTargetItem] = useState<InventoryBalanceItem | null>(
+    null,
+  );
 
   const fetchData = useCallback(async () => {
     try {
       const [balData, logData] = await Promise.all([
         inventoryService.getBalances({
-          warehouseId: selectedWarehouse,
+          warehouseId: effectiveWarehouse,
           category: selectedCategory,
           status: selectedStatus,
           search: searchText,
@@ -48,7 +50,7 @@ export const InventoryView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedWarehouse, selectedCategory, selectedStatus, searchText]);
+  }, [effectiveWarehouse, selectedCategory, selectedStatus, searchText]);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,7 +62,7 @@ export const InventoryView: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [fetchData]);
+  }, [fetchData, refreshKey]);
 
   const handleOpenTransfer = (item?: InventoryBalanceItem) => {
     setTransferTargetItem(item || (balances.length > 0 ? balances[0] : null));
@@ -74,8 +76,10 @@ export const InventoryView: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <Spin size="large" tip="Loading warehouse inventory ledger..." />
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}
+      >
+        <Spin size="large" description="Loading warehouse inventory ledger..." />
       </div>
     );
   }
@@ -83,11 +87,12 @@ export const InventoryView: React.FC = () => {
   return (
     <div style={{ maxWidth: 1920, margin: '0 auto' }}>
       {/* 1. Top KPI Ribbon */}
-      <InventoryKpiStrip />
+      <InventoryKpiStrip balances={balances} />
 
       {/* 2. Filter & Action Toolbar */}
       <InventoryFilterBar
-        selectedWarehouse={selectedWarehouse}
+        balances={balances}
+        selectedWarehouse={effectiveWarehouse}
         onSelectWarehouse={setSelectedWarehouse}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
@@ -111,10 +116,7 @@ export const InventoryView: React.FC = () => {
         </Col>
 
         <Col xs={24} lg={8} xl={7}>
-          <RealtimeLotAuditFeed
-            logs={auditLogs}
-            onRefresh={fetchData}
-          />
+          <RealtimeLotAuditFeed logs={auditLogs} onRefresh={fetchData} />
         </Col>
       </Row>
 

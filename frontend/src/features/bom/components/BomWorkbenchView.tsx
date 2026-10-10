@@ -23,7 +23,9 @@ const defaultSelection = (analysis: BomAnalysis): number | null => {
   const toOrder = analysis.lines
     .filter((line) => line.procurementStatus === 'TO_ORDER')
     .sort((a, b) => (a.orderByDate ?? '').localeCompare(b.orderByDate ?? ''));
-  return toOrder[0]?.materialId ?? analysis.bottleneckMaterialId ?? analysis.lines[0]?.materialId ?? null;
+  return (
+    toOrder[0]?.materialId ?? analysis.bottleneckMaterialId ?? analysis.lines[0]?.materialId ?? null
+  );
 };
 
 export const BomWorkbenchView: React.FC = () => {
@@ -37,7 +39,9 @@ export const BomWorkbenchView: React.FC = () => {
   const [filter, setFilter] = useState<CoverageFilter>('ALL');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [releaseOpen, setReleaseOpen] = useState(false);
-  const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().add(DEFAULT_LEAD_DAYS, 'day').startOf('day'));
+  const [startDate, setStartDate] = useState<Dayjs>(() =>
+    dayjs().add(DEFAULT_LEAD_DAYS, 'day').startOf('day'),
+  );
   const [purchaseLine, setPurchaseLine] = useState<BomAnalysisLine | null>(null);
   const startDateParam = startDate.format('YYYY-MM-DD');
 
@@ -66,7 +70,8 @@ export const BomWorkbenchView: React.FC = () => {
     : analysis
       ? defaultSelection(analysis)
       : null;
-  const selectedLine = analysis?.lines.find((line) => line.materialId === effectiveSelectedId) ?? null;
+  const selectedLine =
+    analysis?.lines.find((line) => line.materialId === effectiveSelectedId) ?? null;
 
   const selectBom = (id: number) => {
     setSearchParams({ bomId: String(id) });
@@ -76,7 +81,9 @@ export const BomWorkbenchView: React.FC = () => {
 
   const applyFilter = (next: CoverageFilter) => {
     setFilter(next);
-    document.getElementById('bom-requirements')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document
+      .getElementById('bom-requirements')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   if (bomsQuery.isError) {
@@ -92,16 +99,43 @@ export const BomWorkbenchView: React.FC = () => {
   if (bomsQuery.isSuccess && boms.length === 0) {
     return (
       <Card>
-        <Empty description={isZh ? '尚未建立任何产品的物料清单' : 'No product has a bill of materials yet'} />
+        <Empty
+          description={
+            isZh ? '尚未建立任何产品的物料清单' : 'No product has a bill of materials yet'
+          }
+        />
       </Card>
     );
   }
 
   return (
-    <div style={{ maxWidth: 1600, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <Card size="small" styles={{ body: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '10px 14px' } }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1, minWidth: 260 }}>
-          <span style={{ fontSize: 12, color: token.colorTextSecondary }}>{isZh ? '产品与物料定额' : 'Product & material norms'}</span>
+    <div
+      style={{
+        maxWidth: 1600,
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      <Card
+        size="small"
+        styles={{
+          body: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            padding: '10px 14px',
+          },
+        }}
+      >
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1, minWidth: 260 }}
+        >
+          <span style={{ fontSize: 12, color: token.colorTextSecondary }}>
+            {isZh ? '产品与物料定额' : 'Product & material norms'}
+          </span>
           <Select
             size="large"
             variant="borderless"
@@ -118,20 +152,33 @@ export const BomWorkbenchView: React.FC = () => {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>{bom.productNameEn}</span>
                   <span style={{ fontSize: 12, color: token.colorTextTertiary, fontWeight: 400 }}>
-                    {bom.productCode} · v{bom.version} · {bom.itemCount} {isZh ? '项物料' : 'materials'}
+                    {bom.productCode} · v{bom.version} · {bom.itemCount}{' '}
+                    {isZh ? '项物料' : 'materials'}
                   </span>
-                  {bom.status !== 'ACTIVE' && <Tag style={{ marginInlineEnd: 0 }}>{bom.status}</Tag>}
+                  {bom.status !== 'ACTIVE' && (
+                    <Tag style={{ marginInlineEnd: 0 }}>{bom.status}</Tag>
+                  )}
                 </span>
               ),
             }))}
           />
         </div>
         {analysis && (
-          <Tag color={analysis.status === 'ACTIVE' ? 'success' : 'default'} style={{ marginInlineEnd: 0 }}>
-            {analysis.bomCode} · {analysis.status === 'ACTIVE' ? (isZh ? '生效中' : 'Active') : analysis.status}
+          <Tag
+            color={analysis.status === 'ACTIVE' ? 'success' : 'default'}
+            style={{ marginInlineEnd: 0 }}
+          >
+            {analysis.bomCode} ·{' '}
+            {analysis.status === 'ACTIVE' ? (isZh ? '生效中' : 'Active') : analysis.status}
           </Tag>
         )}
-        <Button type="primary" size="large" icon={<PlayCircleOutlined />} disabled={!analysis} onClick={() => setReleaseOpen(true)}>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlayCircleOutlined />}
+          disabled={!analysis}
+          onClick={() => setReleaseOpen(true)}
+        >
           {isZh ? '下达生产工单' : 'Create production order'}
         </Button>
       </Card>
@@ -141,12 +188,21 @@ export const BomWorkbenchView: React.FC = () => {
           type="error"
           showIcon
           title={isZh ? '无法计算物料需求' : 'Could not calculate material requirements'}
-          action={<Button size="small" onClick={() => analysisQuery.refetch()}>{isZh ? '重试' : 'Retry'}</Button>}
+          action={
+            <Button size="small" onClick={() => analysisQuery.refetch()}>
+              {isZh ? '重试' : 'Retry'}
+            </Button>
+          }
         />
       )}
 
-      <div className="bom-workbench-body" style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <div style={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div
+        className="bom-workbench-body"
+        style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}
+      >
+        <div
+          style={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}
+        >
           {!analysis ? (
             <Card>
               <Skeleton active paragraph={{ rows: 8 }} />
@@ -161,7 +217,12 @@ export const BomWorkbenchView: React.FC = () => {
                 onUseMaxQuantity={() => setQuantity(analysis.maxBuildableQuantity)}
                 onShowAllShortages={() => applyFilter('SHORTAGE')}
               />
-              <ProductStructureTree analysis={analysis} isZh={isZh} selectedId={effectiveSelectedId} onSelect={setSelectedId} />
+              <ProductStructureTree
+                analysis={analysis}
+                isZh={isZh}
+                selectedId={effectiveSelectedId}
+                onSelect={setSelectedId}
+              />
               <BomRequirementTable
                 analysis={analysis}
                 isZh={isZh}
@@ -176,7 +237,10 @@ export const BomWorkbenchView: React.FC = () => {
           )}
         </div>
 
-        <aside className="bom-workbench-inspector" style={{ width: 320, flexShrink: 0, position: 'sticky', top: 12 }}>
+        <aside
+          className="bom-workbench-inspector"
+          style={{ width: 320, flexShrink: 0, position: 'sticky', top: 12 }}
+        >
           <PlanningInspector
             analysis={analysis}
             isZh={isZh}
@@ -190,8 +254,22 @@ export const BomWorkbenchView: React.FC = () => {
         </aside>
       </div>
 
-      {analysis && <ReleaseOrderModal open={releaseOpen} onClose={() => setReleaseOpen(false)} analysis={analysis} isZh={isZh} />}
-      {analysis && <PurchaseRequestModal line={purchaseLine} analysis={analysis} isZh={isZh} onClose={() => setPurchaseLine(null)} />}
+      {analysis && (
+        <ReleaseOrderModal
+          open={releaseOpen}
+          onClose={() => setReleaseOpen(false)}
+          analysis={analysis}
+          isZh={isZh}
+        />
+      )}
+      {analysis && (
+        <PurchaseRequestModal
+          line={purchaseLine}
+          analysis={analysis}
+          isZh={isZh}
+          onClose={() => setPurchaseLine(null)}
+        />
+      )}
     </div>
   );
 };

@@ -1,15 +1,7 @@
 export type PurchaseOrderStatus =
-  | 'DRAFT'
-  | 'CONFIRMED'
-  | 'INBOUND_INSPECTING'
-  | 'RECEIVED'
-  | 'CANCELLED';
+  'DRAFT' | 'CONFIRMED' | 'INBOUND_INSPECTING' | 'RECEIVED' | 'CANCELLED';
 
-export type GoodsReceiptStatus =
-  | 'INSPECTING'
-  | 'PASSED'
-  | 'DEFECT_HOLD'
-  | 'POSTED';
+export type GoodsReceiptStatus = 'INSPECTING' | 'PASSED' | 'DEFECT_HOLD' | 'POSTED';
 
 export interface PurchaseOrderSummary {
   id: number;
@@ -66,14 +58,19 @@ export interface CreatePurchaseOrderPayload {
   isUrgent?: boolean;
 }
 
+export interface CreateGoodsReceiptItemPayload {
+  itemId: number;
+  quantity: number;
+  locationId?: number;
+  unitPrice?: number;
+}
+
 export interface CreateGoodsReceiptPayload {
-  purchaseOrderId: number;
+  purchaseOrderId?: number;
   warehouseId: number;
-  receivingBay: string;
+  receiptDate?: string;
+  receivingBay?: string;
   carrierTracking?: string;
-  items: {
-    poItemId: number;
-    receivedQuantity: number;
-    locationId?: number;
-  }[];
+  note?: string;
+  items: CreateGoodsReceiptItemPayload[];
 }

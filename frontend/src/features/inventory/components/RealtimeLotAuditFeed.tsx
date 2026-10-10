@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Tag, Radio, Button, Space, message, Badge, theme } from 'antd';
+import { Card, Tag, Radio, Button, Space, Badge, theme } from 'antd';
+import { message } from '@/utils/antdApp';
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -10,6 +11,7 @@ import {
   WifiOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { StockAuditLogItem, StockMovementType } from '../types';
 
 interface RealtimeLotAuditFeedProps {
@@ -17,10 +19,10 @@ interface RealtimeLotAuditFeedProps {
   onRefresh?: () => void;
 }
 
-export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
-  logs,
-}) => {
+export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({ logs, onRefresh }) => {
+  const [syncing, setSyncing] = useState<boolean>(false);
   const { language } = useAppStore();
+  const { user } = useAuthStore();
   const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [filterType, setFilterType] = useState<string>('ALL');
@@ -28,7 +30,8 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
   const filteredLogs = logs.filter((log) => {
     if (filterType === 'ALL') return true;
     if (filterType === 'INBOUND' && log.type === 'INBOUND') return true;
-    if (filterType === 'ISSUE' && (log.type === 'PRODUCTION_ISSUE' || log.type === 'OUTBOUND')) return true;
+    if (filterType === 'ISSUE' && (log.type === 'PRODUCTION_ISSUE' || log.type === 'OUTBOUND'))
+      return true;
     if (filterType === 'TRANSFER' && log.type === 'TRANSFER') return true;
     if (filterType === 'SCRAP' && log.type === 'QC_SCRAP') return true;
     return false;
@@ -146,7 +149,14 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
                   boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 4,
+                  }}
+                >
                   <Space size="small">
                     <Tag
                       color={badge.color}
@@ -155,7 +165,14 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
                     >
                       {badge.text}
                     </Tag>
-                    <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#1677ff', fontWeight: 600 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                        color: '#1677ff',
+                        fontWeight: 600,
+                      }}
+                    >
                       {log.itemCode}
                     </span>
                   </Space>
@@ -172,15 +189,32 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
                   </span>
                 </div>
 
-                <div style={{ fontSize: 12, fontWeight: 500, color: token.colorText, marginBottom: 2 }}>
+                <div
+                  style={{ fontSize: 12, fontWeight: 500, color: token.colorText, marginBottom: 2 }}
+                >
                   {isZh ? log.itemNameZh : log.itemNameEn}
                 </div>
 
-                <div style={{ fontSize: 11, color: token.colorTextSecondary, display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: token.colorTextSecondary,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: 4,
+                  }}
+                >
                   <span>
                     {log.targetLocation ? `-> ${log.targetLocation}` : log.sourceLocation}
                   </span>
-                  <span style={{ fontFamily: 'monospace', color: token.colorTextTertiary || token.colorTextSecondary }}>{log.docReference}</span>
+                  <span
+                    style={{
+                      fontFamily: 'monospace',
+                      color: token.colorTextTertiary || token.colorTextSecondary,
+                    }}
+                  >
+                    {log.docReference}
+                  </span>
                 </div>
 
                 <div
@@ -214,7 +248,14 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
         }}
         styles={{ body: { padding: '12px' } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}
+        >
           <Space size="small">
             <QrcodeOutlined style={{ color: '#1677ff' }} />
             <span style={{ fontWeight: 600, fontSize: 12, color: token.colorText }}>
@@ -222,16 +263,21 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
             </span>
           </Space>
           <Tag color="success" style={{ margin: 0, borderRadius: 2, fontSize: 10 }}>
-            PDA-08 Online
+            {isZh ? '终端在线' : 'Terminal Online'}
           </Tag>
         </div>
 
         <div style={{ fontSize: 11, color: token.colorTextSecondary, lineHeight: '18px' }}>
-          <div>{isZh ? '分配领料员: 陈斌 (工号: WH-030)' : 'Operator: Chen Bin (WH-030)'}</div>
-          <div>{isZh ? '当前作业区: WH-01 原材料立库 A-5' : 'Active Zone: WH-01 High Rack A-5'}</div>
+          <div>
+            {isZh ? '当前操作员: ' : 'Active Operator: '}
+            <strong style={{ color: token.colorText }}>
+              {user?.fullName || user?.username || (isZh ? '当班操作员' : 'Duty Operator')}
+            </strong>
+          </div>
+          <div>{isZh ? '作业区域: 厂区仓储与物流中心' : 'Active Zone: Plant Logistics Hub'}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
             <WifiOutlined style={{ color: '#10b981' }} />
-            <span>5G Industrial -63dBm | {isZh ? '电量: 94%' : 'Battery: 94%'}</span>
+            <span>{isZh ? '工业物联网通信正常' : 'Industrial IoT Connected'}</span>
           </div>
         </div>
 
@@ -239,10 +285,25 @@ export const RealtimeLotAuditFeed: React.FC<RealtimeLotAuditFeedProps> = ({
           type="dashed"
           block
           size="small"
+          loading={syncing}
           style={{ marginTop: 10, fontSize: 11 }}
-          onClick={() => message.success(isZh ? '拣货配料任务已下发至 PDA-08' : 'Picking task pushed to PDA-08')}
+          onClick={async () => {
+            setSyncing(true);
+            try {
+              if (onRefresh) {
+                await onRefresh();
+              }
+              message.success(
+                isZh
+                  ? '拣货任务已与手持终端实时同步'
+                  : 'Picking task synchronized to handheld terminal',
+              );
+            } finally {
+              setSyncing(false);
+            }
+          }}
         >
-          {isZh ? '下发拣货任务至 PDA' : 'Push Picking Task to PDA'}
+          {isZh ? '同步拣货任务' : 'Sync Picking Tasks'}
         </Button>
       </Card>
     </div>

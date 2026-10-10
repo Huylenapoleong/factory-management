@@ -1,15 +1,26 @@
 package com.company.factory.production;
 
-import com.company.factory.common.exception.BusinessException;
 import com.company.factory.inventory.domain.TransactionType;
 import com.company.factory.inventory.service.InventoryService;
 import com.company.factory.masterdata.domain.Item;
 import com.company.factory.masterdata.domain.ItemType;
 import com.company.factory.masterdata.repository.ItemRepository;
-import com.company.factory.production.domain.*;
-import com.company.factory.production.dto.*;
+import com.company.factory.production.domain.Bom;
+import com.company.factory.production.domain.BomItem;
+import com.company.factory.production.domain.ProductionMaterial;
+import com.company.factory.production.domain.ProductionOrder;
+import com.company.factory.production.domain.Routing;
+import com.company.factory.production.domain.RoutingStep;
+import com.company.factory.production.dto.MaterialIssueRequest;
+import com.company.factory.production.dto.ProductionCompleteRequest;
+import com.company.factory.production.dto.ProductionMaterialDto;
+import com.company.factory.production.dto.ProductionOrderDto;
 import com.company.factory.production.mapper.ProductionMapper;
-import com.company.factory.production.repository.*;
+import com.company.factory.production.repository.BomRepository;
+import com.company.factory.production.repository.ProductionMaterialRepository;
+import com.company.factory.production.repository.ProductionOperationRepository;
+import com.company.factory.production.repository.ProductionOrderRepository;
+import com.company.factory.production.repository.RoutingRepository;
 import com.company.factory.production.service.ProductionOrderService;
 import com.company.factory.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,10 +37,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionOrderWorkflowTest {
@@ -182,5 +193,30 @@ class ProductionOrderWorkflowTest {
                 eq(new BigDecimal("150.00")), eq(TransactionType.PRODUCTION_RECEIPT),
                 eq("PRODUCTION_ORDER"), eq("MO-5001"), eq("Final batch complete"), eq(1L)
         );
+    }
+
+    @Test
+    @DisplayName("cancelProductionOrder should set status to CANCELLED")
+    void shouldCancelProductionOrder() {
+        mo.setStatus("RELEASED");
+        when(moRepository.findById(500L)).thenReturn(Optional.of(mo));
+        when(moRepository.save(any(ProductionOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productionMapper.toMoDto(any(ProductionOrder.class))).thenReturn(ProductionOrderDto.builder().id(500L).status("CANCELLED").build());
+
+        ProductionOrderDto result = moService.cancelProductionOrder(500L, 1L);
+
+        assertThat(result).isNotNull();
+        assertThat(mo.getStatus()).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    @DisplayName("deleteProductionOrder should delete when status is DRAFT")
+    void shouldDeleteDraftProductionOrder() {
+        mo.setStatus("DRAFT");
+        when(moRepository.findById(500L)).thenReturn(Optional.of(mo));
+
+        moService.deleteProductionOrder(500L);
+
+        verify(moRepository).delete(mo);
     }
 }

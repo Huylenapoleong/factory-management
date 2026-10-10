@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Modal, message } from 'antd';
+import { Card, Table, Tag, Button, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   AlertFilled,
@@ -23,19 +23,33 @@ export const MaterialShortageCard: React.FC<MaterialShortageCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const { language } = useAppStore();
+  const { modal, message } = App.useApp();
   const [loadingCode, setLoadingCode] = useState<string | null>(null);
 
   const handleQuickPo = (item: MaterialShortageItem) => {
-    Modal.confirm({
+    modal.confirm({
       title: `${t('dashboard.quickPo')} - ${language === 'zh-CN' ? item.materialNameZh : item.materialName}`,
       icon: <ShoppingCartOutlined style={{ color: '#1677ff' }} />,
       content: (
         <div>
           <p>{t('dashboard.quickPoConfirm')}</p>
           <div style={{ padding: 8, backgroundColor: '#f9fafb', borderRadius: 4, fontSize: 12 }}>
-            <div><strong>Item:</strong> {item.materialCode}</div>
-            <div><strong>Deficit to purchase:</strong> <span style={{ color: '#ff4d4f', fontWeight: 600 }}>{item.deficitQty} {item.uom}</span></div>
-            <div><strong>Notice:</strong> {item.leadTimeNotice}</div>
+            <div>
+              <strong>{language === 'zh-CN' ? '物料编码: ' : 'Item Code: '}</strong>{' '}
+              {item.materialCode}
+            </div>
+            <div>
+              <strong>{language === 'zh-CN' ? '缺额数量: ' : 'Deficit to purchase: '}</strong>{' '}
+              <span style={{ color: '#ff4d4f', fontWeight: 600 }}>
+                {item.deficitQty} {item.uom}
+              </span>
+            </div>
+            {item.leadTimeNotice && (
+              <div>
+                <strong>{language === 'zh-CN' ? '说明: ' : 'Notice: '}</strong>{' '}
+                {item.leadTimeNotice}
+              </div>
+            )}
           </div>
         </div>
       ),
@@ -45,9 +59,12 @@ export const MaterialShortageCard: React.FC<MaterialShortageCardProps> = ({
       onOk: async () => {
         try {
           setLoadingCode(item.materialCode);
-          const result = await dashboardService.quickCreatePo(item.materialCode, item.deficitQty);
+          const result = await dashboardService.quickCreatePo(Number(item.id), item.deficitQty);
           message.success({
-            content: `Purchase Order ${result.poNo} created successfully!`,
+            content:
+              language === 'zh-CN'
+                ? `采购订单 ${result.poNo} 已成功创建！`
+                : `Purchase Order ${result.poNo} created successfully!`,
             icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
           });
           onPoCreated?.();
@@ -81,8 +98,12 @@ export const MaterialShortageCard: React.FC<MaterialShortageCardProps> = ({
       width: 110,
       render: (_, record) => (
         <div className="tnum" style={{ fontSize: 11 }}>
-          <span style={{ color: '#cf1322', fontWeight: 600 }}>{record.currentStock} {record.uom}</span>
-          <div style={{ color: '#9ca3af' }}>Min: {record.minStock} {record.uom}</div>
+          <span style={{ color: '#cf1322', fontWeight: 600 }}>
+            {record.currentStock} {record.uom}
+          </span>
+          <div style={{ color: '#9ca3af' }}>
+            Min: {record.minStock} {record.uom}
+          </div>
         </div>
       ),
     },
@@ -130,10 +151,17 @@ export const MaterialShortageCard: React.FC<MaterialShortageCardProps> = ({
           <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>
             {t('dashboard.criticalShortages')}
           </span>
-          <Tag color="error" style={{ margin: 0, fontWeight: 600, borderRadius: 2 }}>
-            <AlertFilled style={{ marginRight: 4 }} />
-            {t('dashboard.criticalDeficitsBadge')}
-          </Tag>
+          {shortages.length > 0 ? (
+            <Tag color="error" style={{ margin: 0, fontWeight: 600, borderRadius: 2 }}>
+              <AlertFilled style={{ marginRight: 4 }} />
+              {shortages.length} {t('dashboard.criticalShortages')}
+            </Tag>
+          ) : (
+            <Tag color="success" style={{ margin: 0, fontWeight: 600, borderRadius: 2 }}>
+              <CheckCircleOutlined style={{ marginRight: 4 }} />
+              {t('dashboard.nominalStatus')}
+            </Tag>
+          )}
         </div>
       }
       style={{
@@ -152,23 +180,25 @@ export const MaterialShortageCard: React.FC<MaterialShortageCardProps> = ({
         bordered
       />
 
-      <div
-        style={{
-          marginTop: 8,
-          padding: '6px 10px',
-          backgroundColor: '#eff6ff',
-          border: '1px solid #bfdbfe',
-          borderRadius: 3,
-          fontSize: 11,
-          color: '#1e40af',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}
-      >
-        <InfoCircleOutlined style={{ color: '#2563eb' }} />
-        <span>{t('dashboard.leadTimeNotice')}</span>
-      </div>
+      {shortages.length > 0 && (
+        <div
+          style={{
+            marginTop: 8,
+            padding: '6px 10px',
+            backgroundColor: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: 3,
+            fontSize: 11,
+            color: '#1e40af',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <InfoCircleOutlined style={{ color: '#2563eb' }} />
+          <span>{t('dashboard.leadTimeNotice')}</span>
+        </div>
+      )}
     </Card>
   );
 };

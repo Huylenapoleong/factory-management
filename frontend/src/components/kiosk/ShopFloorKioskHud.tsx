@@ -17,14 +17,8 @@ export const ShopFloorKioskHud: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    kioskMode,
-    setKioskMode,
-    kioskPlaying,
-    setKioskPlaying,
-    kioskInterval,
-    language,
-  } = useAppStore();
+  const { kioskMode, setKioskMode, kioskPlaying, setKioskPlaying, kioskInterval, language } =
+    useAppStore();
 
   const [countdown, setCountdown] = useState<number>(kioskInterval);
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -113,12 +107,18 @@ export const ShopFloorKioskHud: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <FundProjectionScreenOutlined style={{ fontSize: 22, color: '#38bdf8' }} />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '0.04em', color: '#f8fafc', lineHeight: 1.2 }}>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                color: '#f8fafc',
+                lineHeight: 1.2,
+              }}
+            >
               {t('kiosk.title')}
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8' }}>
-              {t('kiosk.subTitle')}
-            </div>
+            <div style={{ fontSize: 10, color: '#94a3b8' }}>{t('kiosk.subTitle')}</div>
           </div>
         </div>
 
@@ -135,7 +135,7 @@ export const ShopFloorKioskHud: React.FC = () => {
             color: '#e0f2fe',
           }}
         >
-          {language === 'zh-CN' ? '第一车间 (Heavy Machining)' : 'Workshop 01'}
+          {language === 'zh-CN' ? '一号生产车间' : 'Workshop 01'}
         </Tag>
 
         <Tag
@@ -215,14 +215,16 @@ export const ShopFloorKioskHud: React.FC = () => {
           <span style={{ fontSize: 11, color: '#94a3b8' }}>
             {kioskPlaying
               ? t('kiosk.nextRotationIn', { sec: countdown })
-              : (language === 'zh-CN' ? '已暂停轮播' : 'Rotation Paused')}
+              : language === 'zh-CN'
+                ? '已暂停轮播'
+                : 'Rotation Paused'}
           </span>
           <Progress
             type="line"
             percent={progressPercent}
             showInfo={false}
             strokeColor="#38bdf8"
-            trailColor="#334155"
+            railColor="#334155"
             size="small"
             style={{ width: 60, margin: 0 }}
           />
@@ -234,7 +236,13 @@ export const ShopFloorKioskHud: React.FC = () => {
         <Button
           type="text"
           size="small"
-          icon={kioskPlaying ? <PauseCircleFilled style={{ color: '#faad14', fontSize: 18 }} /> : <PlayCircleFilled style={{ color: '#52c41a', fontSize: 18 }} />}
+          icon={
+            kioskPlaying ? (
+              <PauseCircleFilled style={{ color: '#faad14', fontSize: 18 }} />
+            ) : (
+              <PlayCircleFilled style={{ color: '#52c41a', fontSize: 18 }} />
+            )
+          }
           onClick={() => setKioskPlaying(!kioskPlaying)}
           title={kioskPlaying ? t('kiosk.pause') : t('kiosk.resume')}
         />

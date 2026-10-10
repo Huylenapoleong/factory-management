@@ -31,21 +31,23 @@ class UserService {
   public async getUsers(): Promise<UserAccount[]> {
     try {
       const res = await apiClient.get('/users', { params: { size: 50 } });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            username: string;
-            fullName: string;
-            email?: string;
-            phone?: string;
-            status: string;
-            roles: string[];
-            createdAt?: string;
-            updatedAt?: string;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              username: string;
+              fullName: string;
+              email?: string;
+              phone?: string;
+              status: string;
+              roles: string[];
+              createdAt?: string;
+              updatedAt?: string;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
@@ -70,13 +72,15 @@ class UserService {
   public async getRoles(): Promise<RoleDefinition[]> {
     try {
       const res = await apiClient.get('/roles');
-      const responseData = (res as {
-        data?: Array<{
-          id: number;
-          name: string;
-          description: string;
-        }>;
-      })?.data;
+      const responseData = (
+        res as {
+          data?: Array<{
+            id: number;
+            name: string;
+            description: string;
+          }>;
+        }
+      )?.data;
 
       if (Array.isArray(responseData)) {
         return responseData.map((r) => ({
@@ -115,7 +119,7 @@ class UserService {
 
       const created = res?.data;
       return {
-        id: created?.id || Date.now(),
+        id: Number(created?.id ?? 0),
         username: created?.username || payload.username,
         fullName: created?.fullName || payload.fullName,
         email: created?.email || payload.email,

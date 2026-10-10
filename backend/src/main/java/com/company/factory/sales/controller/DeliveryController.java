@@ -75,4 +75,20 @@ public class DeliveryController {
         }
         return ApiResponse.success(deliveryService.postDelivery(id, userId), "Delivery posted and stock deducted");
     }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'WAREHOUSE', 'SALES')")
+    @Operation(summary = "Cancel draft delivery order")
+    public ApiResponse<DeliveryDto> cancelDelivery(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = null;
+        if (userDetails != null) {
+            userId = userRepository.findByUsername(userDetails.getUsername())
+                    .map(User::getId)
+                    .orElse(null);
+        }
+        return ApiResponse.success(deliveryService.cancelDelivery(id, userId), "Delivery cancelled");
+    }
 }

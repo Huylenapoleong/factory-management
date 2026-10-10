@@ -210,4 +210,21 @@ public class DeliveryService {
         dto.setItems(savedDelivery.getItems().stream().map(salesMapper::toDeliveryItemDto).toList());
         return dto;
     }
+
+    @Transactional
+    public DeliveryDto cancelDelivery(Long id, Long userId) {
+        Delivery delivery = deliveryRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "DELIVERY_NOT_FOUND", "Delivery not found: " + id));
+
+        if (!"DRAFT".equals(delivery.getStatus())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_STATE", "Only DRAFT deliveries can be cancelled");
+        }
+
+        delivery.setStatus("CANCELLED");
+        Delivery savedDelivery = deliveryRepository.save(delivery);
+
+        DeliveryDto dto = salesMapper.toDeliveryDto(savedDelivery);
+        dto.setItems(savedDelivery.getItems().stream().map(salesMapper::toDeliveryItemDto).toList());
+        return dto;
+    }
 }

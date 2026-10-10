@@ -11,11 +11,11 @@ export interface SupplierRecord {
   address: string;
   taxNumber: string;
   paymentTerms: string;
-  ratingGrade: 'A' | 'B' | 'C';
-  onTimeDeliveryRate: number;
-  qualityPassRate: number;
+  ratingGrade?: 'A' | 'B' | 'C' | null;
+  onTimeDeliveryRate?: number | null;
+  qualityPassRate?: number | null;
   status: SupplierStatus;
-  leadTimeDays: number;
+  leadTimeDays?: number | null;
   updatedAt: string;
 }
 

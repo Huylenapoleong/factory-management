@@ -82,4 +82,21 @@ public class InventoryController {
         StockTransactionDto dto = inventoryService.adjustStock(request, userId);
         return ApiResponse.success(dto, "Stock adjusted successfully");
     }
+
+    @PostMapping("/transfer")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'WAREHOUSE')")
+    @Operation(summary = "Transfer stock between warehouses")
+    public ApiResponse<List<StockTransactionDto>> transferStock(
+            @Valid @RequestBody com.company.factory.inventory.dto.StockTransferRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = null;
+        if (userDetails != null) {
+            userId = userRepository.findByUsername(userDetails.getUsername())
+                    .map(User::getId)
+                    .orElse(null);
+        }
+        List<StockTransactionDto> txs = inventoryService.transferStock(request, userId);
+        return ApiResponse.success(txs, "Stock transferred successfully");
+    }
 }

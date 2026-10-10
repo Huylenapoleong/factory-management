@@ -8,25 +8,27 @@ class MasterDataService {
   public async getItems(): Promise<ItemRecord[]> {
     try {
       const res = await apiClient.get('/items', { params: { size: 50 } });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            code: string;
-            nameEn: string;
-            nameZh?: string;
-            type: string;
-            categoryId?: number;
-            categoryName?: string;
-            unitCode?: string;
-            purchasePrice?: number;
-            salePrice?: number;
-            minStock?: number;
-            status: string;
-            updatedAt?: string;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              code: string;
+              nameEn: string;
+              nameZh?: string;
+              type: string;
+              categoryId?: number;
+              categoryName?: string;
+              unitCode?: string;
+              purchasePrice?: number;
+              salePrice?: number;
+              minStock?: number;
+              status: string;
+              updatedAt?: string;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
@@ -35,22 +37,60 @@ class MasterDataService {
           itemCode: item.code,
           nameEn: item.nameEn,
           nameZh: item.nameZh || item.nameEn,
-          specification: `${item.code} Industrial Spec`,
+          specification: item.code,
           categoryName: item.categoryName || 'Materials',
           categoryNameZh: item.categoryName || '工业物料',
           type: item.type as ItemRecord['type'],
           uomCode: item.unitCode || 'pcs',
           minStock: Number(item.minStock || 0),
-          maxStock: Number(item.minStock || 0) * 5,
-          safetyStock: Number(item.minStock || 0) * 1.5,
+          maxStock: Number(item.minStock || 0) > 0 ? Number(item.minStock) * 5 : 0,
+          safetyStock: Number(item.minStock || 0) > 0 ? Number(item.minStock) * 1.5 : 0,
           standardCost: Number(item.purchasePrice || 0),
           currency: 'USD',
-          leadTimeDays: 7,
+          leadTimeDays: 0,
           status: (item.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE') as ItemRecord['status'],
-          updatedAt: item.updatedAt || '2026-10-01 10:00:00',
+          updatedAt: item.updatedAt || '',
         }));
       }
       return [];
+    } catch {
+      return [];
+    }
+  }
+
+  public async getItemCategories(): Promise<
+    Array<{ id: number; code: string; nameEn: string; nameZh?: string }>
+  > {
+    try {
+      const res = await apiClient.get('/item-categories');
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{ id: number; code: string; nameEn: string; nameZh?: string }>;
+          };
+        }
+      )?.data;
+      const list = responseData?.data ?? (res as { data?: unknown })?.data;
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  }
+
+  public async getUnitsOfMeasurement(): Promise<
+    Array<{ id: number; code: string; nameEn: string; nameZh?: string }>
+  > {
+    try {
+      const res = await apiClient.get('/units-of-measurement');
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{ id: number; code: string; nameEn: string; nameZh?: string }>;
+          };
+        }
+      )?.data;
+      const list = responseData?.data ?? (res as { data?: unknown })?.data;
+      return Array.isArray(list) ? list : [];
     } catch {
       return [];
     }
@@ -82,7 +122,7 @@ class MasterDataService {
       };
       const created = res?.data;
       return {
-        id: created?.id || Date.now(),
+        id: Number(created?.id ?? 0),
         itemCode: created?.code || payload.itemCode,
         nameEn: created?.nameEn || payload.nameEn,
         nameZh: created?.nameZh || payload.nameZh,
@@ -110,24 +150,26 @@ class MasterDataService {
   public async getSuppliers(): Promise<SupplierRecord[]> {
     try {
       const res = await apiClient.get('/suppliers', { params: { size: 50 } });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            code: string;
-            name: string;
-            nameZh?: string;
-            contactPerson?: string;
-            email?: string;
-            phone?: string;
-            address?: string;
-            taxCode?: string;
-            paymentTerm?: string;
-            status: string;
-            updatedAt?: string;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              code: string;
+              name: string;
+              nameZh?: string;
+              contactPerson?: string;
+              email?: string;
+              phone?: string;
+              address?: string;
+              taxCode?: string;
+              paymentTerm?: string;
+              status: string;
+              updatedAt?: string;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
@@ -136,18 +178,18 @@ class MasterDataService {
           code: sup.code,
           name: sup.name,
           nameZh: sup.nameZh || sup.name,
-          contactPerson: sup.contactPerson || 'Logistics Liaison',
-          email: sup.email || 'procure@wifim-internal.com',
-          phone: sup.phone || '+86-512-6800-0000',
-          address: sup.address || 'Industrial Zone, China',
-          taxNumber: sup.taxCode || '91320500MA1WXXXXXX',
-          paymentTerms: sup.paymentTerm || 'Net 30 Days',
-          ratingGrade: 'A' as const,
-          onTimeDeliveryRate: 98.8,
-          qualityPassRate: 99.4,
+          contactPerson: sup.contactPerson || '—',
+          email: sup.email || '—',
+          phone: sup.phone || '—',
+          address: sup.address || '—',
+          taxNumber: sup.taxCode || '—',
+          paymentTerms: sup.paymentTerm || '—',
+          ratingGrade: undefined,
+          onTimeDeliveryRate: undefined,
+          qualityPassRate: undefined,
           status: (sup.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE') as SupplierRecord['status'],
-          leadTimeDays: 7,
-          updatedAt: sup.updatedAt || '2026-10-01 09:00:00',
+          leadTimeDays: undefined,
+          updatedAt: sup.updatedAt || '',
         }));
       }
       return [];
@@ -181,7 +223,7 @@ class MasterDataService {
       };
       const created = res?.data;
       return {
-        id: created?.id || Date.now(),
+        id: Number(created?.id ?? 0),
         code: created?.code || payload.code,
         name: created?.name || payload.name,
         nameZh: payload.nameZh,
@@ -192,8 +234,8 @@ class MasterDataService {
         taxNumber: payload.taxNumber,
         paymentTerms: payload.paymentTerms,
         ratingGrade: payload.ratingGrade,
-        onTimeDeliveryRate: 100.0,
-        qualityPassRate: 100.0,
+        onTimeDeliveryRate: undefined,
+        qualityPassRate: undefined,
         status: 'ACTIVE',
         leadTimeDays: payload.leadTimeDays,
         updatedAt: new Date().toLocaleString(),
@@ -208,24 +250,26 @@ class MasterDataService {
   public async getCustomers(): Promise<CustomerRecord[]> {
     try {
       const res = await apiClient.get('/customers', { params: { size: 50 } });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            code: string;
-            name: string;
-            nameZh?: string;
-            contactPerson?: string;
-            email?: string;
-            phone?: string;
-            address?: string;
-            paymentTerm?: string;
-            currency?: string;
-            status: string;
-            updatedAt?: string;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              code: string;
+              name: string;
+              nameZh?: string;
+              contactPerson?: string;
+              email?: string;
+              phone?: string;
+              address?: string;
+              paymentTerm?: string;
+              currency?: string;
+              status: string;
+              updatedAt?: string;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
@@ -234,18 +278,18 @@ class MasterDataService {
           code: c.code,
           name: c.name,
           nameZh: c.nameZh || c.name,
-          industry: 'Industrial Equipment Tier-1',
-          contactPerson: c.contactPerson || 'Procurement Director',
-          email: c.email || 'commercial@client.com',
-          phone: c.phone || '+86-21-6000-0000',
-          shippingAddress: c.address || 'Logistics Bay, China',
-          billingAddress: c.address || 'Finance Hub, China',
-          creditLimit: 1500000,
+          industry: undefined,
+          contactPerson: c.contactPerson || '—',
+          email: c.email || '—',
+          phone: c.phone || '—',
+          shippingAddress: c.address || '—',
+          billingAddress: c.address || '—',
+          creditLimit: 0,
           currency: c.currency || 'USD',
-          paymentTerms: c.paymentTerm || 'Net 45 Days',
-          activeOrdersCount: 2,
+          paymentTerms: c.paymentTerm || 'Net 30',
+          activeOrdersCount: 0,
           status: (c.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE') as CustomerRecord['status'],
-          updatedAt: c.updatedAt || '2026-10-01 08:30:00',
+          updatedAt: c.updatedAt || '',
         }));
       }
       return [];
@@ -279,7 +323,7 @@ class MasterDataService {
       };
       const created = res?.data;
       return {
-        id: created?.id || Date.now(),
+        id: Number(created?.id ?? 0),
         code: created?.code || payload.code,
         name: created?.name || payload.name,
         nameZh: payload.nameZh,

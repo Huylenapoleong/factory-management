@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import { Table, Card, Tag, Button, Space, Typography, theme, message } from 'antd';
+import { Table, Card, Tag, Button, Space, Typography, theme, Modal, QRCode } from 'antd';
+import { message } from '@/utils/antdApp';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  SwapOutlined,
-  EditOutlined,
-  InboxOutlined,
-  BarcodeOutlined,
-} from '@ant-design/icons';
+import { SwapOutlined, EditOutlined, InboxOutlined, BarcodeOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
 import { InventoryBalanceItem } from '../types';
 
@@ -29,10 +25,18 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
   const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
+
+  const handleBatchTransfer = () => {
+    const selected = balances.filter((b) => selectedRowKeys.includes(b.id));
+    if (selected.length > 0) {
+      onTransferItem(selected[0]);
+    }
+  };
 
   const columns: ColumnsType<InventoryBalanceItem> = [
     {
-      title: isZh ? '物料编码 (SKU)' : 'SKU / Item Code',
+      title: isZh ? '物料编码' : 'SKU / Item Code',
       dataIndex: 'itemCode',
       key: 'itemCode',
       width: 140,
@@ -94,7 +98,10 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       key: 'lotNumber',
       width: 125,
       render: (lot: string) => (
-        <span className="tnum" style={{ fontFamily: 'monospace', fontSize: 11, color: token.colorTextSecondary }}>
+        <span
+          className="tnum"
+          style={{ fontFamily: 'monospace', fontSize: 11, color: token.colorTextSecondary }}
+        >
           {lot}
         </span>
       ),
@@ -107,7 +114,10 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       align: 'right',
       render: (qty: number, record) => (
         <span className="tnum" style={{ fontWeight: 600, color: token.colorText }}>
-          {qty.toLocaleString()} <Text type="secondary" style={{ fontSize: 11 }}>{record.itemUnitCode}</Text>
+          {qty.toLocaleString()}{' '}
+          <Text type="secondary" style={{ fontSize: 11 }}>
+            {record.itemUnitCode}
+          </Text>
         </span>
       ),
     },
@@ -133,7 +143,7 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       },
     },
     {
-      title: isZh ? '锁定 (Alloc)' : 'Allocated',
+      title: isZh ? '锁定库存' : 'Allocated',
       dataIndex: 'reservedQuantity',
       key: 'reservedQuantity',
       width: 90,
@@ -151,7 +161,10 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       width: 90,
       align: 'right',
       render: (min: number) => (
-        <span className="tnum" style={{ color: token.colorTextTertiary || token.colorTextSecondary, fontSize: 11 }}>
+        <span
+          className="tnum"
+          style={{ color: token.colorTextTertiary || token.colorTextSecondary, fontSize: 11 }}
+        >
           {min > 0 ? min.toLocaleString() : '-'}
         </span>
       ),
@@ -180,13 +193,29 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
       render: (status: string) => {
         switch (status) {
           case 'NORMAL':
-            return <Tag color="success" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '充足' : 'Normal'}</Tag>;
+            return (
+              <Tag color="success" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '充足' : 'Normal'}
+              </Tag>
+            );
           case 'LOW_STOCK':
-            return <Tag color="warning" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '预警' : 'Under Safety'}</Tag>;
+            return (
+              <Tag color="warning" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '预警' : 'Under Safety'}
+              </Tag>
+            );
           case 'STOCKOUT':
-            return <Tag color="error" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '缺料' : 'Stockout'}</Tag>;
+            return (
+              <Tag color="error" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '缺料' : 'Stockout'}
+              </Tag>
+            );
           case 'QUARANTINE':
-            return <Tag color="purple" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '待检隔离' : 'Quarantine'}</Tag>;
+            return (
+              <Tag color="purple" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '待检隔离' : 'Quarantine'}
+              </Tag>
+            );
           default:
             return <Tag style={{ margin: 0 }}>{status}</Tag>;
         }
@@ -263,19 +292,17 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
         {selectedRowKeys.length > 0 && (
           <Space size="small">
             <span style={{ fontSize: 12, color: token.colorTextSecondary }}>
-              {isZh ? `已选中 ${selectedRowKeys.length} 项` : `Selected ${selectedRowKeys.length} items`}
+              {isZh
+                ? `已选中 ${selectedRowKeys.length} 项`
+                : `Selected ${selectedRowKeys.length} items`}
             </span>
-            <Button
-              size="small"
-              icon={<SwapOutlined />}
-              onClick={() => message.info(isZh ? '批量调拨已暂存' : 'Batch Transfer Staged')}
-            >
+            <Button size="small" icon={<SwapOutlined />} onClick={handleBatchTransfer}>
               {isZh ? '批量调拨' : 'Batch Transfer'}
             </Button>
             <Button
               size="small"
               icon={<BarcodeOutlined />}
-              onClick={() => message.success(isZh ? '正在打印条码标签...' : 'Printing Barcode Labels...')}
+              onClick={() => setBarcodeModalOpen(true)}
             >
               {isZh ? '打印条码标签' : 'Print Barcode'}
             </Button>
@@ -299,6 +326,111 @@ export const InventoryLedgerTable: React.FC<InventoryLedgerTableProps> = ({
         }}
         scroll={{ x: 1100 }}
       />
+
+      {/* Real Barcode Label Printable Preview Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BarcodeOutlined style={{ color: '#1677ff' }} />
+            <span>
+              {isZh ? '工业物料条码与批次标签打印' : 'Industrial Barcode & Lot Label Printing'}
+            </span>
+          </div>
+        }
+        open={barcodeModalOpen}
+        width={680}
+        onCancel={() => setBarcodeModalOpen(false)}
+        footer={[
+          <Button key="close" onClick={() => setBarcodeModalOpen(false)}>
+            {isZh ? '关闭' : 'Close'}
+          </Button>,
+          <Button
+            key="print"
+            type="primary"
+            icon={<BarcodeOutlined />}
+            onClick={() => {
+              window.print();
+              message.success(
+                isZh
+                  ? '标签打印任务已提交至热敏标签打印机'
+                  : 'Barcode print job dispatched to thermal label printer',
+              );
+              setBarcodeModalOpen(false);
+            }}
+          >
+            {isZh ? '立即打印标签' : 'Print Labels'}
+          </Button>,
+        ]}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p style={{ margin: 0, color: '#4b5563', fontSize: 13 }}>
+            {isZh
+              ? `已选定 ${selectedRowKeys.length} 种库存物料，以下为标准工业 100mm x 60mm 条码标签样式预览：`
+              : `Selected ${selectedRowKeys.length} inventory items. Previewing standard 100x60mm warehouse labels:`}
+          </p>
+          <div
+            style={{
+              maxHeight: 380,
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            {balances
+              .filter((b) => selectedRowKeys.includes(b.id))
+              .map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    border: '2px solid #1f2937',
+                    borderRadius: 6,
+                    padding: 12,
+                    backgroundColor: '#fff',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          fontFamily: 'monospace',
+                          color: '#111827',
+                        }}
+                      >
+                        {item.itemCode}
+                      </span>
+                      <Tag color="blue">{item.locationCode}</Tag>
+                      <Tag color="cyan">{isZh ? item.warehouseNameZh : item.warehouseNameEn}</Tag>
+                    </div>
+                    <div style={{ fontWeight: 600, color: '#1f2937', fontSize: 13 }}>
+                      {isZh ? item.itemNameZh : item.itemNameEn}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#4b5563' }}>
+                      {item.itemSpec} • {isZh ? '批次' : 'LOT'}:{' '}
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                        {item.lotNumber}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#1677ff', marginTop: 2 }}>
+                      {isZh ? '在库可用量' : 'Qty'}: {item.availableQuantity} {item.itemUnitCode}
+                    </div>
+                  </div>
+                  <div style={{ marginLeft: 16, textAlign: 'center' }}>
+                    <QRCode value={item.itemCode} size={84} bordered={false} />
+                    <div style={{ fontSize: 9, color: '#6b7280', fontFamily: 'monospace' }}>
+                      {item.itemCode}
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      </Modal>
     </Card>
   );
 };

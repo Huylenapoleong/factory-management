@@ -1,5 +1,11 @@
 import apiClient from './api';
-import type { BomAnalysis, BomAnalysisLine, BomStructureNode, BomSummary, SupplierOption } from '@/features/bom/types';
+import type {
+  BomAnalysis,
+  BomAnalysisLine,
+  BomStructureNode,
+  BomSummary,
+  SupplierOption,
+} from '@/features/bom/types';
 
 interface ApiEnvelope<T> {
   data: T;
@@ -61,7 +67,9 @@ export const bomService = {
   },
 
   async getAnalysis(bomId: number, quantity: number, startDate: string): Promise<BomAnalysis> {
-    const res = (await apiClient.get(`/boms/${bomId}/analysis`, { params: { quantity, startDate } })) as ApiEnvelope<BomAnalysis>;
+    const res = (await apiClient.get(`/boms/${bomId}/analysis`, {
+      params: { quantity, startDate },
+    })) as ApiEnvelope<BomAnalysis>;
     const a = res.data;
     return {
       ...a,
@@ -83,7 +91,9 @@ export const bomService = {
     const form = new FormData();
     form.append('file', file);
     // The client defaults to JSON, which makes axios serialize FormData as JSON.
-    await apiClient.put(`/items/${itemId}/image`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    await apiClient.put(`/items/${itemId}/image`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
 
   async deleteItemImage(itemId: number): Promise<void> {
@@ -91,7 +101,9 @@ export const bomService = {
   },
 
   async getSuppliers(): Promise<SupplierOption[]> {
-    const res = (await apiClient.get('/suppliers/active')) as ApiEnvelope<Array<{ id: number; code: string; name: string }>>;
+    const res = (await apiClient.get('/suppliers/active')) as ApiEnvelope<
+      Array<{ id: number; code: string; name: string }>
+    >;
     return (res.data ?? []).map((s) => ({ id: s.id, code: s.code, name: s.name }));
   },
 
@@ -102,7 +114,10 @@ export const bomService = {
     note: string;
     items: Array<{ itemId: number; quantity: number; unitPrice: number }>;
   }): Promise<{ id: number; poNo: string }> {
-    const res = (await apiClient.post('/purchase-orders', payload)) as ApiEnvelope<{ id: number; poNo: string }>;
+    const res = (await apiClient.post('/purchase-orders', payload)) as ApiEnvelope<{
+      id: number;
+      poNo: string;
+    }>;
     return { id: res.data.id, poNo: res.data.poNo };
   },
 
@@ -113,7 +128,10 @@ export const bomService = {
     startDate?: string;
     dueDate?: string;
   }): Promise<{ id: number; moNo: string }> {
-    const res = (await apiClient.post('/production-orders', payload)) as ApiEnvelope<{ id: number; moNo: string }>;
+    const res = (await apiClient.post('/production-orders', payload)) as ApiEnvelope<{
+      id: number;
+      moNo: string;
+    }>;
     return { id: res.data.id, moNo: res.data.moNo };
   },
 };
