@@ -75,4 +75,20 @@ public class GoodsReceiptController {
         }
         return ApiResponse.success(receiptService.postGoodsReceipt(id, userId), "Goods receipt posted and stock updated");
     }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'WAREHOUSE')")
+    @Operation(summary = "Cancel draft goods receipt")
+    public ApiResponse<GoodsReceiptDto> cancelGoodsReceipt(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = null;
+        if (userDetails != null) {
+            userId = userRepository.findByUsername(userDetails.getUsername())
+                    .map(User::getId)
+                    .orElse(null);
+        }
+        return ApiResponse.success(receiptService.cancelGoodsReceipt(id, userId), "Goods receipt cancelled");
+    }
 }

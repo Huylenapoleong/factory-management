@@ -98,6 +98,25 @@ public class ProductionOrderController {
         return ApiResponse.success(moService.completeProductionOrder(id, request, userId), "Production order completed");
     }
 
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PRODUCTION')")
+    @Operation(summary = "Cancel production order")
+    public ApiResponse<ProductionOrderDto> cancelProductionOrder(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = getUserId(userDetails);
+        return ApiResponse.success(moService.cancelProductionOrder(id, userId), "Production order cancelled");
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Delete DRAFT production order")
+    public ApiResponse<Void> deleteProductionOrder(@PathVariable Long id) {
+        moService.deleteProductionOrder(id);
+        return ApiResponse.success(null, "Production order deleted successfully");
+    }
+
     private Long getUserId(UserDetails userDetails) {
         if (userDetails == null) return null;
         return userRepository.findByUsername(userDetails.getUsername())

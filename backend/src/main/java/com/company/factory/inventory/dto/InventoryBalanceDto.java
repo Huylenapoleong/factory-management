@@ -28,5 +28,6 @@ public class InventoryBalanceDto {
     private BigDecimal availableQuantity;
     private BigDecimal minStock;
     private Boolean isLowStock;
+    private BigDecimal unitCost;
     private Instant updatedAt;
 }

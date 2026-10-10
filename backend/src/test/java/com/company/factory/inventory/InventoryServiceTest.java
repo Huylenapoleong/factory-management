@@ -139,4 +139,19 @@ class InventoryServiceTest {
         assertThat(balance.getReservedQuantity()).isEqualByComparingTo(new BigDecimal("50"));
         verify(balanceRepository).save(balance);
     }
+
+    @Test
+    @DisplayName("transferStock should fail if source and destination warehouses are identical")
+    void shouldFailTransferIfSameWarehouse() {
+        com.company.factory.inventory.dto.StockTransferRequest req = com.company.factory.inventory.dto.StockTransferRequest.builder()
+                .fromWarehouseId(1L)
+                .toWarehouseId(1L)
+                .itemId(10L)
+                .quantity(new BigDecimal("10"))
+                .build();
+
+        assertThatThrownBy(() -> inventoryService.transferStock(req, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Source and destination warehouses cannot be the same");
+    }
 }

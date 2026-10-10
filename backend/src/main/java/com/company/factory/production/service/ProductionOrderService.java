@@ -267,6 +267,31 @@ public class ProductionOrderService {
         return toDetailedDto(moRepository.save(mo));
     }
 
+    @Transactional
+    public ProductionOrderDto cancelProductionOrder(Long id, Long userId) {
+        ProductionOrder mo = moRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "MO_NOT_FOUND", "Production order not found: " + id));
+
+        if ("COMPLETED".equals(mo.getStatus()) || "CANCELLED".equals(mo.getStatus())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_STATE", "Cannot cancel an order in state: " + mo.getStatus());
+        }
+
+        mo.setStatus("CANCELLED");
+        return toDetailedDto(moRepository.save(mo));
+    }
+
+    @Transactional
+    public void deleteProductionOrder(Long id) {
+        ProductionOrder mo = moRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "MO_NOT_FOUND", "Production order not found: " + id));
+
+        if (!"DRAFT".equals(mo.getStatus())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_STATE", "Only DRAFT orders can be deleted");
+        }
+
+        moRepository.delete(mo);
+    }
+
     private ProductionOrderDto toDetailedDto(ProductionOrder mo) {
         ProductionOrderDto dto = productionMapper.toMoDto(mo);
         dto.setMaterials(mo.getMaterials().stream().map(productionMapper::toMaterialDto).toList());

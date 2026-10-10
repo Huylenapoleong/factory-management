@@ -194,4 +194,29 @@ class ProductionOrderWorkflowTest {
                 eq("PRODUCTION_ORDER"), eq("MO-5001"), eq("Final batch complete"), eq(1L)
         );
     }
+
+    @Test
+    @DisplayName("cancelProductionOrder should set status to CANCELLED")
+    void shouldCancelProductionOrder() {
+        mo.setStatus("RELEASED");
+        when(moRepository.findById(500L)).thenReturn(Optional.of(mo));
+        when(moRepository.save(any(ProductionOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productionMapper.toMoDto(any(ProductionOrder.class))).thenReturn(ProductionOrderDto.builder().id(500L).status("CANCELLED").build());
+
+        ProductionOrderDto result = moService.cancelProductionOrder(500L, 1L);
+
+        assertThat(result).isNotNull();
+        assertThat(mo.getStatus()).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    @DisplayName("deleteProductionOrder should delete when status is DRAFT")
+    void shouldDeleteDraftProductionOrder() {
+        mo.setStatus("DRAFT");
+        when(moRepository.findById(500L)).thenReturn(Optional.of(mo));
+
+        moService.deleteProductionOrder(500L);
+
+        verify(moRepository).delete(mo);
+    }
 }

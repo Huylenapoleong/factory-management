@@ -205,4 +205,21 @@ public class GoodsReceiptService {
         dto.setItems(savedReceipt.getItems().stream().map(purchasingMapper::toReceiptItemDto).toList());
         return dto;
     }
+
+    @Transactional
+    public GoodsReceiptDto cancelGoodsReceipt(Long id, Long userId) {
+        GoodsReceipt receipt = receiptRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "RECEIPT_NOT_FOUND", "Goods receipt not found: " + id));
+
+        if (!"DRAFT".equals(receipt.getStatus())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_STATE", "Only DRAFT receipts can be cancelled");
+        }
+
+        receipt.setStatus("CANCELLED");
+        GoodsReceipt savedReceipt = receiptRepository.save(receipt);
+
+        GoodsReceiptDto dto = purchasingMapper.toReceiptDto(savedReceipt);
+        dto.setItems(savedReceipt.getItems().stream().map(purchasingMapper::toReceiptItemDto).toList());
+        return dto;
+    }
 }
