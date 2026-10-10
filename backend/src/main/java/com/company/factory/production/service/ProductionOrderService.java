@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -115,9 +114,7 @@ public class ProductionOrderService {
         List<ProductionMaterial> materials = new ArrayList<>();
         if (bom != null) {
             for (BomItem bomItem : bom.getItems()) {
-                BigDecimal scrapRate = (bomItem.getScrapRate() != null) ? bomItem.getScrapRate() : BigDecimal.ZERO;
-                BigDecimal scrapFactor = BigDecimal.ONE.add(scrapRate.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-                BigDecimal requiredQty = request.getPlannedQuantity().multiply(bomItem.getQuantity()).multiply(scrapFactor);
+                BigDecimal requiredQty = bomItem.requiredQuantityFor(request.getPlannedQuantity());
 
                 ProductionMaterial material = ProductionMaterial.builder()
                         .productionOrder(mo)

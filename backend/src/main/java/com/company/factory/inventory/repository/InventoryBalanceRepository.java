@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,9 @@ public interface InventoryBalanceRepository extends JpaRepository<InventoryBalan
 
     @Query("SELECT COALESCE(SUM(b.quantity - b.reservedQuantity), 0) FROM InventoryBalance b WHERE b.item.id = :itemId")
     BigDecimal getTotalAvailableQuantityByItemId(@Param("itemId") Long itemId);
+
+    @Query("SELECT b.item.id, COALESCE(SUM(b.quantity - b.reservedQuantity), 0) FROM InventoryBalance b WHERE b.item.id IN :itemIds GROUP BY b.item.id")
+    List<Object[]> sumAvailableQuantityByItemIds(@Param("itemIds") Collection<Long> itemIds);
 
     @Query("SELECT b FROM InventoryBalance b JOIN b.item i WHERE (b.quantity - b.reservedQuantity) <= i.minStock")
     List<InventoryBalance> findLowStockBalances();

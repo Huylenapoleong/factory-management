@@ -12,6 +12,7 @@ import {
   BuildFilled,
   ShopOutlined,
   TeamOutlined,
+  PartitionOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +46,11 @@ export const MainLayout: React.FC = () => {
       key: '/production',
       icon: <ToolOutlined />,
       label: t('menu.production'),
+    },
+    {
+      key: '/production/bom',
+      icon: <PartitionOutlined />,
+      label: t('menu.boms'),
     },
     {
       key: '/inventory',

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Entity
 @Table(name = "bom_items")
@@ -33,4 +34,10 @@ public class BomItem {
     @Column(name = "scrap_rate", precision = 5, scale = 2)
     @Builder.Default
     private BigDecimal scrapRate = BigDecimal.ZERO;
+
+    public BigDecimal requiredQuantityFor(BigDecimal plannedQuantity) {
+        BigDecimal rate = scrapRate != null ? scrapRate : BigDecimal.ZERO;
+        BigDecimal scrapFactor = BigDecimal.ONE.add(rate.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+        return plannedQuantity.multiply(quantity).multiply(scrapFactor);
+    }
 }

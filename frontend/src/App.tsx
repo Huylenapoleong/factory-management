@@ -10,6 +10,7 @@ import { ProtectedRoute } from '@/routes/ProtectedRoute';
 import { LoginView } from '@/features/auth';
 import { DashboardView } from '@/features/dashboard/components/DashboardView';
 import { ProductionView } from '@/features/production';
+import { BomWorkbenchView } from '@/features/bom';
 import { InventoryView } from '@/features/inventory';
 import { PurchasingView } from '@/features/purchasing';
 import { SalesView } from '@/features/sales';
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<DashboardView />} />
                 <Route path="/production" element={<ProductionView />} />
+                <Route path="/production/bom" element={<BomWorkbenchView />} />
                 <Route path="/inventory" element={<InventoryView />} />
                 <Route path="/purchasing" element={<PurchasingView />} />
                 <Route path="/sales" element={<SalesView />} />

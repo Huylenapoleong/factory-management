@@ -8,6 +8,7 @@ import com.company.factory.purchasing.domain.PurchaseOrder;
 import com.company.factory.purchasing.domain.PurchaseOrderItem;
 import com.company.factory.purchasing.dto.CreatePurchaseOrderItemRequest;
 import com.company.factory.purchasing.dto.CreatePurchaseOrderRequest;
+import com.company.factory.purchasing.dto.ItemSupplyDto;
 import com.company.factory.purchasing.dto.PurchaseOrderDto;
 import com.company.factory.purchasing.mapper.PurchasingMapper;
 import com.company.factory.purchasing.repository.PurchaseOrderRepository;
@@ -25,8 +26,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -38,6 +45,8 @@ public class PurchaseOrderService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final PurchasingMapper purchasingMapper;
+
+    private static final Set<String> OPEN_STATUSES = Set.of("DRAFT", "CONFIRMED", "PARTIAL_RECEIVED");
 
     @Transactional(readOnly = true)
     public PageResponse<PurchaseOrderDto> getPurchaseOrders(String search, String status, Pageable pageable) {
@@ -61,6 +70,52 @@ public class PurchaseOrderService {
             return dto;
         });
         return PageResponse.from(page);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, ItemSupplyDto> getItemSupply(Collection<Long> itemIds) {
+        if (itemIds == null || itemIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, List<PurchaseOrderItem>> linesByItem = new HashMap<>();
+        for (PurchaseOrderItem line : poRepository.findActiveLinesByItemIds(itemIds)) {
+            linesByItem.computeIfAbsent(line.getItem().getId(), id -> new ArrayList<>()).add(line);
+        }
+
+        Map<Long, ItemSupplyDto> result = new HashMap<>();
+        linesByItem.forEach((itemId, lines) -> {
+            PurchaseOrderItem latest = lines.get(0);
+            BigDecimal onOrder = BigDecimal.ZERO;
+            LocalDate nextExpected = null;
+            long leadDaysSum = 0;
+            int leadSamples = 0;
+
+            for (PurchaseOrderItem line : lines) {
+                PurchaseOrder po = line.getPurchaseOrder();
+                BigDecimal remaining = line.getQuantity().subtract(line.getReceivedQuantity()).max(BigDecimal.ZERO);
+                if (OPEN_STATUSES.contains(po.getStatus()) && remaining.signum() > 0) {
+                    onOrder = onOrder.add(remaining);
+                    if (po.getExpectedDate() != null && (nextExpected == null || po.getExpectedDate().isAfter(nextExpected))) {
+                        nextExpected = po.getExpectedDate();
+                    }
+                }
+                if (po.getExpectedDate() != null && !po.getExpectedDate().isBefore(po.getOrderDate())) {
+                    leadDaysSum += ChronoUnit.DAYS.between(po.getOrderDate(), po.getExpectedDate());
+                    leadSamples++;
+                }
+            }
+
+            result.put(itemId, ItemSupplyDto.builder()
+                    .itemId(itemId)
+                    .onOrderQuantity(onOrder)
+                    .nextExpectedDate(nextExpected)
+                    .lastSupplierId(latest.getPurchaseOrder().getSupplier().getId())
+                    .lastSupplierName(latest.getPurchaseOrder().getSupplier().getName())
+                    .lastUnitPrice(latest.getUnitPrice())
+                    .leadTimeDays(leadSamples > 0 ? (int) Math.round((double) leadDaysSum / leadSamples) : null)
+                    .build());
+        });
+        return result;
     }
 
     @Transactional(readOnly = true)
