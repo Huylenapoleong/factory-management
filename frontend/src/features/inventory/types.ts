@@ -1,12 +1,7 @@
 export type StockStatus = 'NORMAL' | 'LOW_STOCK' | 'STOCKOUT' | 'QUARANTINE';
 
 export type StockMovementType =
-  | 'INBOUND'
-  | 'OUTBOUND'
-  | 'TRANSFER'
-  | 'ADJUSTMENT'
-  | 'PRODUCTION_ISSUE'
-  | 'QC_SCRAP';
+  'INBOUND' | 'OUTBOUND' | 'TRANSFER' | 'ADJUSTMENT' | 'PRODUCTION_ISSUE' | 'QC_SCRAP';
 
 export interface InventoryBalanceItem {
   id: number;

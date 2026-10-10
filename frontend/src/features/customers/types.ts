@@ -5,7 +5,7 @@ export interface CustomerRecord {
   code: string;
   name: string;
   nameZh: string;
-  industry: string;
+  industry?: string;
   contactPerson: string;
   email: string;
   phone: string;

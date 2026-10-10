@@ -23,12 +23,27 @@ export const dashboardService = {
         };
       };
       const d = res?.data;
+      let completionRate = 0;
+      try {
+        const progRes = (await apiClient.get('/dashboard/production-progress')) as {
+          data?: Array<{ plannedQuantity?: number; completedQuantity?: number }>;
+        };
+        const items = progRes?.data || [];
+        const plannedSum = items.reduce((s, i) => s + Number(i.plannedQuantity || 0), 0);
+        const completedSum = items.reduce((s, i) => s + Number(i.completedQuantity || 0), 0);
+        if (plannedSum > 0) {
+          completionRate = Math.min(100, Math.round((completedSum / plannedSum) * 100));
+        }
+      } catch {
+        // default 0
+      }
+
       return {
         totalInventoryItems: d?.totalItems ?? 0,
         pendingPurchaseOrders: d?.pendingPurchaseOrders ?? 0,
         activeProductionOrders: d?.activeProductionOrders ?? 0,
         openSalesOrders: d?.openSalesOrders ?? 0,
-        dailyPlanCompletionRate: d?.activeProductionOrders ? 94.2 : 0,
+        dailyPlanCompletionRate: completionRate,
         activeOrdersNearDeadline: 0,
         lowStockItemsCount: d?.lowStockAlerts ?? 0,
         dispatchedSalesOrdersToday: 0,
@@ -71,16 +86,16 @@ export const dashboardService = {
           productName: item.productName || item.productCode,
           productNameZh: item.productName || item.productCode,
           spec: `${item.productCode} / Batch: ${item.moNo.replace('WO-', '')}`,
-          workstation: `Line A-${idx + 1} (CNC Workstation)`,
-          workstationZh: `A产线-0${idx + 1} (CNC加工中心)`,
+          workstation: `Line ${idx + 1}`,
+          workstationZh: `产线-0${idx + 1}`,
           plannedQty: Number(item.plannedQuantity || 0),
           completedQty: Number(item.completedQuantity || 0),
           progressPercent: Math.round(Number(item.progressPercentage || 0)),
           status: (item.status === 'IN_PROGRESS'
             ? 'IN_PRODUCTION'
             : item.status === 'COMPLETED'
-            ? 'COMPLETED'
-            : 'IN_PRODUCTION') as WorkOrderProgressItem['status'],
+              ? 'COMPLETED'
+              : 'IN_PRODUCTION') as WorkOrderProgressItem['status'],
           uom: 'pcs',
         }));
       }
@@ -91,32 +106,8 @@ export const dashboardService = {
   },
 
   async getHourlyThroughput(): Promise<HourlyThroughputItem[]> {
-    try {
-      // Derive active production throughput from real production progress metrics
-      const res = (await apiClient.get('/dashboard/production-progress')) as {
-        data?: Array<{
-          plannedQuantity: number;
-          completedQuantity: number;
-        }>;
-      };
-      const list = res?.data || [];
-      const totalCompleted = list.reduce((acc, curr) => acc + Number(curr.completedQuantity || 0), 0);
-      const avgPerHour = Math.max(1, Math.round(totalCompleted / 8));
-
-      const standardSlots = [
-        { hourSlot: '08:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 0.95), yieldRatePercent: 98.2 },
-        { hourSlot: '09:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 1.05), yieldRatePercent: 98.8 },
-        { hourSlot: '10:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 1.12), yieldRatePercent: 99.1 },
-        { hourSlot: '11:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 1.0), yieldRatePercent: 98.4 },
-        { hourSlot: '13:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 1.02), yieldRatePercent: 98.7 },
-        { hourSlot: '14:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 1.08), yieldRatePercent: 98.9 },
-        { hourSlot: '15:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 0.98), yieldRatePercent: 98.6 },
-        { hourSlot: '16:00', targetQty: Math.round(avgPerHour * 1.1), actualQty: Math.round(avgPerHour * 1.04), yieldRatePercent: 99.0 },
-      ];
-      return standardSlots;
-    } catch {
-      return [];
-    }
+    // Only return records if real hourly telemetry has been recorded
+    return [];
   },
 
   async getMaterialShortages(): Promise<MaterialShortageItem[]> {
@@ -144,7 +135,7 @@ export const dashboardService = {
           minStock: Number(item.minStock || 0),
           deficitQty: Math.max(0, Number(item.minStock || 0) - Number(item.quantity || 0)),
           uom: item.itemUnitCode || 'pcs',
-          leadTimeNotice: 'Expedite Procurement (Lead time: 3-5 days)',
+          leadTimeNotice: `Below safety threshold: ${Number(item.quantity || 0)} / ${Number(item.minStock || 0)} ${item.itemUnitCode || 'pcs'}`,
         }));
       }
       return [];
@@ -180,10 +171,10 @@ export const dashboardService = {
             tx.transactionType === 'PURCHASE_IN'
               ? 'PO_INBOUND'
               : tx.transactionType === 'SALE_OUT'
-              ? 'SO_OUTBOUND'
-              : tx.transactionType === 'PRODUCTION_ISSUE'
-              ? 'PRODUCTION_ISSUE'
-              : 'QC_RETURN',
+                ? 'SO_OUTBOUND'
+                : tx.transactionType === 'PRODUCTION_ISSUE'
+                  ? 'PRODUCTION_ISSUE'
+                  : 'QC_RETURN',
           referenceDoc: tx.transactionNo || tx.referenceId || 'TX-DOC',
           itemName: tx.itemNameEn || tx.itemCode,
           itemNameZh: tx.itemNameEn || tx.itemCode,
@@ -200,13 +191,30 @@ export const dashboardService = {
     }
   },
 
-  async quickCreatePo(materialCode: string, quantity: number): Promise<{ success: boolean; poNo: string }> {
+  async quickCreatePo(
+    itemId: number,
+    quantity: number,
+    supplierId?: number,
+    unitPrice = 0,
+  ): Promise<{ success: boolean; poNo: string }> {
     try {
+      let targetSupplierId = supplierId;
+      if (!targetSupplierId) {
+        const suppliersRes = (await apiClient.get('/suppliers', { params: { size: 1 } })) as {
+          data?: { data?: Array<{ id: number }> };
+        };
+        const defaultSupplierId = suppliersRes?.data?.data?.[0]?.id;
+        if (!defaultSupplierId) {
+          throw new Error('No supplier available to create purchase order');
+        }
+        targetSupplierId = defaultSupplierId;
+      }
       const res = (await apiClient.post('/purchase-orders', {
-        supplierId: 1,
-        items: [{ itemCode: materialCode, quantity, unitPrice: 50 }],
+        supplierId: targetSupplierId,
+        orderDate: new Date().toISOString().split('T')[0],
+        items: [{ itemId, quantity, unitPrice }],
       })) as { data?: { poNo?: string } };
-      return { success: true, poNo: res?.data?.poNo || `PO-${Date.now()}` };
+      return { success: true, poNo: res?.data?.poNo || '' };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create PO';
       throw new Error(message, { cause: err });

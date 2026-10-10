@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
+import { message } from '@/utils/antdApp';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -19,7 +20,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 apiClient.interceptors.response.use(
@@ -27,22 +28,23 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    // Auto-refresh token on 401 Unauthorized ONLY if we have a real refresh token and not in demo mode
+    // Auto-refresh token on 401 Unauthorized ONLY if we have a valid refresh token stored
     if (error.response?.status === 401 && !originalRequest._retry) {
-      const storedAccessToken = localStorage.getItem('access_token');
       const storedRefreshToken = localStorage.getItem('refresh_token');
 
-      // Standalone demo tokens or absence of refresh token should NEVER trigger hard redirects to /login
-      if (!storedRefreshToken || storedAccessToken?.startsWith('wifim_demo_jwt_')) {
+      if (!storedRefreshToken) {
         return Promise.reject(error.response?.data || error.message);
       }
 
       originalRequest._retry = true;
       try {
-        const refreshResponse = await axios.post<{ data?: { accessToken?: string }; accessToken?: string }>(
+        const refreshResponse = await axios.post<{
+          data?: { accessToken?: string };
+          accessToken?: string;
+        }>(
           `${API_BASE_URL}/auth/refresh`,
           { refreshToken: storedRefreshToken },
-          { withCredentials: true }
+          { withCredentials: true },
         );
         const refreshData = refreshResponse.data?.data || refreshResponse.data;
         const newToken = refreshData?.accessToken;
@@ -67,8 +69,27 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Friendly notification on 403 Forbidden access violation
+    if (error.response?.status === 403) {
+      const currentLang = localStorage.getItem('i18nextLng') || 'zh-CN';
+      const isZh = currentLang.startsWith('zh');
+      message.error(
+        isZh
+          ? '操作被拒绝 (403): 您的账户缺少执行此工控操作的安全角色权限'
+          : 'Access Denied (403): Your account lacks required authorization.',
+      );
+    } else if (!error.response && error.message === 'Network Error') {
+      const currentLang = localStorage.getItem('i18nextLng') || 'zh-CN';
+      const isZh = currentLang.startsWith('zh');
+      message.warning(
+        isZh
+          ? '工业网关连接超时，请核查 MES 局域网连接'
+          : 'MES Gateway connection timeout. Please check network.',
+      );
+    }
+
     return Promise.reject(error.response?.data || error.message);
-  }
+  },
 );
 
 export default apiClient;

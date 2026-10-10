@@ -1,4 +1,5 @@
-export type ProductionOrderStatus = 'PLANNED' | 'IN_PRODUCTION' | 'QC_TESTING' | 'COMPLETED' | 'CANCELLED';
+export type ProductionOrderStatus =
+  'PLANNED' | 'IN_PRODUCTION' | 'QC_TESTING' | 'COMPLETED' | 'CANCELLED';
 
 export interface ProductionOrder {
   id: string;
@@ -67,7 +68,10 @@ export interface BomComponentItem {
 }
 
 export interface CreateProductionOrderRequest {
+  productId?: number;
   productCode: string;
+  bomId?: number;
+  routingId?: number;
   workstation: string;
   plannedQty: number;
   scheduledEnd: string;

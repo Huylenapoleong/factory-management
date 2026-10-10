@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Tag, Input, Select, Row, Col, Statistic, Button, message, Space, theme } from 'antd';
+import { Table, Card, Tag, Input, Select, Row, Col, Statistic, Button, Space, theme } from 'antd';
+import { message } from '@/utils/antdApp';
 import type { TableColumnsType } from 'antd';
 import {
   AuditOutlined,
@@ -12,6 +13,53 @@ import {
 import { useAppStore } from '@/stores/useAppStore';
 import { auditService } from '@/services/auditService';
 import { AuditLogItem } from '../types';
+
+const csvCell = (value: string | number): string => `"${String(value).replace(/"/g, '""')}"`;
+
+const exportAuditCsv = (data: AuditLogItem[], isZh: boolean) => {
+  const header = isZh
+    ? [
+        '时间戳',
+        '操作人',
+        '岗位角色',
+        '动作类型',
+        '目标业务实体',
+        '单据号',
+        '审计记录详情',
+        'IP地址',
+        '校验状态',
+      ]
+    : [
+        'Timestamp',
+        'Username',
+        'Role',
+        'Action',
+        'Entity Type',
+        'Entity ID',
+        'Details',
+        'IP Address',
+        'Status',
+      ];
+  const rows = data.map((log) => [
+    log.timestamp,
+    log.username,
+    isZh ? log.userRoleZh : log.userRoleEn,
+    log.action,
+    log.entityType,
+    log.entityId,
+    isZh ? log.detailsZh : log.detailsEn,
+    log.ipAddress,
+    log.status,
+  ]);
+  const csv = [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 export const AuditView: React.FC = () => {
   const { language } = useAppStore();
@@ -88,15 +136,35 @@ export const AuditView: React.FC = () => {
       render: (act: string) => {
         switch (act) {
           case 'SHIP':
-            return <Tag color="geekblue" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '发货' : 'SHIP'}</Tag>;
+            return (
+              <Tag color="geekblue" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '发货' : 'SHIP'}
+              </Tag>
+            );
           case 'CONFIRM':
-            return <Tag color="blue" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '确认' : 'CONFIRM'}</Tag>;
+            return (
+              <Tag color="blue" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '确认' : 'CONFIRM'}
+              </Tag>
+            );
           case 'POST':
-            return <Tag color="green" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '过账' : 'POST'}</Tag>;
+            return (
+              <Tag color="green" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '过账' : 'POST'}
+              </Tag>
+            );
           case 'LOGIN':
-            return <Tag color="cyan" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '登录' : 'LOGIN'}</Tag>;
+            return (
+              <Tag color="cyan" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '登录' : 'LOGIN'}
+              </Tag>
+            );
           case 'UPDATE':
-            return <Tag color="orange" style={{ margin: 0, borderRadius: 2 }}>{isZh ? '变更' : 'UPDATE'}</Tag>;
+            return (
+              <Tag color="orange" style={{ margin: 0, borderRadius: 2 }}>
+                {isZh ? '变更' : 'UPDATE'}
+              </Tag>
+            );
           default:
             return <Tag style={{ margin: 0 }}>{act}</Tag>;
         }
@@ -108,7 +176,10 @@ export const AuditView: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <div>
-          <span className="tnum" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1f2937' }}>
+          <span
+            className="tnum"
+            style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1f2937' }}
+          >
             {record.entityId}
           </span>
           <div style={{ fontSize: 10, color: '#9ca3af' }}>{record.entityType}</div>
@@ -158,15 +229,32 @@ export const AuditView: React.FC = () => {
     },
   ];
 
+  const totalLogs = logs.length;
+  const successCount = logs.filter((l) => l.status === 'SUCCESS').length;
+  const complianceRate = totalLogs > 0 ? Math.round((successCount / totalLogs) * 100) : 100;
+  const flaggedCount = logs.filter((l) => l.status !== 'SUCCESS').length;
+  const activeUsersCount = new Set(logs.map((l) => l.username)).size;
+
   return (
     <div style={{ maxWidth: 1920, margin: '0 auto' }}>
       {/* 1. KPI Ribbon */}
       <Row gutter={[10, 10]} style={{ marginBottom: 12 }}>
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}>
+          <Card
+            size="small"
+            style={{
+              borderRadius: 4,
+              border: `1px solid ${token.colorBorderSecondary}`,
+              backgroundColor: token.colorBgContainer,
+            }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>{isZh ? '今日审计事件总数' : 'TOTAL AUDIT EVENTS'}</span>}
-              value={1492}
+              title={
+                <span style={{ fontSize: 11, color: token.colorTextSecondary }}>
+                  {isZh ? '今日审计事件总数' : 'TOTAL AUDIT EVENTS'}
+                </span>
+              }
+              value={totalLogs}
               styles={{ content: { fontSize: 20, fontWeight: 700, color: '#1677ff' } }}
               prefix={<AuditOutlined />}
             />
@@ -174,10 +262,21 @@ export const AuditView: React.FC = () => {
         </Col>
 
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: '1px solid #86efac', backgroundColor: token.colorFillAlter }}>
+          <Card
+            size="small"
+            style={{
+              borderRadius: 4,
+              border: '1px solid #86efac',
+              backgroundColor: token.colorFillAlter,
+            }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 11, color: '#15803d' }}>{isZh ? '合规溯源达成度' : 'COMPLIANCE INTEGRITY'}</span>}
-              value={100}
+              title={
+                <span style={{ fontSize: 11, color: '#15803d' }}>
+                  {isZh ? '合规溯源达成度' : 'COMPLIANCE INTEGRITY'}
+                </span>
+              }
+              value={complianceRate}
               suffix="%"
               styles={{ content: { fontSize: 20, fontWeight: 700, color: '#15803d' } }}
               prefix={<SafetyCertificateOutlined />}
@@ -186,24 +285,60 @@ export const AuditView: React.FC = () => {
         </Col>
 
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: '1px solid #fed7aa', backgroundColor: token.colorFillAlter }}>
+          <Card
+            size="small"
+            style={{
+              borderRadius: 4,
+              border: '1px solid #fed7aa',
+              backgroundColor: token.colorFillAlter,
+            }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 11, color: '#d97706' }}>{isZh ? '质量异常评审 (NCR)' : 'FLAGGED NCRs'}</span>}
-              value={1}
+              title={
+                <span style={{ fontSize: 11, color: '#d97706' }}>
+                  {isZh ? '质量异常评审' : 'FLAGGED NCRs'}
+                </span>
+              }
+              value={flaggedCount}
               styles={{ content: { fontSize: 20, fontWeight: 700, color: '#d97706' } }}
               prefix={<AlertOutlined />}
-              suffix={<span style={{ fontSize: 11, color: '#b45309', marginLeft: 4 }}>Pending Review</span>}
+              suffix={
+                <span style={{ fontSize: 11, color: '#b45309', marginLeft: 4 }}>
+                  {flaggedCount > 0
+                    ? isZh
+                      ? '待评审'
+                      : 'Pending Review'
+                    : isZh
+                      ? '无异常'
+                      : 'Nominal'}
+                </span>
+              }
             />
           </Card>
         </Col>
 
         <Col xs={12} sm={8} lg={6}>
-          <Card size="small" style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}>
+          <Card
+            size="small"
+            style={{
+              borderRadius: 4,
+              border: `1px solid ${token.colorBorderSecondary}`,
+              backgroundColor: token.colorBgContainer,
+            }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>{isZh ? '在线车间工控机 / PDA' : 'ONLINE TERMINALS'}</span>}
-              value={24}
+              title={
+                <span style={{ fontSize: 11, color: token.colorTextSecondary }}>
+                  {isZh ? '当班操作员 / 终端数' : 'ACTIVE OPERATORS'}
+                </span>
+              }
+              value={activeUsersCount}
               styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-              suffix={<span style={{ fontSize: 11, color: '#10b981', marginLeft: 6 }}>TLS 1.3 Active</span>}
+              suffix={
+                <span style={{ fontSize: 11, color: '#10b981', marginLeft: 6 }}>
+                  {isZh ? '在线审计中' : 'Active'}
+                </span>
+              }
             />
           </Card>
         </Col>
@@ -212,10 +347,23 @@ export const AuditView: React.FC = () => {
       {/* 2. Filter Bar */}
       <Card
         size="small"
-        style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer, marginBottom: 12 }}
+        style={{
+          borderRadius: 4,
+          border: `1px solid ${token.colorBorderSecondary}`,
+          backgroundColor: token.colorBgContainer,
+          marginBottom: 12,
+        }}
         styles={{ body: { padding: '10px 14px' } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
           <Space wrap size="small">
             <Select
               size="small"
@@ -223,7 +371,7 @@ export const AuditView: React.FC = () => {
               onChange={setSelectedEntity}
               style={{ width: 180 }}
               options={[
-                { value: 'ALL', label: isZh ? '全部业务实体 (All Entities)' : 'All Entities' },
+                { value: 'ALL', label: isZh ? '全部业务实体' : 'All Entities' },
                 { value: 'PRODUCTION_ORDER', label: isZh ? '车间生产工单' : 'Production Orders' },
                 { value: 'STOCK_MOVEMENT', label: isZh ? '仓储物料出入库' : 'Stock Movements' },
                 { value: 'PURCHASE_ORDER', label: isZh ? '采购订单' : 'Purchase Orders' },
@@ -238,17 +386,19 @@ export const AuditView: React.FC = () => {
               onChange={setSelectedAction}
               style={{ width: 140 }}
               options={[
-                { value: 'ALL', label: isZh ? '全部动作 (All Actions)' : 'All Actions' },
-                { value: 'CONFIRM', label: 'CONFIRM / 确认' },
-                { value: 'POST', label: 'POST / 过账' },
-                { value: 'SHIP', label: 'SHIP / 发货' },
-                { value: 'UPDATE', label: 'UPDATE / 变更' },
-                { value: 'LOGIN', label: 'LOGIN / 登录' },
+                { value: 'ALL', label: isZh ? '全部动作' : 'All Actions' },
+                { value: 'CONFIRM', label: isZh ? '确认' : 'CONFIRM' },
+                { value: 'POST', label: isZh ? '过账' : 'POST' },
+                { value: 'SHIP', label: isZh ? '发货' : 'SHIP' },
+                { value: 'UPDATE', label: isZh ? '变更' : 'UPDATE' },
+                { value: 'LOGIN', label: isZh ? '登录' : 'LOGIN' },
               ]}
             />
 
             <Input
-              placeholder={isZh ? '搜索用户名、单据号、事件描述、IP...' : 'Search user, doc#, details, IP...'}
+              placeholder={
+                isZh ? '搜索用户名、单据号、事件描述、IP...' : 'Search user, doc#, details, IP...'
+              }
               prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
               size="small"
               allowClear
@@ -261,7 +411,14 @@ export const AuditView: React.FC = () => {
           <Button
             size="small"
             icon={<DownloadOutlined />}
-            onClick={() => message.success(isZh ? '正在导出不可篡改审计台账 (SHA-256 Validated)...' : 'Exporting Signed Audit Ledger...')}
+            onClick={() => {
+              if (filteredLogs.length === 0) {
+                message.warning(isZh ? '暂无审计记录可导出' : 'No audit records to export');
+                return;
+              }
+              exportAuditCsv(filteredLogs, isZh);
+              message.success(isZh ? '已导出合规审计报表' : 'Audit report exported successfully');
+            }}
           >
             {isZh ? '导出合规审计报表' : 'Export Audit CSV'}
           </Button>
@@ -271,7 +428,11 @@ export const AuditView: React.FC = () => {
       {/* 3. Table */}
       <Card
         size="small"
-        style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+        style={{
+          borderRadius: 4,
+          border: `1px solid ${token.colorBorderSecondary}`,
+          backgroundColor: token.colorBgContainer,
+        }}
         styles={{ body: { padding: 0 } }}
       >
         <Table
@@ -283,7 +444,8 @@ export const AuditView: React.FC = () => {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => (isZh ? `共 ${total} 条不可篡改审计记录` : `Total ${total} audit records`),
+            showTotal: (total) =>
+              isZh ? `共 ${total} 条不可篡改审计记录` : `Total ${total} audit records`,
             size: 'small',
             style: { paddingRight: 14, marginBottom: 10 },
           }}

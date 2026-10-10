@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Spin, message, Card, theme } from 'antd';
+import { Row, Col, Spin, Card, theme } from 'antd';
+import { message } from '@/utils/antdApp';
 import { purchasingService } from '@/services/purchasingService';
 import { useAppStore } from '@/stores/useAppStore';
-import {
-  PurchaseOrderSummary,
-  GoodsReceiptSummary,
-  PurchaseOrderStatus,
-} from '../types';
+import { PurchaseOrderSummary, GoodsReceiptSummary, PurchaseOrderStatus } from '../types';
 import { PurchasingKpiStrip } from './PurchasingKpiStrip';
 import { PurchasingFilterBar } from './PurchasingFilterBar';
 import { PurchaseOrdersTable } from './PurchaseOrdersTable';
@@ -15,7 +12,7 @@ import { CreatePurchaseOrderModal } from './CreatePurchaseOrderModal';
 import { CreateGoodsReceiptModal } from './CreateGoodsReceiptModal';
 
 export const PurchasingView: React.FC = () => {
-  const { language } = useAppStore();
+  const { language, refreshKey } = useAppStore();
   const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
   const [loading, setLoading] = useState(true);
@@ -57,7 +54,7 @@ export const PurchasingView: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [fetchData]);
+  }, [fetchData, refreshKey]);
 
   const handleOpenReceive = (po?: PurchaseOrderSummary) => {
     setReceiptTargetPO(po || (orders.length > 0 ? orders[0] : null));
@@ -75,14 +72,20 @@ export const PurchasingView: React.FC = () => {
   const handlePostReceipt = async (id: number) => {
     const success = await purchasingService.postGoodsReceipt(id);
     if (success) {
-      message.success(isZh ? '到货物料已确认上架入库，库存已实时更新' : 'Goods posted to stock, inventory updated');
+      message.success(
+        isZh
+          ? '到货物料已确认上架入库，库存已实时更新'
+          : 'Goods posted to stock, inventory updated',
+      );
       void fetchData();
     }
   };
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}
+      >
         <Spin size="large" description="Loading purchasing & inbound dock console..." />
       </div>
     );
@@ -91,10 +94,11 @@ export const PurchasingView: React.FC = () => {
   return (
     <div style={{ maxWidth: 1920, margin: '0 auto' }}>
       {/* 1. Top KPI Ribbon */}
-      <PurchasingKpiStrip />
+      <PurchasingKpiStrip orders={orders} receipts={receipts} />
 
       {/* 2. Filter & Action Toolbar */}
       <PurchasingFilterBar
+        orders={orders}
         selectedSupplier={selectedSupplier}
         onSelectSupplier={setSelectedSupplier}
         selectedStatus={selectedStatus}
@@ -118,14 +122,11 @@ export const PurchasingView: React.FC = () => {
         </Col>
 
         <Col xs={24} lg={8} xl={7}>
-          <ActiveInboundQcDrawer
-            receipts={receipts}
-            onPostReceipt={handlePostReceipt}
-          />
+          <ActiveInboundQcDrawer receipts={receipts} onPostReceipt={handlePostReceipt} />
         </Col>
       </Row>
 
-      {/* 4. Industrial Telemetry Footer Bar */}
+      {/* 4. Operational Status Bar */}
       <Card
         size="small"
         style={{
@@ -136,14 +137,28 @@ export const PurchasingView: React.FC = () => {
         }}
         styles={{ body: { padding: '8px 14px' } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', fontSize: 11, color: token.colorTextSecondary }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            fontSize: 11,
+            color: token.colorTextSecondary,
+          }}
+        >
           <div style={{ display: 'flex', gap: 16 }}>
-            <span>● SAP S/4HANA Sync: <strong style={{ color: '#15803d' }}>Active (24ms)</strong></span>
-            <span>● WMS Gateway: <strong style={{ color: '#15803d' }}>Connected (Zone A/B/C)</strong></span>
-            <span>● SCADA Weighbridge: <strong style={{ color: '#15803d' }}>Calibrated JWB-02</strong></span>
+            <span>
+              {isZh ? '采购订单总计: ' : 'Total Purchase Orders: '}
+              <strong style={{ color: token.colorText }}>{orders.length}</strong>
+            </span>
+            <span>
+              {isZh ? '到货入库单总计: ' : 'Total Goods Receipts: '}
+              <strong style={{ color: token.colorText }}>{receipts.length}</strong>
+            </span>
           </div>
           <div>
-            <span>Protocol: <strong>TLS 1.3 / Enclave Validated</strong> · WIFIM INDUSTRIAL 05.4.12</span>
+            <span>{isZh ? '供应链协同状态: 实时连接' : 'Procurement Gateway: Connected'}</span>
           </div>
         </div>
       </Card>

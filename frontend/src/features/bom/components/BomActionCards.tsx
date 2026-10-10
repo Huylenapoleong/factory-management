@@ -40,7 +40,8 @@ interface TodoCard {
 const MAX_CARDS = 4;
 
 const byUrgency = (a: BomAnalysisLine, b: BomAnalysisLine) => {
-  const ordered = Number(a.procurementStatus === 'ORDERED') - Number(b.procurementStatus === 'ORDERED');
+  const ordered =
+    Number(a.procurementStatus === 'ORDERED') - Number(b.procurementStatus === 'ORDERED');
   if (ordered !== 0) return ordered;
   return (a.orderByDate ?? '').localeCompare(b.orderByDate ?? '');
 };
@@ -64,10 +65,22 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
       const ordered = line.procurementStatus === 'ORDERED';
       const urgent = !ordered && (line.urgency === 'LATE' || line.urgency === 'TODAY');
       const chip = ordered
-        ? { text: formatDay(line.expectedArrivalDate), color: line.urgency === 'LATE' ? token.colorWarning : token.colorSuccess, bg: line.urgency === 'LATE' ? token.colorWarningBg : token.colorSuccessBg }
+        ? {
+            text: formatDay(line.expectedArrivalDate),
+            color: line.urgency === 'LATE' ? token.colorWarning : token.colorSuccess,
+            bg: line.urgency === 'LATE' ? token.colorWarningBg : token.colorSuccessBg,
+          }
         : urgent
-          ? { text: line.urgency === 'TODAY' ? (isZh ? '今天' : 'Today') : (isZh ? '紧急' : 'Urgent'), color: token.colorError, bg: token.colorErrorBg }
-          : { text: formatDay(line.orderByDate), color: token.colorWarning, bg: token.colorWarningBg };
+          ? {
+              text: line.urgency === 'TODAY' ? (isZh ? '今天' : 'Today') : isZh ? '紧急' : 'Urgent',
+              color: token.colorError,
+              bg: token.colorErrorBg,
+            }
+          : {
+              text: formatDay(line.orderByDate),
+              color: token.colorWarning,
+              bg: token.colorWarningBg,
+            };
 
       cards.push({
         key: `buy-${line.materialId}`,
@@ -79,7 +92,9 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
         unit: line.unitCode ?? '',
         label: materialName(line, isZh),
         chip,
-        action: ordered ? undefined : { text: isZh ? '下单采购' : 'Order', onClick: () => onOrder(line), primary: true },
+        action: ordered
+          ? undefined
+          : { text: isZh ? '下单采购' : 'Order', onClick: () => onOrder(line), primary: true },
         doneText: ordered ? (isZh ? '已下单' : 'Ordered') : undefined,
         onClick: () => onSelect(line.materialId),
       });
@@ -102,7 +117,11 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
       });
     });
 
-  if (analysis.shortageCount > 0 && analysis.maxBuildableQuantity > 0 && analysis.maxBuildableQuantity < analysis.plannedQuantity) {
+  if (
+    analysis.shortageCount > 0 &&
+    analysis.maxBuildableQuantity > 0 &&
+    analysis.maxBuildableQuantity < analysis.plannedQuantity
+  ) {
     cards.push({
       key: 'split',
       icon: <ScissorOutlined />,
@@ -151,12 +170,20 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
   const hidden = cards.length - visible.length;
 
   return (
-    <section aria-labelledby="todo-heading" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <section
+      aria-labelledby="todo-heading"
+      style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <h2 id="todo-heading" style={{ margin: 0, fontSize: 13, fontWeight: 600, color: token.colorTextSecondary }}>
+        <h2
+          id="todo-heading"
+          style={{ margin: 0, fontSize: 13, fontWeight: 600, color: token.colorTextSecondary }}
+        >
           {isZh ? '待办事项' : 'To do'}
         </h2>
-        {analysis.toOrderCount > 0 && <Badge count={analysis.toOrderCount} color={token.colorError} />}
+        {analysis.toOrderCount > 0 && (
+          <Badge count={analysis.toOrderCount} color={token.colorError} />
+        )}
         <div style={{ flexGrow: 1, height: 1, background: token.colorBorderSecondary }} />
         {hidden > 0 && (
           <Button type="link" size="small" onClick={onShowAllShortages} style={{ padding: 0 }}>
@@ -165,7 +192,13 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+          gap: 12,
+        }}
+      >
         {visible.map((card) => (
           <Card
             key={card.key}
@@ -213,14 +246,24 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span className="tnum" style={{ fontSize: 26, fontWeight: 600, lineHeight: 1.1, color: token.colorText }}>
+                <span
+                  className="tnum"
+                  style={{ fontSize: 26, fontWeight: 600, lineHeight: 1.1, color: token.colorText }}
+                >
                   {card.value}
                 </span>
                 <span style={{ fontSize: 12, color: token.colorTextSecondary }}>{card.unit}</span>
               </div>
               <div
                 title={card.label}
-                style={{ fontSize: 12, color: token.colorTextSecondary, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                style={{
+                  fontSize: 12,
+                  color: token.colorTextSecondary,
+                  marginTop: 2,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
               >
                 {card.label}
               </div>
@@ -240,11 +283,33 @@ export const BomActionCards: React.FC<BomActionCardsProps> = ({
                 {card.action.text}
               </Button>
             ) : card.doneText ? (
-              <span style={{ height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 999, background: token.colorSuccessBg, color: token.colorSuccess, fontSize: 12, fontWeight: 600 }}>
+              <span
+                style={{
+                  height: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  borderRadius: 999,
+                  background: token.colorSuccessBg,
+                  color: token.colorSuccess,
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
                 <CheckOutlined /> {card.doneText}
               </span>
             ) : (
-              <span style={{ height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: token.colorTextTertiary }}>
+              <span
+                style={{
+                  height: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  color: token.colorTextTertiary,
+                }}
+              >
                 {card.idleText}
               </span>
             )}

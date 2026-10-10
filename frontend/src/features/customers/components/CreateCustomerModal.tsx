@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Row, Col, message } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Row, Col } from 'antd';
+import { message } from '@/utils/antdApp';
 import { useAppStore } from '@/stores/useAppStore';
 import { masterDataService } from '@/services/masterDataService';
 import { CreateCustomerPayload } from '../types';
@@ -28,13 +29,13 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
         code: values.code,
         name: values.name,
         nameZh: values.nameZh,
-        industry: values.industry || 'Machinery Manufacturing',
+        industry: values.industry || '',
         contactPerson: values.contactPerson,
         email: values.email || '',
         phone: values.phone || '',
         shippingAddress: values.shippingAddress || '',
-        billingAddress: values.billingAddress || '',
-        creditLimit: values.creditLimit || 1000000,
+        billingAddress: values.billingAddress || values.shippingAddress || '',
+        creditLimit: Number(values.creditLimit ?? 0),
         paymentTerms: values.paymentTerms || 'Net 30',
       };
 
@@ -64,12 +65,17 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
       destroyOnHidden
       forceRender
     >
-      <Form form={form} layout="vertical" size="small" initialValues={{ paymentTerms: 'Net 30', creditLimit: 2000000 }}>
+      <Form
+        form={form}
+        layout="vertical"
+        size="small"
+        initialValues={{ paymentTerms: 'Net 30', creditLimit: 0 }}
+      >
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="code"
-              label={isZh ? '客户编码 (Account Code)' : 'Client Account Code'}
+              label={isZh ? '客户编码' : 'Client Account Code'}
               rules={[{ required: true, message: isZh ? '请输入客户编码' : 'Required' }]}
             >
               <Input placeholder="e.g. CUST-VOLVO-05" />
@@ -84,9 +90,18 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               <Select
                 options={[
                   { value: 'Heavy Machinery', label: isZh ? '重工与工程装备' : 'Heavy Machinery' },
-                  { value: 'Automotive & Commercial Vehicles', label: isZh ? '汽车制造与商用车' : 'Automotive' },
-                  { value: 'Aerospace & Marine', label: isZh ? '航空航天与船舶' : 'Aerospace & Marine' },
-                  { value: 'Energy & Power Equipment', label: isZh ? '能源与电力装备' : 'Energy & Power' },
+                  {
+                    value: 'Automotive & Commercial Vehicles',
+                    label: isZh ? '汽车制造与商用车' : 'Automotive',
+                  },
+                  {
+                    value: 'Aerospace & Marine',
+                    label: isZh ? '航空航天与船舶' : 'Aerospace & Marine',
+                  },
+                  {
+                    value: 'Energy & Power Equipment',
+                    label: isZh ? '能源与电力装备' : 'Energy & Power',
+                  },
                 ]}
               />
             </Form.Item>
@@ -97,7 +112,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
           <Col span={12}>
             <Form.Item
               name="nameZh"
-              label={isZh ? '客户企业名称 (中文)' : 'Client Name (Chinese)'}
+              label={isZh ? '客户中文企业全称' : 'Client Name (Chinese)'}
               rules={[{ required: true, message: isZh ? '请输入客户企业名称' : 'Required' }]}
             >
               <Input placeholder="e.g. 沃尔沃建筑设备亚太中心" />
@@ -106,7 +121,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
           <Col span={12}>
             <Form.Item
               name="name"
-              label={isZh ? '客户企业名称 (英文)' : 'Client Name (English)'}
+              label={isZh ? '客户英文企业全称' : 'Client Name (English)'}
               rules={[{ required: true, message: isZh ? '请输入英文名称' : 'Required' }]}
             >
               <Input placeholder="e.g. Volvo Construction Equipment APAC" />
@@ -121,7 +136,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               label={isZh ? '采购/商务负责人' : 'Commercial Contact'}
               rules={[{ required: true }]}
             >
-              <Input placeholder="e.g. Director Zhang (张总监)" />
+              <Input placeholder={isZh ? '请输入联系人姓名' : 'Enter contact person name'} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -144,7 +159,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
           <Col span={12}>
             <Form.Item
               name="creditLimit"
-              label={isZh ? '授信信用额度 (USD)' : 'Credit Limit (USD)'}
+              label={isZh ? '授信信用额度（美元）' : 'Credit Limit (USD)'}
               rules={[{ required: true }]}
             >
               <InputNumber min={0} step={10000} style={{ width: '100%' }} />
@@ -152,7 +167,10 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
           </Col>
         </Row>
 
-        <Form.Item name="shippingAddress" label={isZh ? '指定发货/收货厂区地址' : 'Default Delivery Site Address'}>
+        <Form.Item
+          name="shippingAddress"
+          label={isZh ? '指定发货/收货厂区地址' : 'Default Delivery Site Address'}
+        >
           <Input placeholder="Dock Bay, Logistics Park..." />
         </Form.Item>
       </Form>

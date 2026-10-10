@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, message, Descriptions, Alert } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Descriptions, Alert } from 'antd';
+import { message } from '@/utils/antdApp';
 import { useAppStore } from '@/stores/useAppStore';
 import { inventoryService } from '@/services/inventoryService';
 import { InventoryBalanceItem } from '../types';
@@ -36,7 +37,8 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   }, [open, item, form, isZh]);
 
   const systemQty = item ? item.quantity : 0;
-  const physicalCount = watchedPhysicalCount !== undefined ? Number(watchedPhysicalCount) : systemQty;
+  const physicalCount =
+    watchedPhysicalCount !== undefined ? Number(watchedPhysicalCount) : systemQty;
   const delta = physicalCount - systemQty;
 
   const handleSubmit = async () => {
@@ -74,7 +76,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   return (
     <Modal
       open={open}
-      title={isZh ? '库存盘点与台账调整 (Stocktake Adjustment)' : 'Stocktake Adjustment'}
+      title={isZh ? '库存盘点与台账调整' : 'Stocktake Adjustment'}
       onCancel={handleCancel}
       onOk={handleSubmit}
       centered
@@ -87,38 +89,58 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     >
       {item && (
         <div style={{ marginBottom: 14 }}>
-          <Descriptions size="small" column={2} bordered>
-            <Descriptions.Item label={isZh ? '物料' : 'Item'}>
-              <span style={{ fontWeight: 600, color: '#1677ff' }}>{item.itemCode}</span>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>
-                {isZh ? item.itemNameZh : item.itemNameEn}
-              </div>
-            </Descriptions.Item>
-            <Descriptions.Item label={isZh ? '库位' : 'Location'}>
-              {item.locationCode}
-            </Descriptions.Item>
-            <Descriptions.Item label={isZh ? '系统在库数' : 'System Count'}>
-              <span className="tnum" style={{ fontWeight: 700, color: '#1f2937' }}>
-                {item.quantity} {item.itemUnitCode}
-              </span>
-            </Descriptions.Item>
-            <Descriptions.Item label={isZh ? '安全库存基线' : 'Safety Min'}>
-              <span className="tnum">{item.minStock} {item.itemUnitCode}</span>
-            </Descriptions.Item>
-          </Descriptions>
+          <Descriptions
+            size="small"
+            column={2}
+            bordered
+            items={[
+              {
+                key: 'item',
+                label: isZh ? '物料' : 'Item',
+                children: (
+                  <div>
+                    <span style={{ fontWeight: 600, color: '#1677ff' }}>{item.itemCode}</span>
+                    <div style={{ fontSize: 11, color: '#6b7280' }}>
+                      {isZh ? item.itemNameZh : item.itemNameEn}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'location',
+                label: isZh ? '库位' : 'Location',
+                children: item.locationCode,
+              },
+              {
+                key: 'count',
+                label: isZh ? '系统在库数' : 'System Count',
+                children: (
+                  <span className="tnum" style={{ fontWeight: 700, color: '#1f2937' }}>
+                    {item.quantity} {item.itemUnitCode}
+                  </span>
+                ),
+              },
+              {
+                key: 'safety',
+                label: isZh ? '安全库存基线' : 'Safety Min',
+                children: (
+                  <span className="tnum">
+                    {item.minStock} {item.itemUnitCode}
+                  </span>
+                ),
+              },
+            ]}
+          />
         </div>
       )}
 
       <Form form={form} layout="vertical" size="small">
         <Form.Item
           name="physicalCount"
-          label={isZh ? '实盘数量 (Physical Count)' : 'Physical Counted Quantity'}
+          label={isZh ? '实盘数量' : 'Physical Counted Quantity'}
           rules={[{ required: true, message: 'Please input physical count' }]}
         >
-          <InputNumber
-            style={{ width: '100%' }}
-            min={0}
-          />
+          <InputNumber style={{ width: '100%' }} min={0} />
         </Form.Item>
 
         {/* Real-time Variance preview */}
@@ -135,7 +157,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           }}
         >
           <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>
-            {isZh ? '盘盈 / 盘亏差额 (Variance Delta):' : 'Variance Delta:'}
+            {isZh ? '盘盈 / 盘亏差额:' : 'Variance Delta:'}
           </span>
           <span
             className="tnum"
@@ -156,9 +178,18 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         >
           <Select
             options={[
-              { value: isZh ? '周期盘点差异调整' : 'Cycle count discrepancy', label: isZh ? '周期盘点差异调整' : 'Cycle count discrepancy' },
-              { value: isZh ? '车间边角损耗报废' : 'Scrap & spillage adjustment', label: isZh ? '车间边角损耗报废' : 'Scrap & spillage adjustment' },
-              { value: isZh ? '入库质检数量复核修正' : 'Inbound quantity correction', label: isZh ? '入库质检数量复核修正' : 'Inbound quantity correction' },
+              {
+                value: isZh ? '周期盘点差异调整' : 'Cycle count discrepancy',
+                label: isZh ? '周期盘点差异调整' : 'Cycle count discrepancy',
+              },
+              {
+                value: isZh ? '车间边角损耗报废' : 'Scrap & spillage adjustment',
+                label: isZh ? '车间边角损耗报废' : 'Scrap & spillage adjustment',
+              },
+              {
+                value: isZh ? '入库质检数量复核修正' : 'Inbound quantity correction',
+                label: isZh ? '入库质检数量复核修正' : 'Inbound quantity correction',
+              },
             ]}
           />
         </Form.Item>
@@ -166,7 +197,11 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         <Form.Item name="note" label={isZh ? '详细核查说明' : 'Adjustment Note'}>
           <Input.TextArea
             rows={2}
-            placeholder={isZh ? '请输入具体核对工单或现场责任人...' : 'Enter discrepancy details or audit note...'}
+            placeholder={
+              isZh
+                ? '请输入具体核对工单或现场责任人...'
+                : 'Enter discrepancy details or audit note...'
+            }
           />
         </Form.Item>
 

@@ -1,9 +1,24 @@
 import React from 'react';
 import { Button, Card, DatePicker, InputNumber, Progress, Slider, theme } from 'antd';
-import { MinusOutlined, PlusOutlined, InfoCircleOutlined, CheckOutlined, ShoppingCartOutlined, ToolOutlined } from '@ant-design/icons';
+import {
+  MinusOutlined,
+  PlusOutlined,
+  InfoCircleOutlined,
+  CheckOutlined,
+  ShoppingCartOutlined,
+  ToolOutlined,
+} from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import type { BomAnalysis, BomAnalysisLine } from '../types';
-import { formatDay, formatMoney, formatQty, itemNameByCode, materialName, procurementMeta, statusMeta } from '../utils';
+import {
+  formatDay,
+  formatMoney,
+  formatQty,
+  itemNameByCode,
+  materialName,
+  procurementMeta,
+  statusMeta,
+} from '../utils';
 
 interface PlanningInspectorProps {
   analysis: BomAnalysis | undefined;
@@ -32,19 +47,39 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
   const { token } = theme.useToken();
   const unit = analysis?.productUnitCode ?? 'pcs';
   const setQty = (value: number) => onQuantityChange(Math.max(1, Math.round(value)));
-  const sliderMax = Math.max(1000, Math.ceil(((analysis?.maxBuildableQuantity ?? 0) * 1.5) / 100) * 100, quantity);
+  const sliderMax = Math.max(
+    1000,
+    Math.ceil(((analysis?.maxBuildableQuantity ?? 0) * 1.5) / 100) * 100,
+    quantity,
+  );
 
   const feasible = analysis ? Math.min(analysis.maxBuildableQuantity, analysis.plannedQuantity) : 0;
-  const feasPct = analysis && analysis.plannedQuantity > 0 ? Math.round((feasible / analysis.plannedQuantity) * 100) : 0;
+  const feasPct =
+    analysis && analysis.plannedQuantity > 0
+      ? Math.round((feasible / analysis.plannedQuantity) * 100)
+      : 0;
   const ok = analysis ? analysis.shortageCount === 0 : true;
   const verdictColor = ok ? token.colorSuccess : token.colorError;
-  const bottleneck = analysis ? (isZh && analysis.bottleneckMaterialNameZh) || analysis.bottleneckMaterialNameEn : null;
+  const bottleneck = analysis
+    ? (isZh && analysis.bottleneckMaterialNameZh) || analysis.bottleneckMaterialNameEn
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <Card size="small" styles={{ body: { display: 'flex', flexDirection: 'column', gap: 12, padding: 14 } }}>
+      <Card
+        size="small"
+        styles={{ body: { display: 'flex', flexDirection: 'column', gap: 12, padding: 14 } }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: token.colorTextSecondary }}>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: token.colorTextSecondary,
+            }}
+          >
             {isZh ? '生产计划' : 'Production plan'}
           </span>
           <span style={{ fontSize: 12, color: token.colorTextTertiary }}>
@@ -53,7 +88,13 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Button shape="circle" icon={<MinusOutlined />} aria-label={isZh ? '减少' : 'Decrease'} onClick={() => setQty(quantity - STEP)} disabled={quantity <= 1} />
+          <Button
+            shape="circle"
+            icon={<MinusOutlined />}
+            aria-label={isZh ? '减少' : 'Decrease'}
+            onClick={() => setQty(quantity - STEP)}
+            disabled={quantity <= 1}
+          />
           <InputNumber
             variant="borderless"
             min={1}
@@ -66,7 +107,12 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
             controls={false}
             aria-label={isZh ? '计划数量' : 'Planned quantity'}
           />
-          <Button shape="circle" icon={<PlusOutlined />} aria-label={isZh ? '增加' : 'Increase'} onClick={() => setQty(quantity + STEP)} />
+          <Button
+            shape="circle"
+            icon={<PlusOutlined />}
+            aria-label={isZh ? '增加' : 'Increase'}
+            onClick={() => setQty(quantity + STEP)}
+          />
         </div>
 
         <Slider
@@ -80,16 +126,30 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
           aria-label={isZh ? '计划数量滑块' : 'Planned quantity slider'}
         />
 
-        <div role="group" aria-label={isZh ? '快速数量' : 'Quick quantity'} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 6 }}>
+        <div
+          role="group"
+          aria-label={isZh ? '快速数量' : 'Quick quantity'}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 6 }}
+        >
           {PRESETS.map((q) => (
-            <Button key={q} size="small" type={q === quantity ? 'primary' : 'default'} ghost={q === quantity} onClick={() => setQty(q)}>
+            <Button
+              key={q}
+              size="small"
+              type={q === quantity ? 'primary' : 'default'}
+              ghost={q === quantity}
+              onClick={() => setQty(q)}
+            >
               {formatQty(q, 0)}
             </Button>
           ))}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <span style={{ fontSize: 12, color: token.colorTextSecondary }}>{isZh ? '计划开工' : 'Production starts'}</span>
+        <div
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+        >
+          <span style={{ fontSize: 12, color: token.colorTextSecondary }}>
+            {isZh ? '计划开工' : 'Production starts'}
+          </span>
           <DatePicker
             size="small"
             allowClear={false}
@@ -118,24 +178,45 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
                 size={60}
                 percent={feasPct}
                 strokeColor={verdictColor}
-                format={(p) => <span className="tnum" style={{ fontSize: 13, fontWeight: 600, color: token.colorText }}>{p}%</span>}
+                format={(p) => (
+                  <span
+                    className="tnum"
+                    style={{ fontSize: 13, fontWeight: 600, color: token.colorText }}
+                  >
+                    {p}%
+                  </span>
+                )}
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: verdictColor }}>
                   {ok
-                    ? isZh ? '物料齐套' : 'All materials available'
-                    : isZh ? `缺 ${analysis.shortageCount} 种物料` : `${analysis.shortageCount} material${analysis.shortageCount > 1 ? 's' : ''} short`}
+                    ? isZh
+                      ? '物料齐套'
+                      : 'All materials available'
+                    : isZh
+                      ? `缺 ${analysis.shortageCount} 种物料`
+                      : `${analysis.shortageCount} material${analysis.shortageCount > 1 ? 's' : ''} short`}
                 </span>
                 <span style={{ fontSize: 12, lineHeight: 1.5, color: token.colorText }}>
-                  {isZh ? '可生产' : 'Can build'} <strong className="tnum">{formatQty(analysis.maxBuildableQuantity, 0)}</strong> {unit}
+                  {isZh ? '可生产' : 'Can build'}{' '}
+                  <strong className="tnum">{formatQty(analysis.maxBuildableQuantity, 0)}</strong>{' '}
+                  {unit}
                   {bottleneck ? ` · ${isZh ? '瓶颈' : 'limited by'} ${bottleneck}` : ''}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-              <Tile label={isZh ? '物料总成本' : 'Material cost'} value={formatMoney(analysis.totalMaterialCost)} />
-              <Tile label={`${isZh ? '物料成本' : 'Material cost'} / ${unit}`} value={formatMoney(analysis.costPerUnit)} />
+            <div
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}
+            >
+              <Tile
+                label={isZh ? '物料总成本' : 'Material cost'}
+                value={formatMoney(analysis.totalMaterialCost)}
+              />
+              <Tile
+                label={`${isZh ? '物料成本' : 'Material cost'} / ${unit}`}
+                value={formatMoney(analysis.costPerUnit)}
+              />
             </div>
           </>
         )}
@@ -147,7 +228,11 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
         ) : (
           <div style={{ display: 'flex', gap: 8, color: token.colorTextSecondary, fontSize: 13 }}>
             <InfoCircleOutlined style={{ marginTop: 3 }} />
-            <span>{isZh ? '在结构图或表格中点击一项物料以查看详情。' : 'Click a material in the structure or table to see its details.'}</span>
+            <span>
+              {isZh
+                ? '在结构图或表格中点击一项物料以查看详情。'
+                : 'Click a material in the structure or table to see its details.'}
+            </span>
           </div>
         )}
       </Card>
@@ -158,7 +243,16 @@ export const PlanningInspector: React.FC<PlanningInspectorProps> = ({
 const Tile: React.FC<{ label: string; value: string }> = ({ label, value }) => {
   const { token } = theme.useToken();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 10, borderRadius: token.borderRadius, background: token.colorFillQuaternary }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
+        padding: 10,
+        borderRadius: token.borderRadius,
+        background: token.colorFillQuaternary,
+      }}
+    >
       <span style={{ fontSize: 11, color: token.colorTextSecondary }}>{label}</span>
       <span className="tnum" style={{ fontSize: 14, fontWeight: 600 }}>
         {value}
@@ -181,14 +275,25 @@ const MaterialDetail: React.FC<{
   const index = analysis.lines.findIndex((l) => l.materialId === line.materialId) + 1;
 
   const facts: Array<{ label: string; value: string; color?: string; strong?: boolean }> = [
-    { label: isZh ? '定额' : 'Norm', value: `${formatQty(line.unitQuantity, 4)} ${unit}/${productUnit}` },
+    {
+      label: isZh ? '定额' : 'Norm',
+      value: `${formatQty(line.unitQuantity, 4)} ${unit}/${productUnit}`,
+    },
     { label: isZh ? '损耗' : 'Scrap', value: `${formatQty(line.scrapRate)}%` },
-    { label: isZh ? '本单需求' : 'Needed for plan', value: `${formatQty(line.requiredQuantity)} ${unit}` },
+    {
+      label: isZh ? '本单需求' : 'Needed for plan',
+      value: `${formatQty(line.requiredQuantity)} ${unit}`,
+    },
     { label: isZh ? '库存' : 'In stock', value: `${formatQty(line.availableQuantity)} ${unit}` },
     {
       label: line.makeOrBuy === 'MAKE' ? (isZh ? '需自制' : 'To make') : isZh ? '缺口' : 'Short',
       value: `${formatQty(Math.ceil(line.shortageQuantity), 0)} ${unit}`,
-      color: line.shortageQuantity > 0 ? (line.makeOrBuy === 'MAKE' ? token.colorPrimary : token.colorError) : token.colorSuccess,
+      color:
+        line.shortageQuantity > 0
+          ? line.makeOrBuy === 'MAKE'
+            ? token.colorPrimary
+            : token.colorError
+          : token.colorSuccess,
       strong: true,
     },
     { label: isZh ? '单价' : 'Unit price', value: `${formatMoney(line.unitCost)} / ${unit}` },
@@ -200,7 +305,10 @@ const MaterialDetail: React.FC<{
     { label: isZh ? '需要日期' : 'Needed from', value: formatDay(analysis.startDate) },
   ];
   if (line.makeOrBuy === 'MAKE') {
-    rows.push({ label: isZh ? '来源' : 'Source', value: isZh ? '按子BOM自制' : 'Made in-house (sub-BOM)' });
+    rows.push({
+      label: isZh ? '来源' : 'Source',
+      value: isZh ? '按子BOM自制' : 'Made in-house (sub-BOM)',
+    });
   } else {
     rows.push(
       {
@@ -211,12 +319,17 @@ const MaterialDetail: React.FC<{
         label: isZh ? '供应商' : 'Supplier',
         value: line.supplierName
           ? `${line.supplierName}${line.leadTimeDays != null ? ` · ${line.leadTimeDays} ${isZh ? '天' : 'days'}` : ''}`
-          : isZh ? '暂无采购记录' : 'No purchase history',
-      }
+          : isZh
+            ? '暂无采购记录'
+            : 'No purchase history',
+      },
     );
   }
   if (line.onOrderQuantity > 0) {
-    rows.push({ label: isZh ? '在途' : 'On order', value: `${formatQty(line.onOrderQuantity)} ${unit}` });
+    rows.push({
+      label: isZh ? '在途' : 'On order',
+      value: `${formatQty(line.onOrderQuantity)} ${unit}`,
+    });
   }
 
   return (
@@ -241,34 +354,77 @@ const MaterialDetail: React.FC<{
           {index}
         </span>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flexGrow: 1 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.35 }}>{materialName(line, isZh)}</span>
-          <span style={{ fontSize: 11, color: token.colorTextTertiary, fontFamily: 'ui-monospace, Menlo, monospace' }}>{line.materialCode}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.35 }}>
+            {materialName(line, isZh)}
+          </span>
+          <span
+            style={{
+              fontSize: 11,
+              color: token.colorTextTertiary,
+              fontFamily: 'ui-monospace, Menlo, monospace',
+            }}
+          >
+            {line.materialCode}
+          </span>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, color: meta.color, background: meta.bg, whiteSpace: 'nowrap' }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '3px 8px',
+            borderRadius: 999,
+            color: meta.color,
+            background: meta.bg,
+            whiteSpace: 'nowrap',
+          }}
+        >
           {meta.label}
         </span>
       </div>
 
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span style={{ color: token.colorTextSecondary }}>{isZh ? '库存满足率' : 'Stock coverage'}</span>
+          <span style={{ color: token.colorTextSecondary }}>
+            {isZh ? '库存满足率' : 'Stock coverage'}
+          </span>
           <strong className="tnum">{formatQty(line.coveragePercent, 0)}%</strong>
         </div>
-        <Progress percent={line.coveragePercent} showInfo={false} strokeColor={meta.color} size="small" />
+        <Progress
+          percent={line.coveragePercent}
+          showInfo={false}
+          strokeColor={meta.color}
+          size="small"
+        />
       </div>
 
-      <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+      <dl
+        style={{
+          margin: 0,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: 10,
+        }}
+      >
         {facts.map((f) => (
           <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <dt style={{ fontSize: 11, color: token.colorTextSecondary }}>{f.label}</dt>
-            <dd className="tnum" style={{ margin: 0, fontSize: 13, fontWeight: f.strong ? 700 : 600, color: f.color }}>
+            <dd
+              className="tnum"
+              style={{ margin: 0, fontSize: 13, fontWeight: f.strong ? 700 : 600, color: f.color }}
+            >
               {f.value}
             </dd>
           </div>
         ))}
       </dl>
 
-      <div style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: token.borderRadius, fontSize: 12 }}>
+      <div
+        style={{
+          border: `1px solid ${token.colorBorderSecondary}`,
+          borderRadius: token.borderRadius,
+          fontSize: 12,
+        }}
+      >
         {rows.map((r, i) => (
           <div
             key={r.label}
@@ -287,7 +443,14 @@ const MaterialDetail: React.FC<{
       </div>
 
       {line.procurementStatus === 'TO_ORDER' && (
-        <Button type="primary" danger block size="large" icon={<ShoppingCartOutlined />} onClick={() => onOrder(line)}>
+        <Button
+          type="primary"
+          danger
+          block
+          size="large"
+          icon={<ShoppingCartOutlined />}
+          onClick={() => onOrder(line)}
+        >
           {isZh ? '采购' : 'Order'} {formatQty(line.orderQuantity, 0)} {unit}
         </Button>
       )}

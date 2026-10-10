@@ -6,6 +6,7 @@ import {
   SwapOutlined,
   RollbackOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/useAppStore';
 import { StockMovementItem, StockMovementType } from '../types';
@@ -18,13 +19,15 @@ export const StockMovementsTimelineCard: React.FC<StockMovementsTimelineCardProp
   movements,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { language } = useAppStore();
   const [filterType, setFilterType] = useState<string>('ALL');
 
   const filteredMovements = movements.filter((mov) => {
     if (filterType === 'ALL') return true;
     if (filterType === 'INBOUND') return mov.type === 'PO_INBOUND';
-    if (filterType === 'OUTBOUND') return mov.type === 'SO_OUTBOUND' || mov.type === 'PRODUCTION_ISSUE';
+    if (filterType === 'OUTBOUND')
+      return mov.type === 'SO_OUTBOUND' || mov.type === 'PRODUCTION_ISSUE';
     if (filterType === 'RETURN') return mov.type === 'QC_RETURN';
     return true;
   });
@@ -47,7 +50,11 @@ export const StockMovementsTimelineCard: React.FC<StockMovementsTimelineCardProp
     const color = isPositive ? 'success' : type === 'SO_OUTBOUND' ? 'purple' : 'processing';
 
     return (
-      <Tag color={color} style={{ fontSize: 11, borderRadius: 2, margin: 0, padding: '0 6px' }} className="tnum">
+      <Tag
+        color={color}
+        style={{ fontSize: 11, borderRadius: 2, margin: 0, padding: '0 6px' }}
+        className="tnum"
+      >
         {isPositive ? `+${qty}` : qty} {uom}
       </Tag>
     );
@@ -57,7 +64,15 @@ export const StockMovementsTimelineCard: React.FC<StockMovementsTimelineCardProp
     <Card
       size="small"
       title={
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 6,
+          }}
+        >
           <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>
             {t('dashboard.recentStockMovements')}
           </span>
@@ -87,16 +102,32 @@ export const StockMovementsTimelineCard: React.FC<StockMovementsTimelineCardProp
           icon: getMovementDot(mov.type),
           content: (
             <div style={{ paddingBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 2,
+                }}
+              >
                 <span className="tnum" style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
-                  {mov.timestamp} &nbsp;|&nbsp; <span style={{ color: '#1677ff' }}>{mov.referenceDoc}</span>
+                  {mov.timestamp} &nbsp;|&nbsp;{' '}
+                  <span style={{ color: '#1677ff' }}>{mov.referenceDoc}</span>
                 </span>
                 {getMovementBadge(mov.type, mov.quantity, mov.uom)}
               </div>
               <div style={{ fontSize: 12, fontWeight: 600, color: '#1f2937' }}>
                 {language === 'zh-CN' ? mov.itemNameZh : mov.itemName}
               </div>
-              <div style={{ fontSize: 11, color: '#6b7280', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#6b7280',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: 2,
+                }}
+              >
                 <span>{language === 'zh-CN' ? mov.warehouseZh : mov.warehouse}</span>
                 <span style={{ color: '#9ca3af' }}>{mov.operator}</span>
               </div>
@@ -106,7 +137,12 @@ export const StockMovementsTimelineCard: React.FC<StockMovementsTimelineCardProp
       />
 
       <div style={{ textAlign: 'center', borderTop: '1px solid #f0f0f0', paddingTop: 6 }}>
-        <Button type="link" size="small" style={{ fontSize: 11, color: '#1677ff' }}>
+        <Button
+          type="link"
+          size="small"
+          style={{ fontSize: 11, color: '#1677ff' }}
+          onClick={() => navigate('/inventory')}
+        >
           {t('dashboard.viewAllLogistics')} →
         </Button>
       </div>

@@ -1,15 +1,15 @@
-import React from 'react';
-import { Card, Input, Select, Radio, Button, Space, message } from 'antd';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  InboxOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Input, Select, Radio, Button, Space } from 'antd';
+import { message } from '@/utils/antdApp';
+import { SearchOutlined, PlusOutlined, InboxOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
-import { PurchaseOrderStatus } from '../types';
+import { PermissionGuard } from '@/components/common/PermissionGuard';
+import { masterDataService } from '@/services/masterDataService';
+import { SupplierRecord } from '@/features/suppliers/types';
+import { PurchaseOrderStatus, PurchaseOrderSummary } from '../types';
 
 interface PurchasingFilterBarProps {
+  orders: PurchaseOrderSummary[];
   selectedSupplier: string;
   onSelectSupplier: (val: string) => void;
   selectedStatus: PurchaseOrderStatus | 'ALL';
@@ -21,6 +21,7 @@ interface PurchasingFilterBarProps {
 }
 
 export const PurchasingFilterBar: React.FC<PurchasingFilterBarProps> = ({
+  orders,
   selectedSupplier,
   onSelectSupplier,
   selectedStatus,
@@ -32,15 +33,21 @@ export const PurchasingFilterBar: React.FC<PurchasingFilterBarProps> = ({
 }) => {
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
+  const [suppliers, setSuppliers] = useState<SupplierRecord[]>([]);
+
+  useEffect(() => {
+    void masterDataService.getSuppliers().then(setSuppliers);
+  }, []);
 
   const supplierOptions = [
-    { value: 'ALL', label: isZh ? '全部合格供应商 / All Suppliers (42)' : 'All Suppliers (42)' },
-    { value: 'Baosteel', label: isZh ? '宝武特钢股份有限公司 (Baosteel)' : 'Baosteel Precision Steel Ltd' },
-    { value: 'Inovance', label: isZh ? '汇川精密伺服技术 (Inovance)' : 'Shenzhen Inovance Servo Tech' },
-    { value: 'Parker', label: isZh ? '派克汉尼汾流体传动 (Parker)' : 'Parker Hannifin Hydraulics' },
-    { value: 'Dongguan', label: isZh ? '东莞五金紧固件实业 (Dongguan)' : 'Dongguan Standard Fasteners' },
-    { value: 'Omron', label: isZh ? '欧姆龙工业自动化 (Omron)' : 'Omron Industrial Automation' },
-    { value: 'Festo', label: isZh ? '费斯托气动系统 (Festo)' : 'Festo Pneumatic Systems' },
+    {
+      value: 'ALL',
+      label: `${isZh ? '全部合格供应商' : 'All Qualified Suppliers'} (${suppliers.length})`,
+    },
+    ...suppliers.map((s) => ({
+      value: String(s.id),
+      label: `${isZh ? s.nameZh : s.name} (${s.code})`,
+    })),
   ];
 
   return (
@@ -93,28 +100,52 @@ export const PurchasingFilterBar: React.FC<PurchasingFilterBarProps> = ({
         </Space>
 
         <Space size="small">
-          <Button
-            type="primary"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={onOpenCreatePO}
-            style={{ backgroundColor: '#1677ff' }}
-          >
-            {isZh ? '新建采购单' : 'New Purchase Order'}
-          </Button>
+          <PermissionGuard action="CREATE_PURCHASE_ORDER">
+            <Button
+              type="primary"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={onOpenCreatePO}
+              style={{ backgroundColor: '#1677ff' }}
+            >
+              {isZh ? '新建采购单' : 'New Purchase Order'}
+            </Button>
+          </PermissionGuard>
 
-          <Button
-            size="small"
-            icon={<InboxOutlined />}
-            onClick={onOpenCreateReceipt}
-          >
-            {isZh ? '采购收货入库' : 'Create Goods Receipt'}
-          </Button>
+          <PermissionGuard action="RECEIVE_GOODS">
+            <Button size="small" icon={<InboxOutlined />} onClick={onOpenCreateReceipt}>
+              {isZh ? '采购收货入库' : 'Create Goods Receipt'}
+            </Button>
+          </PermissionGuard>
 
           <Button
             size="small"
             icon={<DownloadOutlined />}
-            onClick={() => message.success(isZh ? '正在导出采购总台账...' : 'Exporting Procurement CSV...')}
+            onClick={() => {
+              if (orders.length === 0) {
+                message.warning(isZh ? '无采购订单数据可导出' : 'No data to export');
+                return;
+              }
+              const headers = ['OrderNo,Supplier,TotalAmount,Status,OrderDate,ExpectedDate'];
+              const rows = orders.map(
+                (o) =>
+                  `"${o.poNumber}","${isZh ? o.supplierNameZh : o.supplierNameEn}",${o.totalAmount},"${o.status}","${o.orderDate}","${o.expectedDate}"`,
+              );
+              const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute(
+                'download',
+                `purchase_orders_${new Date().toISOString().slice(0, 10)}.csv`,
+              );
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+              message.success(isZh ? '采购订单数据已成功导出' : 'Purchase orders exported');
+            }}
           >
             {isZh ? '导出报表' : 'Export CSV'}
           </Button>
@@ -123,7 +154,9 @@ export const PurchasingFilterBar: React.FC<PurchasingFilterBarProps> = ({
 
       {/* Lower row: Status tags */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
+        <span
+          style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}
+        >
           {isZh ? '订单状态:' : 'PO STATUS:'}
         </span>
         <Radio.Group
@@ -133,19 +166,27 @@ export const PurchasingFilterBar: React.FC<PurchasingFilterBarProps> = ({
           buttonStyle="solid"
         >
           <Radio.Button value="ALL">
-            {isZh ? '全部 (28)' : 'All (28)'}
+            {isZh ? `全部 (${orders.length})` : `All (${orders.length})`}
           </Radio.Button>
           <Radio.Button value="DRAFT">
-            {isZh ? '草稿 (3)' : 'Draft (3)'}
+            {isZh
+              ? `草稿 (${orders.filter((o) => o.status === 'DRAFT').length})`
+              : `Draft (${orders.filter((o) => o.status === 'DRAFT').length})`}
           </Radio.Button>
           <Radio.Button value="CONFIRMED">
-            {isZh ? '已确认 (12)' : 'Confirmed (12)'}
+            {isZh
+              ? `已确认 (${orders.filter((o) => o.status === 'CONFIRMED').length})`
+              : `Confirmed (${orders.filter((o) => o.status === 'CONFIRMED').length})`}
           </Radio.Button>
           <Radio.Button value="INBOUND_INSPECTING">
-            {isZh ? '到货质检中 (5)' : 'Inbound Inspecting (5)'}
+            {isZh
+              ? `到货质检中 (${orders.filter((o) => o.status === 'INBOUND_INSPECTING').length})`
+              : `Inbound Inspecting (${orders.filter((o) => o.status === 'INBOUND_INSPECTING').length})`}
           </Radio.Button>
           <Radio.Button value="RECEIVED">
-            {isZh ? '已入库 (8)' : 'Received (8)'}
+            {isZh
+              ? `已入库 (${orders.filter((o) => o.status === 'RECEIVED').length})`
+              : `Received (${orders.filter((o) => o.status === 'RECEIVED').length})`}
           </Radio.Button>
         </Radio.Group>
       </div>

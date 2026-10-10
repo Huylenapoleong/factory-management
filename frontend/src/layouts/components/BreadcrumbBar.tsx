@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Breadcrumb, Button, Space, theme } from 'antd';
 import { ReloadOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { message } from '@/utils/antdApp';
 import { useAppStore } from '@/stores/useAppStore';
 import { getLocalTimezoneOffsetString } from '@/utils/timezone';
 
@@ -12,7 +14,9 @@ interface BreadcrumbBarProps {
 export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
   const { t } = useTranslation();
   const { token } = theme.useToken();
-  const { language, autoRefreshInterval } = useAppStore();
+  const { language, autoRefreshInterval, triggerRefresh } = useAppStore();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [timeString, setTimeString] = useState<string>('');
   const tzString = getLocalTimezoneOffsetString();
 
@@ -28,7 +32,7 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
-        })
+        }),
       );
     };
     updateTime();
@@ -40,6 +44,24 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
     autoRefreshInterval > 0
       ? `${t('header.autoRefresh')}: ${autoRefreshInterval}s`
       : t('header.refreshOff');
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    triggerRefresh();
+    try {
+      await queryClient.invalidateQueries();
+    } catch {
+      // ignore
+    }
+    window.dispatchEvent(new CustomEvent('wifim:refresh'));
+    message.success({
+      content:
+        language === 'zh-CN' ? '系统数据与遥测已刷新' : 'Plant operational telemetry refreshed',
+      key: 'wifim-refresh-msg',
+    });
+    setTimeout(() => setRefreshing(false), 600);
+    if (onRefresh) onRefresh();
+  };
 
   return (
     <div
@@ -59,12 +81,12 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
             title: (
               <span style={{ color: token.colorTextSecondary }}>
                 <EnvironmentOutlined style={{ marginRight: 4 }} />
-                {language === 'zh-CN' ? '华东制造基地' : 'East China Facility'}
+                {t('header.factoryFacility', 'Central Manufacturing Plant')}
               </span>
             ),
           },
           {
-            title: language === 'zh-CN' ? '一车间 (机加工)' : 'Workshop 01',
+            title: t('header.workshop', 'Workshop Operations'),
           },
           {
             title: (
@@ -78,7 +100,8 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
 
       <Space size="middle" align="center" className="tnum">
         <span style={{ color: token.colorTextSecondary }}>
-          {t('header.systemTime')} ({tzString}): <strong style={{ color: token.colorText }}>{timeString}</strong>
+          {t('header.systemTime')} ({tzString}):{' '}
+          <strong style={{ color: token.colorText }}>{timeString}</strong>
         </span>
         <span style={{ color: token.colorBorder }}>|</span>
         <span
@@ -92,8 +115,8 @@ export const BreadcrumbBar: React.FC<BreadcrumbBarProps> = ({ onRefresh }) => {
         </span>
         <Button
           size="small"
-          icon={<ReloadOutlined />}
-          onClick={onRefresh}
+          icon={<ReloadOutlined spin={refreshing} />}
+          onClick={handleRefresh}
           style={{ fontSize: 11, height: 24, padding: '0 8px' }}
         >
           {t('header.manualRefresh')}

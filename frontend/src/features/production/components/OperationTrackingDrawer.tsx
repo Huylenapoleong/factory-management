@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tag, InputNumber, Select, Button, Form, message, Steps, theme } from 'antd';
+import { Card, Tag, InputNumber, Select, Button, Form, App, Steps, theme } from 'antd';
 import {
   CheckCircleFilled,
   ClockCircleFilled,
@@ -9,6 +9,7 @@ import {
   CloseOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { productionService } from '@/services/productionService';
 import { ProductionOrder, OperationStep } from '../types';
 
@@ -24,10 +25,14 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
   onReportSubmitted,
 }) => {
   const { language } = useAppStore();
+  const { user } = useAuthStore();
   const { token } = theme.useToken();
+  const { message } = App.useApp();
   const [steps, setSteps] = useState<OperationStep[]>([]);
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+
+  const currentOperator = user?.fullName || user?.username || 'Operator';
 
   useEffect(() => {
     if (!order) return;
@@ -40,9 +45,14 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
 
   if (!order) {
     return (
-      <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb', textAlign: 'center', padding: 32 }}>
+      <Card
+        size="small"
+        style={{ borderRadius: 4, border: '1px solid #e5e7eb', textAlign: 'center', padding: 32 }}
+      >
         <span style={{ color: '#9ca3af' }}>
-          {language === 'zh-CN' ? '请选择一个生产工单以查看工序与现场报工' : 'Select a work order to view operation routing & dispatch'}
+          {language === 'zh-CN'
+            ? '请选择一个生产工单以查看工序与现场报工'
+            : 'Select a work order to view operation routing & dispatch'}
         </span>
       </Card>
     );
@@ -51,20 +61,24 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
   const activeStep = steps.find((s) => s.status === 'ACTIVE') || steps[0];
 
   const handleReportSubmit = async () => {
+    if (!activeStep?.id) {
+      message.warning('No operation step available to report');
+      return;
+    }
     try {
       const values = await form.validateFields();
       setSubmitting(true);
-      await productionService.submitOperationReport(order.id, activeStep?.id || 'step-30', {
+      await productionService.submitOperationReport(order.id, activeStep.id, {
         qualifiedQty: values.qualifiedQty,
         scrapQty: values.scrapQty,
         defectReason: values.defectReason,
         machineRunHours: values.machineRunHours,
-        operatorId: 'operator-chen',
+        operatorId: user?.username || 'operator',
       });
       message.success(
         language === 'zh-CN'
           ? `工序报工已提交成功: +${values.qualifiedQty} 件合格!`
-          : `Operation report submitted: +${values.qualifiedQty} pcs qualified!`
+          : `Operation report submitted: +${values.qualifiedQty} pcs qualified!`,
       );
       form.resetFields();
       onReportSubmitted?.();
@@ -101,21 +115,48 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
       styles={{ body: { padding: '12px 14px' } }}
     >
       {/* Product Summary Header */}
-      <div style={{ padding: '8px 10px', backgroundColor: token.colorFillAlter, border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4, marginBottom: 12 }}>
+      <div
+        style={{
+          padding: '8px 10px',
+          backgroundColor: token.colorFillAlter,
+          border: `1px solid ${token.colorBorderSecondary}`,
+          borderRadius: 4,
+          marginBottom: 12,
+        }}
+      >
         <div style={{ fontWeight: 600, color: token.colorText, fontSize: 13 }}>
           {language === 'zh-CN' ? order.productNameZh : order.productName}
         </div>
-        <div style={{ fontSize: 11, color: token.colorTextSecondary, display: 'flex', gap: 12, marginTop: 2 }}>
-          <span>Part: <strong style={{ color: token.colorText }}>{order.productCode}</strong></span>
-          <span>Batch: <strong style={{ color: token.colorText }}>{order.batchNo}</strong></span>
-          <span>Total: <strong style={{ color: token.colorPrimary }}>{order.plannedQty} {order.uom}</strong></span>
+        <div
+          style={{
+            fontSize: 11,
+            color: token.colorTextSecondary,
+            display: 'flex',
+            gap: 12,
+            marginTop: 2,
+          }}
+        >
+          <span>
+            Part: <strong style={{ color: token.colorText }}>{order.productCode}</strong>
+          </span>
+          <span>
+            Batch: <strong style={{ color: token.colorText }}>{order.batchNo}</strong>
+          </span>
+          <span>
+            Total:{' '}
+            <strong style={{ color: token.colorPrimary }}>
+              {order.plannedQty} {order.uom}
+            </strong>
+          </span>
         </div>
       </div>
 
       {/* 5-Step Routing Process */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: '#4b5563', marginBottom: 8 }}>
-          {language === 'zh-CN' ? '标准工艺工序进度 (5-Step Routing)' : 'Standard Routing Progress (5 Steps)'}
+          {language === 'zh-CN'
+            ? `标准工艺工序进度 (${steps.length} 道工序)`
+            : `Standard Routing Progress (${steps.length} Steps)`}
         </div>
 
         <Steps
@@ -124,29 +165,45 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
           current={order.stepNumber - 1}
           items={steps.map((st) => ({
             title: (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: st.status === 'ACTIVE' ? '#1677ff' : '#1f2937' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: st.status === 'ACTIVE' ? '#1677ff' : '#1f2937',
+                  }}
+                >
                   {st.stepCode}: {language === 'zh-CN' ? st.stepNameZh : st.stepName}
                 </span>
                 {st.status === 'COMPLETED' && (
-                  <Tag color="success" style={{ margin: 0, fontSize: 10, padding: '0 4px', borderRadius: 2 }}>
+                  <Tag
+                    color="success"
+                    style={{ margin: 0, fontSize: 10, padding: '0 4px', borderRadius: 2 }}
+                  >
                     <CheckCircleFilled style={{ marginRight: 2 }} />
                     {st.completedQty} / {st.targetQty}
                   </Tag>
                 )}
                 {st.status === 'ACTIVE' && (
-                  <Tag color="processing" style={{ margin: 0, fontSize: 10, padding: '0 4px', borderRadius: 2 }}>
+                  <Tag
+                    color="processing"
+                    style={{ margin: 0, fontSize: 10, padding: '0 4px', borderRadius: 2 }}
+                  >
                     <ClockCircleFilled style={{ marginRight: 2 }} />
                     {st.progressPercent}% ({st.completedQty} pcs)
                   </Tag>
                 )}
               </div>
             ),
-            description: (
+            content: (
               <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
                 <span>Machine: {st.machineId}</span> &nbsp;|&nbsp;{' '}
                 <span>Operator: {language === 'zh-CN' ? st.workerNameZh : st.workerName}</span>
-                {st.scrapQty > 0 && <span style={{ color: '#ff4d4f', marginLeft: 8 }}>Scrap: {st.scrapQty}</span>}
+                {st.scrapQty > 0 && (
+                  <span style={{ color: '#ff4d4f', marginLeft: 8 }}>Scrap: {st.scrapQty}</span>
+                )}
               </div>
             ),
           }))}
@@ -160,13 +217,20 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
           paddingTop: 12,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}
+        >
           <span style={{ fontSize: 12, fontWeight: 600, color: token.colorText }}>
-            {language === 'zh-CN' ? '现场工位快速报工 (Quick Dispatch)' : 'Quick Operation Reporting'}
+            {language === 'zh-CN' ? '现场工位快速报工' : 'Quick Operation Reporting'}
           </span>
           <Tag color="blue" style={{ fontSize: 10, borderRadius: 2 }}>
             <UserOutlined style={{ marginRight: 3 }} />
-            {language === 'zh-CN' ? '陈斌 (工号: M-204)' : 'Chen Bin (Op-204)'}
+            {currentOperator}
           </Tag>
         </div>
 
@@ -174,12 +238,17 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
           form={form}
           layout="vertical"
           size="small"
-          initialValues={{ qualifiedQty: 25, scrapQty: 0, machineRunHours: 1.5, defectReason: 'NONE' }}
+          initialValues={{
+            qualifiedQty: 1,
+            scrapQty: 0,
+            machineRunHours: 1.0,
+            defectReason: 'NONE',
+          }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <Form.Item
               name="qualifiedQty"
-              label={language === 'zh-CN' ? '本次合格数 (Qualified)' : 'Qualified Output'}
+              label={language === 'zh-CN' ? '本次合格数' : 'Qualified Output'}
               rules={[{ required: true }]}
             >
               <InputNumber min={0} max={1000} style={{ width: '100%' }} suffix="pcs" />
@@ -187,7 +256,7 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
 
             <Form.Item
               name="scrapQty"
-              label={language === 'zh-CN' ? '报废数 (Defect/Scrap)' : 'Scrap Qty'}
+              label={language === 'zh-CN' ? '报废数' : 'Scrap Qty'}
               rules={[{ required: true }]}
             >
               <InputNumber min={0} max={500} style={{ width: '100%' }} suffix="pcs" />
@@ -197,21 +266,33 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 8 }}>
             <Form.Item
               name="defectReason"
-              label={language === 'zh-CN' ? '不良原因代码 (Defect Code)' : 'Defect Reason'}
+              label={language === 'zh-CN' ? '不良原因' : 'Defect Reason'}
             >
               <Select
                 options={[
-                  { value: 'NONE', label: language === 'zh-CN' ? '无异常 (Normal)' : 'None (Normal)' },
-                  { value: 'POROSITY', label: language === 'zh-CN' ? '铸造气孔 (Porosity)' : 'Porosity Defect' },
-                  { value: 'DIMENSION', label: language === 'zh-CN' ? '尺寸超差 (Dimensional)' : 'Dimension Error' },
-                  { value: 'ROUGHNESS', label: language === 'zh-CN' ? '表面光洁度不达标' : 'Surface Roughness' },
+                  {
+                    value: 'NONE',
+                    label: language === 'zh-CN' ? '无异常' : 'None (Normal)',
+                  },
+                  {
+                    value: 'POROSITY',
+                    label: language === 'zh-CN' ? '铸造气孔' : 'Porosity Defect',
+                  },
+                  {
+                    value: 'DIMENSION',
+                    label: language === 'zh-CN' ? '尺寸超差' : 'Dimension Error',
+                  },
+                  {
+                    value: 'ROUGHNESS',
+                    label: language === 'zh-CN' ? '表面光洁度不达标' : 'Surface Roughness',
+                  },
                 ]}
               />
             </Form.Item>
 
             <Form.Item
               name="machineRunHours"
-              label={language === 'zh-CN' ? '设备工时 (Hours)' : 'Run Hours'}
+              label={language === 'zh-CN' ? '设备工时' : 'Run Hours'}
               rules={[{ required: true }]}
             >
               <InputNumber min={0.1} max={24} step={0.5} style={{ width: '100%' }} suffix="h" />
@@ -230,7 +311,14 @@ export const OperationTrackingDrawer: React.FC<OperationTrackingDrawerProps> = (
             </Button>
             <Button
               icon={<PrinterOutlined />}
-              onClick={() => message.success('Printing Barcode Traveler: ' + order.orderNo)}
+              onClick={() => {
+                window.print();
+                message.success(
+                  language === 'zh-CN'
+                    ? `正在打印工单流转卡条码: ${order.orderNo}`
+                    : `Printing Barcode Traveler: ${order.orderNo}`,
+                );
+              }}
             >
               {language === 'zh-CN' ? '条码标签' : 'Barcode'}
             </Button>

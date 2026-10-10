@@ -18,6 +18,8 @@ import { ItemsView } from '@/features/items';
 import { SuppliersView } from '@/features/suppliers';
 import { CustomersView } from '@/features/customers';
 import { AuditView, SettingsView } from '@/features/settings';
+import { UserGuideView } from '@/features/guide';
+import { AntdAppBridge } from '@/utils/antdApp';
 
 export const App: React.FC = () => {
   const { language, themeMode, displayDensity } = useAppStore();
@@ -45,11 +47,9 @@ export const App: React.FC = () => {
   const activeTheme = getIndustrialTheme(isDark, displayDensity);
 
   return (
-    <ConfigProvider
-      locale={antdLocale}
-      theme={activeTheme}
-    >
+    <ConfigProvider locale={antdLocale} theme={activeTheme}>
       <AntdApp>
+        <AntdAppBridge />
         <BrowserRouter>
           <Routes>
             {/* Public Terminal Authentication */}
@@ -60,16 +60,61 @@ export const App: React.FC = () => {
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<DashboardView />} />
-                <Route path="/production" element={<ProductionView />} />
-                <Route path="/production/bom" element={<BomWorkbenchView />} />
-                <Route path="/inventory" element={<InventoryView />} />
-                <Route path="/purchasing" element={<PurchasingView />} />
-                <Route path="/sales" element={<SalesView />} />
                 <Route path="/items" element={<ItemsView />} />
-                <Route path="/suppliers" element={<SuppliersView />} />
-                <Route path="/customers" element={<CustomersView />} />
-                <Route path="/audit" element={<AuditView />} />
-                <Route path="/settings" element={<SettingsView />} />
+
+                {/* Production Subsystem */}
+                <Route
+                  element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'PRODUCTION']} />}
+                >
+                  <Route path="/production" element={<ProductionView />} />
+                  <Route path="/production/bom" element={<BomWorkbenchView />} />
+                </Route>
+
+                {/* Inventory & Logistics Subsystem */}
+                <Route
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={['ADMIN', 'MANAGER', 'WAREHOUSE', 'PURCHASING', 'SALES']}
+                    />
+                  }
+                >
+                  <Route path="/inventory" element={<InventoryView />} />
+                </Route>
+
+                {/* Purchasing & Supply Chain */}
+                <Route
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={['ADMIN', 'MANAGER', 'PURCHASING', 'WAREHOUSE']}
+                    />
+                  }
+                >
+                  <Route path="/purchasing" element={<PurchasingView />} />
+                  <Route path="/suppliers" element={<SuppliersView />} />
+                </Route>
+
+                {/* Sales & Outbound Order Fulfillment */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'WAREHOUSE']} />
+                  }
+                >
+                  <Route path="/sales" element={<SalesView />} />
+                  <Route path="/customers" element={<CustomersView />} />
+                </Route>
+
+                {/* Audit & Compliance (System Administrator Exclusive) */}
+                <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                  <Route path="/audit" element={<AuditView />} />
+                </Route>
+
+                {/* System Settings & Factory Master Parameters */}
+                <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
+                  <Route path="/settings" element={<SettingsView />} />
+                </Route>
+
+                {/* Global Role-Adaptive User Guide & SOP Screen */}
+                <Route path="/guide" element={<UserGuideView />} />
               </Route>
             </Route>
 

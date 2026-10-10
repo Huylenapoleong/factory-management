@@ -5,14 +5,29 @@ import {
   InboxOutlined,
   AlertOutlined,
   SafetyCertificateOutlined,
-  DollarOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
+import { PurchaseOrderSummary, GoodsReceiptSummary } from '../types';
 
-export const PurchasingKpiStrip: React.FC = () => {
+interface PurchasingKpiStripProps {
+  orders?: PurchaseOrderSummary[];
+  receipts?: GoodsReceiptSummary[];
+}
+
+export const PurchasingKpiStrip: React.FC<PurchasingKpiStripProps> = ({
+  orders = [],
+  receipts = [],
+}) => {
   const { language } = useAppStore();
   const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
+
+  const activeOrdersCount = orders.length;
+  const totalSpend = orders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+  const pendingInspect = receipts.filter((r) => r.status === 'INSPECTING').length;
+  const delayedOrders = orders.filter((o) => o.slaWarn).length;
+  const postedReceipts = receipts.filter((r) => r.status === 'POSTED').length;
 
   return (
     <Row gutter={[10, 10]} style={{ marginBottom: 12 }}>
@@ -20,68 +35,71 @@ export const PurchasingKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '在途采购单' : 'ACTIVE PURCHASE ORDERS'}
                 </span>
                 <FileTextOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
-            value={28}
+            value={activeOrdersCount}
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-            suffix={
-              <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
-                +4.2% MoM
-              </span>
-            }
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            <span className="tnum" style={{ fontWeight: 600, color: token.colorText }}>$842,500</span> {isZh ? '| 14家合格供方' : '| 14 Active Suppliers'}
+            <span className="tnum" style={{ fontWeight: 600, color: token.colorText }}>
+              $
+              {totalSpend.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>{' '}
+            {isZh ? '总采购额' : 'total amount'}
           </div>
         </Card>
       </Col>
 
-      {/* 2. Inbound Expected Today */}
+      {/* 2. Inbound Receipts */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '今日预计到港' : 'INBOUND EXPECTED TODAY'}
+                  {isZh ? '已建到货单' : 'INBOUND RECEIPTS'}
                 </span>
                 <InboxOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
-            value={6}
+            value={receipts.length}
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-            suffix={
-              <span
-                style={{
-                  fontSize: 10,
-                  backgroundColor: token.colorPrimaryBg,
-                  color: token.colorPrimary,
-                  padding: '1px 5px',
-                  borderRadius: 2,
-                  marginLeft: 6,
-                  fontWeight: 600,
-                }}
-              >
-                Bays 01-04
-              </span>
-            }
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            380 {isZh ? '托盘 | 下次到货: 11:45' : 'pallets | ETA: 11:45 AM'}
+            {pendingInspect > 0
+              ? `${pendingInspect} ${isZh ? '笔质检中' : 'in inspection'}`
+              : isZh
+                ? '无待检积压'
+                : 'No inspection backlog'}
           </div>
         </Card>
       </Col>
@@ -90,38 +108,73 @@ export const PurchasingKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={4} xl={4}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #f87171', backgroundColor: token.colorFillAlter }}
+          style={{
+            borderRadius: 4,
+            border:
+              delayedOrders > 0 ? '1px solid #f87171' : `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: delayedOrders > 0 ? token.colorFillAlter : token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 600 }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: delayedOrders > 0 ? '#dc2626' : token.colorTextSecondary,
+                    fontWeight: 600,
+                  }}
+                >
                   {isZh ? '交付逾期预警' : 'DELAYED DELIVERIES'}
                 </span>
-                <AlertOutlined style={{ color: '#dc2626', fontSize: 13 }} />
+                <AlertOutlined
+                  style={{ color: delayedOrders > 0 ? '#dc2626' : '#10b981', fontSize: 13 }}
+                />
               </div>
             }
-            value={2}
-            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#dc2626' } }}
+            value={delayedOrders}
+            styles={{
+              content: {
+                fontSize: 20,
+                fontWeight: 700,
+                color: delayedOrders > 0 ? '#dc2626' : token.colorText,
+              },
+            }}
             suffix={
-              <span
-                style={{
-                  fontSize: 10,
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  padding: '1px 5px',
-                  borderRadius: 2,
-                  marginLeft: 6,
-                  fontWeight: 600,
-                }}
-              >
-                CRITICAL
-              </span>
+              delayedOrders > 0 ? (
+                <span
+                  style={{
+                    fontSize: 10,
+                    backgroundColor: '#fee2e2',
+                    color: '#dc2626',
+                    padding: '1px 5px',
+                    borderRadius: 2,
+                    marginLeft: 6,
+                    fontWeight: 600,
+                  }}
+                >
+                  CRITICAL
+                </span>
+              ) : null
             }
           />
-          <div style={{ fontSize: 11, color: '#ef4444', marginTop: 2 }}>
-            RM-STEEL-304, Fastener-M8
+          <div
+            style={{
+              fontSize: 11,
+              color: delayedOrders > 0 ? '#ef4444' : token.colorTextSecondary,
+              marginTop: 2,
+            }}
+          >
+            {delayedOrders > 0
+              ? isZh
+                ? '存在交期风险订单'
+                : 'Overdue SLA orders'
+              : isZh
+                ? '全部按期交付'
+                : 'All orders on track'}
           </div>
         </Card>
       </Col>
@@ -130,63 +183,65 @@ export const PurchasingKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '待质检入库' : 'PENDING QC INSPECTION'}
+                  {isZh ? '待质检收货' : 'PENDING QC INSPECTION'}
                 </span>
                 <SafetyCertificateOutlined style={{ color: '#d97706', fontSize: 13 }} />
               </div>
             }
-            value={3}
+            value={pendingInspect}
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-            suffix={
-              <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>
-                {isZh ? '批 (140托盘)' : 'Batches (140p)'}
-              </span>
-            }
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            {isZh ? '平均等待: 38分钟 | Bay 02 暂存' : 'Avg wait: 38 mins | Bay 02 Hold'}
+            {isZh ? '码头现场质检中' : 'Awaiting QC release'}
           </div>
         </Card>
       </Col>
 
-      {/* 5. Monthly Procurement Spend */}
+      {/* 5. Completed Posted Inbound */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '本月累计采购额' : 'MONTHLY PROCUREMENT SPEND'}
+                  {isZh ? '已过账入库' : 'POSTED TO INVENTORY'}
                 </span>
-                <DollarOutlined style={{ color: '#0f766e', fontSize: 13 }} />
+                <CheckCircleOutlined style={{ color: '#15803d', fontSize: 13 }} />
               </div>
             }
-            value={1.24}
-            precision={2}
-            prefix="$"
-            suffix={
-              <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>
-                M <span style={{ color: '#10b981' }}>78.4%</span>
-              </span>
-            }
-            styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
+            value={postedReceipts}
+            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#15803d' } }}
           />
-          <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
-            Optimal Cost Index | FY26-Q4
+          <div style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
+            {isZh ? '已完成库存上架' : 'Shelved & updated'}
           </div>
         </Card>
       </Col>
     </Row>
   );
 };
+
+export default PurchasingKpiStrip;

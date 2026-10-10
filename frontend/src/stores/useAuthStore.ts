@@ -60,10 +60,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         | { data?: { accessToken: string; refreshToken: string; user: AuthUser } }
         | { accessToken: string; refreshToken: string; user: AuthUser }
       >('/auth/login', { username, password });
-      const authData = (res as { data?: { accessToken: string; refreshToken: string; user: AuthUser } })?.data || res;
+      const authData =
+        (res as { data?: { accessToken: string; refreshToken: string; user: AuthUser } })?.data ||
+        res;
 
       if (authData && 'accessToken' in authData && authData.accessToken) {
-        const { accessToken, refreshToken, user } = authData as { accessToken: string; refreshToken: string; user: AuthUser };
+        const { accessToken, refreshToken, user } = authData as {
+          accessToken: string;
+          refreshToken: string;
+          user: AuthUser;
+        };
         localStorage.setItem('access_token', accessToken);
         if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
         if (user) localStorage.setItem('auth_user', JSON.stringify(user));
@@ -81,7 +87,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw new Error('Invalid authentication response structure');
     } catch (err: unknown) {
       set({ isLoading: false });
-      const apiMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const apiMessage = (err as { response?: { data?: { message?: string } } })?.response?.data
+        ?.message;
       return {
         success: false,
         error: apiMessage || 'Authentication failed. Please check your username and password.',

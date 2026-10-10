@@ -19,7 +19,12 @@ interface FormValues {
   dueDate: Dayjs;
 }
 
-export const ReleaseOrderModal: React.FC<ReleaseOrderModalProps> = ({ open, onClose, analysis, isZh }) => {
+export const ReleaseOrderModal: React.FC<ReleaseOrderModalProps> = ({
+  open,
+  onClose,
+  analysis,
+  isZh,
+}) => {
   const [form] = Form.useForm<FormValues>();
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -44,7 +49,11 @@ export const ReleaseOrderModal: React.FC<ReleaseOrderModalProps> = ({ open, onCl
         dueDate: values.dueDate.format('YYYY-MM-DD'),
       }),
     onSuccess: (order) => {
-      message.success(isZh ? `已创建生产工单 ${order.moNo}（草稿）` : `Production order ${order.moNo} created as draft`);
+      message.success(
+        isZh
+          ? `已创建生产工单 ${order.moNo}（草稿）`
+          : `Production order ${order.moNo} created as draft`,
+      );
       onClose();
       navigate('/production');
     },
@@ -67,7 +76,8 @@ export const ReleaseOrderModal: React.FC<ReleaseOrderModalProps> = ({ open, onCl
       destroyOnHidden
     >
       <div style={{ marginBottom: 12, fontSize: 13 }}>
-        <strong>{(isZh && analysis.productNameZh) || analysis.productNameEn}</strong> · {analysis.productCode} · BOM {analysis.bomCode} v{analysis.version}
+        <strong>{(isZh && analysis.productNameZh) || analysis.productNameEn}</strong> ·{' '}
+        {analysis.productCode} · BOM {analysis.bomCode} v{analysis.version}
       </div>
       {analysis.toOrderCount > 0 && (
         <Alert
@@ -90,7 +100,11 @@ export const ReleaseOrderModal: React.FC<ReleaseOrderModalProps> = ({ open, onCl
           <InputNumber min={1} precision={0} style={{ width: '100%' }} />
         </Form.Item>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Form.Item name="startDate" label={isZh ? '计划开工' : 'Start date'} rules={[{ required: true }]}>
+          <Form.Item
+            name="startDate"
+            label={isZh ? '计划开工' : 'Start date'}
+            rules={[{ required: true }]}
+          >
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
@@ -101,9 +115,17 @@ export const ReleaseOrderModal: React.FC<ReleaseOrderModalProps> = ({ open, onCl
               { required: true },
               ({ getFieldValue }) => ({
                 validator: (_, value?: Dayjs) =>
-                  !value || !getFieldValue('startDate') || !value.isBefore(getFieldValue('startDate'), 'day')
+                  !value ||
+                  !getFieldValue('startDate') ||
+                  !value.isBefore(getFieldValue('startDate'), 'day')
                     ? Promise.resolve()
-                    : Promise.reject(new Error(isZh ? '交付日期不能早于开工日期' : 'Due date must be on or after the start date')),
+                    : Promise.reject(
+                        new Error(
+                          isZh
+                            ? '交付日期不能早于开工日期'
+                            : 'Due date must be on or after the start date',
+                        ),
+                      ),
               }),
             ]}
           >

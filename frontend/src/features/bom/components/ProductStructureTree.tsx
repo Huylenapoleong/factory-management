@@ -25,16 +25,27 @@ interface Column {
 const LEGEND: CoverageStatus[] = ['SUFFICIENT', 'LOW', 'SHORTAGE', 'MAKE'];
 const HEADER_MIN_HEIGHT = 84;
 
-const nodeName = (node: BomStructureNode, isZh: boolean) => (isZh && node.itemNameZh) || node.itemNameEn;
+const nodeName = (node: BomStructureNode, isZh: boolean) =>
+  (isZh && node.itemNameZh) || node.itemNameEn;
 
 const countSubAssemblies = (node: BomStructureNode): number =>
-  node.children.reduce((sum, child) => sum + (child.makeOrBuy === 'MAKE' ? 1 : 0) + countSubAssemblies(child), 0);
+  node.children.reduce(
+    (sum, child) => sum + (child.makeOrBuy === 'MAKE' ? 1 : 0) + countSubAssemblies(child),
+    0,
+  );
 
-export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ analysis, isZh, selectedId, onSelect }) => {
+export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({
+  analysis,
+  isZh,
+  selectedId,
+  onSelect,
+}) => {
   const { token } = theme.useToken();
   const root = analysis.structure;
   const productUnit = analysis.productUnitCode ?? 'pcs';
-  const lines = new Map<number, BomAnalysisLine>(analysis.lines.map((line) => [line.materialId, line]));
+  const lines = new Map<number, BomAnalysisLine>(
+    analysis.lines.map((line) => [line.materialId, line]),
+  );
   const connector = token.colorPrimaryBorder;
   const subAssemblies = countSubAssemblies(root);
 
@@ -43,20 +54,28 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
   const directShort = direct.filter((node) => lines.get(node.itemId)?.status === 'SHORTAGE').length;
 
   const columns: Column[] = [
-    ...groups.map((group): Column => {
+    ...groups.map((group, gIdx): Column => {
       const line = lines.get(group.itemId);
       const make = group.makeQuantity ?? 0;
       const stock = formatQty(line?.availableQuantity ?? 0);
       return {
-        key: `group-${group.itemId}`,
+        key: `group-${group.itemId}-${gIdx}`,
         title: nodeName(group, isZh),
         subtitle: isZh
           ? `每件成品用 ${formatQty(group.quantityPer, 4)} ${group.unitCode ?? ''}`
           : `${formatQty(group.quantityPer, 4)} ${group.unitCode ?? ''} per ${productUnit}`,
         status:
           make > 0
-            ? { text: isZh ? `需自制 ${formatQty(make, 0)} · 库存 ${stock}` : `Make ${formatQty(make, 0)} · ${stock} in stock`, color: token.colorPrimary }
-            : { text: isZh ? `库存 ${stock}，无需自制` : `${stock} in stock · no need to make`, color: token.colorSuccess },
+            ? {
+                text: isZh
+                  ? `需自制 ${formatQty(make, 0)} · 库存 ${stock}`
+                  : `Make ${formatQty(make, 0)} · ${stock} in stock`,
+                color: token.colorPrimary,
+              }
+            : {
+                text: isZh ? `库存 ${stock}，无需自制` : `${stock} in stock · no need to make`,
+                color: token.colorSuccess,
+              },
         group,
         parentUnit: group.unitCode ?? '',
         leaves: group.children,
@@ -67,10 +86,15 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
           {
             key: 'direct',
             title: isZh ? '直接装配' : 'Fitted directly',
-            subtitle: isZh ? `${direct.length} 项物料直接装到成品` : `${direct.length} parts go straight into the ${productUnit}`,
+            subtitle: isZh
+              ? `${direct.length} 项物料直接装到成品`
+              : `${direct.length} parts go straight into the ${productUnit}`,
             status:
               directShort > 0
-                ? { text: isZh ? `${directShort} 项缺料` : `${directShort} short`, color: token.colorError }
+                ? {
+                    text: isZh ? `${directShort} 项缺料` : `${directShort} short`,
+                    color: token.colorError,
+                  }
                 : { text: isZh ? '物料齐全' : 'All parts available', color: token.colorSuccess },
             parentUnit: productUnit,
             leaves: direct,
@@ -79,7 +103,12 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
       : []),
   ];
 
-  const renderLeaf = (node: BomStructureNode, parentUnit: string, depth: number): React.ReactNode => {
+  const renderLeaf = (
+    node: BomStructureNode,
+    parentUnit: string,
+    depth: number,
+    index = 0,
+  ): React.ReactNode => {
     const line = lines.get(node.itemId);
     if (!line) return null;
     const meta = statusMeta(line.status, token, isZh);
@@ -90,7 +119,10 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
     const isGroup = node.makeOrBuy === 'MAKE';
 
     return (
-      <div key={`${node.itemId}-${depth}`} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div
+        key={`${node.itemId}-${depth}-${index}`}
+        style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
+      >
         <button
           type="button"
           onClick={() => onSelect(node.itemId)}
@@ -119,21 +151,60 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
             opacity: notNeeded ? 0.55 : 1,
           }}
         >
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: notNeeded ? token.colorTextQuaternary : meta.color }} />
-          <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: notNeeded ? token.colorTextQuaternary : meta.color,
+            }}
+          />
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {nodeName(node, isZh)}
           </span>
-          <span className="tnum" style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', color: notNeeded ? token.colorTextTertiary : token.colorText }}>
+          <span
+            className="tnum"
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              color: notNeeded ? token.colorTextTertiary : token.colorText,
+            }}
+          >
             {notNeeded ? '' : `${formatQty(node.requiredQuantity)} ${unit}`}
           </span>
           <span />
-          <span className="tnum" style={{ gridColumn: '2 / 4', fontSize: 11, color: token.colorTextTertiary }}>
-            {notNeeded ? (isZh ? `本次无需 · 定额 ${norm}` : `Not needed this time · ${norm}`) : `${isZh ? '定额' : 'norm'} ${norm}`}
+          <span
+            className="tnum"
+            style={{ gridColumn: '2 / 4', fontSize: 11, color: token.colorTextTertiary }}
+          >
+            {notNeeded
+              ? isZh
+                ? `本次无需 · 定额 ${norm}`
+                : `Not needed this time · ${norm}`
+              : `${isZh ? '定额' : 'norm'} ${norm}`}
           </span>
         </button>
         {isGroup && node.children.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: 12, paddingLeft: 10, borderLeft: `1px dashed ${connector}` }}>
-            {node.children.map((child) => renderLeaf(child, unit, depth + 1))}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              marginLeft: 12,
+              paddingLeft: 10,
+              borderLeft: `1px dashed ${connector}`,
+            }}
+          >
+            {node.children.map((child, cIdx) => renderLeaf(child, unit, depth + 1, cIdx))}
           </div>
         )}
       </div>
@@ -165,13 +236,21 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
         <span className="tnum" style={{ fontSize: 12, color: token.colorTextSecondary }}>
           {column.subtitle}
         </span>
-        <span className="tnum" style={{ fontSize: 12, fontWeight: 600, color: column.status.color }}>
+        <span
+          className="tnum"
+          style={{ fontSize: 12, fontWeight: 600, color: column.status.color }}
+        >
           {column.status.text}
         </span>
       </>
     );
     return column.group ? (
-      <button type="button" onClick={() => onSelect(column.group!.itemId)} aria-pressed={selected} style={{ ...style, cursor: 'pointer' }}>
+      <button
+        type="button"
+        onClick={() => onSelect(column.group!.itemId)}
+        aria-pressed={selected}
+        style={{ ...style, cursor: 'pointer' }}
+      >
         {content}
       </button>
     ) : (
@@ -194,7 +273,14 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
 
         <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
-            <div style={{ minWidth: 'fit-content', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              style={{
+                minWidth: 'fit-content',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
@@ -223,34 +309,67 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
                   {analysis.productCode.slice(0, 6)}
                 </span>
                 <span style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: 14, fontWeight: 600 }}>{(isZh && analysis.productNameZh) || analysis.productNameEn}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>
+                    {(isZh && analysis.productNameZh) || analysis.productNameEn}
+                  </span>
                   <span className="tnum" style={{ fontSize: 12, opacity: 0.85 }}>
-                    {isZh ? '成品' : 'Finished good'} · {formatQty(analysis.plannedQuantity)} {productUnit}
+                    {isZh ? '成品' : 'Finished good'} · {formatQty(analysis.plannedQuantity)}{' '}
+                    {productUnit}
                   </span>
                 </span>
               </div>
 
-              {columns.length > 0 && <div style={{ width: 0, height: 18, borderLeft: `1px solid ${connector}` }} />}
+              {columns.length > 0 && (
+                <div style={{ width: 0, height: 18, borderLeft: `1px solid ${connector}` }} />
+              )}
 
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
                 {columns.map((column, index) => {
                   const first = index === 0;
                   const last = index === columns.length - 1;
                   return (
-                    <div key={column.key} style={{ position: 'relative', width: 270, flexShrink: 0, padding: '18px 8px 0', boxSizing: 'border-box' }}>
+                    <div
+                      key={column.key}
+                      style={{
+                        position: 'relative',
+                        width: 270,
+                        flexShrink: 0,
+                        padding: '18px 8px 0',
+                        boxSizing: 'border-box',
+                      }}
+                    >
                       {columns.length > 1 && (
                         <div
                           aria-hidden="true"
-                          style={{ position: 'absolute', top: 0, left: first ? '50%' : 0, right: last ? '50%' : 0, borderTop: `1px solid ${connector}` }}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: first ? '50%' : 0,
+                            right: last ? '50%' : 0,
+                            borderTop: `1px solid ${connector}`,
+                          }}
                         />
                       )}
-                      <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', height: 18, borderLeft: `1px solid ${connector}` }} />
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: '50%',
+                          height: 18,
+                          borderLeft: `1px solid ${connector}`,
+                        }}
+                      />
                       {renderHeader(column)}
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <div style={{ width: 0, height: 12, borderLeft: `1px dashed ${connector}` }} />
+                        <div
+                          style={{ width: 0, height: 12, borderLeft: `1px dashed ${connector}` }}
+                        />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {column.leaves.map((leaf) => renderLeaf(leaf, column.parentUnit, 1))}
+                        {column.leaves.map((leaf, lIdx) =>
+                          renderLeaf(leaf, column.parentUnit, 1, lIdx),
+                        )}
                       </div>
                     </div>
                   );
@@ -277,7 +396,9 @@ export const ProductStructureTree: React.FC<ProductStructureTreeProps> = ({ anal
                 const meta = statusMeta(status, token, isZh);
                 return (
                   <span key={status} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color }} />
+                    <span
+                      style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color }}
+                    />
                     {meta.label}
                   </span>
                 );

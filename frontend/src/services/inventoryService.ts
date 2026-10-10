@@ -24,61 +24,71 @@ class InventoryService {
       }
 
       const res = await apiClient.get('/inventory/balances', { params: queryParams });
-      const responseData = (res as {
-        data?: {
-          data?: Array<{
-            id: number;
-            warehouseId: number;
-            warehouseCode: string;
-            warehouseNameEn?: string;
-            locationId?: number;
-            locationCode?: string;
-            itemId: number;
-            itemCode: string;
-            itemNameEn: string;
-            itemUnitCode?: string;
-            quantity: number;
-            reservedQuantity: number;
-            availableQuantity: number;
-            minStock: number;
-            isLowStock?: boolean;
-            updatedAt?: string;
-          }>;
-        };
-      })?.data;
+      const responseData = (
+        res as {
+          data?: {
+            data?: Array<{
+              id: number;
+              warehouseId: number;
+              warehouseCode: string;
+              warehouseNameEn?: string;
+              locationId?: number;
+              locationCode?: string;
+              itemId: number;
+              itemCode: string;
+              itemNameEn: string;
+              itemUnitCode?: string;
+              quantity: number;
+              reservedQuantity: number;
+              availableQuantity: number;
+              minStock: number;
+              isLowStock?: boolean;
+              unitCost?: number;
+              updatedAt?: string;
+            }>;
+          };
+        }
+      )?.data;
 
       const rawList = responseData?.data;
       if (Array.isArray(rawList)) {
-        let result = rawList.map((dto) => ({
-          id: dto.id,
-          warehouseId: dto.warehouseId,
-          warehouseCode: dto.warehouseCode,
-          warehouseNameEn: dto.warehouseNameEn || dto.warehouseCode,
-          warehouseNameZh: dto.warehouseNameEn || dto.warehouseCode,
-          locationId: dto.locationId || 1,
-          locationCode: dto.locationCode ? `${dto.warehouseCode} / ${dto.locationCode}` : `${dto.warehouseCode} / Floor`,
-          itemId: dto.itemId,
-          itemCode: dto.itemCode,
-          itemNameEn: dto.itemNameEn,
-          itemNameZh: dto.itemNameEn,
-          itemSpec: `${dto.itemCode} Industrial Grade`,
-          itemCategory: 'Materials',
-          itemCategoryZh: '物料库存',
-          itemUnitCode: dto.itemUnitCode || 'pcs',
-          lotNumber: `LOT-26Q4-0${dto.id}`,
-          quantity: Number(dto.quantity || 0),
-          reservedQuantity: Number(dto.reservedQuantity || 0),
-          availableQuantity: Number(dto.availableQuantity || 0),
-          minStock: Number(dto.minStock || 0),
-          unitCost: 25.0,
-          totalValuation: Number(dto.quantity || 0) * 25.0,
-          status: (dto.isLowStock || Number(dto.availableQuantity || 0) < Number(dto.minStock || 0)
-            ? 'LOW_STOCK'
-            : Number(dto.quantity || 0) <= 0
-            ? 'STOCKOUT'
-            : 'NORMAL') as InventoryBalanceItem['status'],
-          updatedAt: dto.updatedAt || '2026-10-01 12:00:00',
-        }));
+        let result = rawList.map((dto) => {
+          const unitCost = Number(dto.unitCost || 0);
+          const qty = Number(dto.quantity || 0);
+          return {
+            id: dto.id,
+            warehouseId: dto.warehouseId,
+            warehouseCode: dto.warehouseCode,
+            warehouseNameEn: dto.warehouseNameEn || dto.warehouseCode,
+            warehouseNameZh: dto.warehouseNameEn || dto.warehouseCode,
+            locationId: dto.locationId,
+            locationCode: dto.locationCode
+              ? `${dto.warehouseCode} / ${dto.locationCode}`
+              : `${dto.warehouseCode} / Floor`,
+            itemId: dto.itemId,
+            itemCode: dto.itemCode,
+            itemNameEn: dto.itemNameEn,
+            itemNameZh: dto.itemNameEn,
+            itemSpec: dto.itemCode,
+            itemCategory: 'Materials',
+            itemCategoryZh: '物料库存',
+            itemUnitCode: dto.itemUnitCode || 'pcs',
+            lotNumber: dto.locationCode ? `LOC-${dto.locationCode}` : `WH-${dto.warehouseCode}`,
+            quantity: qty,
+            reservedQuantity: Number(dto.reservedQuantity || 0),
+            availableQuantity: Number(dto.availableQuantity || 0),
+            minStock: Number(dto.minStock || 0),
+            unitCost,
+            totalValuation: qty * unitCost,
+            status: (dto.isLowStock ||
+            Number(dto.availableQuantity || 0) < Number(dto.minStock || 0)
+              ? 'LOW_STOCK'
+              : qty <= 0
+                ? 'STOCKOUT'
+                : 'NORMAL') as InventoryBalanceItem['status'],
+            updatedAt: dto.updatedAt ? new Date(dto.updatedAt).toLocaleString() : '',
+          };
+        });
 
         if (params?.category && params.category !== 'ALL') {
           result = result.filter((b) => b.itemCategory === params.category);
@@ -94,7 +104,7 @@ class InventoryService {
               b.itemNameEn.toLowerCase().includes(q) ||
               b.itemNameZh.includes(q) ||
               b.locationCode.toLowerCase().includes(q) ||
-              b.lotNumber.toLowerCase().includes(q)
+              b.lotNumber.toLowerCase().includes(q),
           );
         }
         this.balances = result;
@@ -109,23 +119,25 @@ class InventoryService {
   public async getRecentAuditLogs(): Promise<StockAuditLogItem[]> {
     try {
       const res = await apiClient.get('/inventory/transactions/recent');
-      const responseData = (res as {
-        data?: Array<{
-          id: number;
-          transactionNo: string;
-          transactionType: string;
-          itemCode: string;
-          itemNameEn: string;
-          quantity: number;
-          locationCode?: string;
-          warehouseCode?: string;
-          referenceType?: string;
-          referenceId?: string;
-          createdByUsername?: string;
-          note?: string;
-          createdAt?: string;
-        }>;
-      })?.data;
+      const responseData = (
+        res as {
+          data?: Array<{
+            id: number;
+            transactionNo: string;
+            transactionType: string;
+            itemCode: string;
+            itemNameEn: string;
+            quantity: number;
+            locationCode?: string;
+            warehouseCode?: string;
+            referenceType?: string;
+            referenceId?: string;
+            createdByUsername?: string;
+            note?: string;
+            createdAt?: string;
+          }>;
+        }
+      )?.data;
 
       if (Array.isArray(responseData)) {
         return responseData.map((tx) => ({
@@ -134,17 +146,21 @@ class InventoryService {
           type: (tx.transactionType === 'PURCHASE_IN'
             ? 'PURCHASE_IN'
             : tx.transactionType === 'PRODUCTION_ISSUE'
-            ? 'PRODUCTION_ISSUE'
-            : tx.transactionType === 'SALE_OUT'
-            ? 'OUTBOUND'
-            : 'TRANSFER') as StockAuditLogItem['type'],
+              ? 'PRODUCTION_ISSUE'
+              : tx.transactionType === 'SALE_OUT'
+                ? 'OUTBOUND'
+                : 'TRANSFER') as StockAuditLogItem['type'],
           itemCode: tx.itemCode,
           itemNameEn: tx.itemNameEn,
           itemNameZh: tx.itemNameEn,
           quantityDelta: Number(tx.quantity || 0),
           unit: 'pcs',
-          sourceLocation: tx.locationCode ? `${tx.warehouseCode} / ${tx.locationCode}` : 'Staging Area',
-          targetLocation: tx.referenceType ? `${tx.referenceType} #${tx.referenceId || ''}` : 'Shop Floor Buffer',
+          sourceLocation: tx.locationCode
+            ? `${tx.warehouseCode} / ${tx.locationCode}`
+            : 'Staging Area',
+          targetLocation: tx.referenceType
+            ? `${tx.referenceType} #${tx.referenceId || ''}`
+            : 'Shop Floor Buffer',
           docReference: tx.referenceId || tx.transactionNo,
           operator: tx.createdByUsername || 'System Operator',
           verificationStatus: 'PASS',
@@ -163,16 +179,18 @@ class InventoryService {
   public async getWarehouses(): Promise<WarehouseSummary[]> {
     try {
       const res = await apiClient.get('/warehouses');
-      const responseData = (res as {
-        data?: Array<{
-          id: number;
-          code: string;
-          nameEn: string;
-          nameZh?: string;
-          type: string;
-          locations?: unknown[];
-        }>;
-      })?.data;
+      const responseData = (
+        res as {
+          data?: Array<{
+            id: number;
+            code: string;
+            nameEn: string;
+            nameZh?: string;
+            type: string;
+            locations?: unknown[];
+          }>;
+        }
+      )?.data;
 
       if (Array.isArray(responseData)) {
         return responseData.map((wh) => ({
@@ -181,8 +199,8 @@ class InventoryService {
           nameEn: wh.nameEn,
           nameZh: wh.nameZh || wh.nameEn,
           type: wh.type as WarehouseSummary['type'],
-          activeLocations: wh.locations?.length || 20,
-          totalSkus: 150,
+          activeLocations: wh.locations?.length ?? 0,
+          totalSkus: 0,
         }));
       }
       return [];
@@ -192,11 +210,21 @@ class InventoryService {
   }
 
   public async transferStock(payload: StockTransferPayload): Promise<boolean> {
-    const item = this.balances.find((b) => b.itemId === payload.itemId);
-    if (!item) return false;
-    item.availableQuantity = Math.max(0, item.availableQuantity - payload.quantity);
-    item.updatedAt = new Date().toLocaleTimeString();
-    return true;
+    try {
+      await apiClient.post('/inventory/transfer', {
+        fromWarehouseId: payload.fromWarehouseId,
+        fromLocationId: payload.fromLocationCode ? undefined : undefined,
+        toWarehouseId: payload.toWarehouseId,
+        toLocationId: payload.toLocationCode ? undefined : undefined,
+        itemId: payload.itemId,
+        quantity: payload.quantity,
+        note: payload.reason,
+      });
+      return true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Transfer failed';
+      throw new Error(message, { cause: err });
+    }
   }
 
   public async adjustStock(payload: StockAdjustmentPayload): Promise<boolean> {

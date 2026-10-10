@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Progress, Button, Space, Input, Radio, Tooltip, message } from 'antd';
+import { Card, Table, Tag, Progress, Button, Space, Input, Radio, Tooltip } from 'antd';
+import { message } from '@/utils/antdApp';
 import type { ColumnsType } from 'antd/es/table';
 import {
   SearchOutlined,
@@ -9,6 +10,7 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
 import { WorkOrderProgressItem, WorkOrderStatus } from '../types';
 
@@ -18,6 +20,7 @@ interface PriorityWorkOrdersCardProps {
 
 export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ orders }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { language } = useAppStore();
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -70,7 +73,21 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
       key: 'woNo',
       width: 140,
       render: (text) => (
-        <span className="tnum" style={{ fontWeight: 600, color: '#1677ff', cursor: 'pointer' }}>
+        <span
+          className="tnum"
+          style={{
+            fontWeight: 600,
+            color: '#1677ff',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+          onClick={() => navigate(`/production?search=${encodeURIComponent(text)}`)}
+          title={
+            language === 'zh-CN'
+              ? `点击进入工单 ${text} 生产控制台`
+              : `Click to view Work Order ${text}`
+          }
+        >
           {text}
         </span>
       ),
@@ -83,9 +100,7 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
           <div style={{ fontWeight: 600, color: '#1f2937', fontSize: 13 }}>
             {language === 'zh-CN' ? record.productNameZh : record.productName}
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>
-            {record.spec}
-          </div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>{record.spec}</div>
         </div>
       ),
     },
@@ -108,7 +123,10 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
       render: (_, record) => (
         <div className="tnum" style={{ fontSize: 12, textAlign: 'right' }}>
           <strong style={{ color: '#111827' }}>{record.completedQty.toLocaleString()}</strong>
-          <span style={{ color: '#9ca3af' }}> / {record.plannedQty.toLocaleString()} {record.uom}</span>
+          <span style={{ color: '#9ca3af' }}>
+            {' '}
+            / {record.plannedQty.toLocaleString()} {record.uom}
+          </span>
         </div>
       ),
     },
@@ -121,8 +139,12 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
         <Progress
           percent={percent}
           size="small"
-          status={record.status === 'NEAR_DEADLINE' ? 'exception' : percent === 100 ? 'success' : 'active'}
-          strokeColor={record.status === 'NEAR_DEADLINE' ? '#ff4d4f' : percent === 100 ? '#52c41a' : '#1677ff'}
+          status={
+            record.status === 'NEAR_DEADLINE' ? 'exception' : percent === 100 ? 'success' : 'active'
+          }
+          strokeColor={
+            record.status === 'NEAR_DEADLINE' ? '#ff4d4f' : percent === 100 ? '#52c41a' : '#1677ff'
+          }
         />
       ),
     },
@@ -146,7 +168,7 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
               type="link"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => message.info(`Order ${record.woNo} details opened`)}
+              onClick={() => navigate(`/production?search=${encodeURIComponent(record.woNo)}`)}
               style={{ padding: '0 4px', fontSize: 12 }}
             >
               {t('actions.viewDetails')}
@@ -157,7 +179,7 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
               type="primary"
               size="small"
               icon={<ThunderboltOutlined />}
-              onClick={() => message.success(`Dispatch reported for ${record.woNo}`)}
+              onClick={() => navigate(`/production?search=${encodeURIComponent(record.woNo)}`)}
               style={{ fontSize: 11, height: 22, padding: '0 6px' }}
             >
               {t('actions.dispatch')}
@@ -172,7 +194,15 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
     <Card
       size="small"
       title={
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 8,
+          }}
+        >
           <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>
             {t('dashboard.priorityWorkOrders')}
           </span>
@@ -191,7 +221,33 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
             <Button
               size="small"
               icon={<DownloadOutlined />}
-              onClick={() => message.success('Exporting Work Orders CSV...')}
+              onClick={() => {
+                if (filteredOrders.length === 0) {
+                  message.warning(language === 'zh-CN' ? '无工单数据可导出' : 'No data to export');
+                  return;
+                }
+                const headers = [
+                  'WoNo,Product,Workstation,PlannedQty,CompletedQty,ProgressPercent,Status',
+                ];
+                const rows = filteredOrders.map(
+                  (o) =>
+                    `"${o.woNo}","${language === 'zh-CN' ? o.productNameZh : o.productName}","${language === 'zh-CN' ? o.workstationZh : o.workstation}",${o.plannedQty},${o.completedQty},${o.progressPercent},"${o.status}"`,
+                );
+                const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute(
+                  'download',
+                  `priority_work_orders_${new Date().toISOString().slice(0, 10)}.csv`,
+                );
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                message.success(language === 'zh-CN' ? '工单数据已导出' : 'Work orders exported');
+              }}
             >
               {t('dashboard.exportCsv')}
             </Button>
@@ -225,7 +281,8 @@ export const PriorityWorkOrdersCard: React.FC<PriorityWorkOrdersCardProps> = ({ 
         pagination={{
           pageSize: 5,
           size: 'small',
-          showTotal: (total) => `Total ${total} orders`,
+          showTotal: (total) =>
+            language === 'zh-CN' ? `共 ${total} 条工单` : `Total ${total} orders`,
         }}
         bordered
       />

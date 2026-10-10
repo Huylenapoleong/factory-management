@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Tag, Input, Select, Button, Space, Row, Col, Statistic, message } from 'antd';
+import {
+  Card,
+  Table,
+  Tag,
+  Input,
+  Select,
+  Button,
+  Space,
+  Row,
+  Col,
+  Statistic,
+  Drawer,
+  Descriptions,
+} from 'antd';
+import { message } from '@/utils/antdApp';
 import type { ColumnsType } from 'antd/es/table';
 import {
   AppstoreOutlined,
@@ -9,13 +23,17 @@ import {
   CheckCircleOutlined,
   WarningOutlined,
   FileSyncOutlined,
+  PartitionOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
+import { PermissionGuard } from '@/components/common/PermissionGuard';
 import { masterDataService } from '@/services/masterDataService';
 import { ItemRecord, ItemType } from '../types';
 import { CreateItemModal } from './CreateItemModal';
 
 export const ItemsView: React.FC = () => {
+  const navigate = useNavigate();
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
 
@@ -24,6 +42,7 @@ export const ItemsView: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedType, setSelectedType] = useState<ItemType | 'ALL'>('ALL');
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ItemRecord | null>(null);
 
   const fetchItems = React.useCallback(async () => {
     setLoading(true);
@@ -46,7 +65,12 @@ export const ItemsView: React.FC = () => {
   }, []);
 
   const filteredItems = items.filter((item) => {
-    const matchesType = selectedType === 'ALL' || item.type === selectedType;
+    const matchesType =
+      selectedType === 'ALL' ||
+      item.type === selectedType ||
+      (selectedType === 'FINISHED_GOODS' && item.type === 'FINISHED_GOOD') ||
+      (selectedType === 'WIP' && item.type === 'SEMI_FINISHED') ||
+      (selectedType === 'SPARE_PART' && item.type === 'CONSUMABLE');
     const q = searchText.toLowerCase().trim();
     const matchesSearch =
       !q ||
@@ -58,7 +82,34 @@ export const ItemsView: React.FC = () => {
   });
 
   const rawCount = items.filter((i) => i.type === 'RAW_MATERIAL').length;
-  const finishedCount = items.filter((i) => i.type === 'FINISHED_GOODS').length;
+  const finishedCount = items.filter(
+    (i) => i.type === 'FINISHED_GOODS' || i.type === 'FINISHED_GOOD',
+  ).length;
+
+  const getTypeTag = (type: ItemType) => {
+    const colorMap: Record<ItemType, string> = {
+      RAW_MATERIAL: 'blue',
+      WIP: 'orange',
+      SEMI_FINISHED: 'orange',
+      FINISHED_GOODS: 'green',
+      FINISHED_GOOD: 'green',
+      CONSUMABLE: 'purple',
+      SPARE_PART: 'purple',
+    };
+    const labelMap: Record<ItemType, string> = {
+      RAW_MATERIAL: isZh ? '原材料' : 'Raw Mat',
+      WIP: isZh ? '在制品' : 'WIP',
+      SEMI_FINISHED: isZh ? '半成品' : 'Semi-Finished',
+      FINISHED_GOODS: isZh ? '产成品' : 'Finished',
+      FINISHED_GOOD: isZh ? '产成品' : 'Finished',
+      CONSUMABLE: isZh ? '耗材/备件' : 'Consumable',
+      SPARE_PART: isZh ? '备件' : 'Spare Part',
+    };
+    return {
+      color: colorMap[type] || 'default',
+      label: labelMap[type] || type,
+    };
+  };
 
   const columns: ColumnsType<ItemRecord> = [
     {
@@ -67,9 +118,7 @@ export const ItemsView: React.FC = () => {
       key: 'itemCode',
       width: 140,
       render: (val: string) => (
-        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff' }}>
-          {val}
-        </span>
+        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1677ff' }}>{val}</span>
       ),
     },
     {
@@ -81,7 +130,8 @@ export const ItemsView: React.FC = () => {
             {isZh ? r.nameZh : r.nameEn}
           </div>
           <div style={{ fontSize: 11, color: '#6b7280' }}>
-            {isZh ? r.nameEn : r.nameZh} • <span style={{ color: '#4b5563' }}>{r.specification}</span>
+            {isZh ? r.nameEn : r.nameZh} •{' '}
+            <span style={{ color: '#4b5563' }}>{r.specification}</span>
           </div>
         </div>
       ),
@@ -103,19 +153,8 @@ export const ItemsView: React.FC = () => {
       key: 'type',
       width: 120,
       render: (type: ItemType) => {
-        const colorMap: Record<ItemType, string> = {
-          RAW_MATERIAL: 'blue',
-          WIP: 'orange',
-          FINISHED_GOODS: 'green',
-          SPARE_PART: 'purple',
-        };
-        const labelMap: Record<ItemType, string> = {
-          RAW_MATERIAL: isZh ? '原材料' : 'Raw Mat',
-          WIP: isZh ? '在制品' : 'WIP',
-          FINISHED_GOODS: isZh ? '产成品' : 'Finished',
-          SPARE_PART: isZh ? '备件' : 'Spare Part',
-        };
-        return <Tag color={colorMap[type]}>{labelMap[type]}</Tag>;
+        const { color, label } = getTypeTag(type);
+        return <Tag color={color}>{label}</Tag>;
       },
     },
     {
@@ -163,21 +202,15 @@ export const ItemsView: React.FC = () => {
       key: 'status',
       width: 90,
       render: (status: string) => (
-        <Tag color={status === 'ACTIVE' ? 'success' : 'default'}>
-          {status}
-        </Tag>
+        <Tag color={status === 'ACTIVE' ? 'success' : 'default'}>{status}</Tag>
       ),
     },
     {
       title: isZh ? '操作' : 'Action',
       key: 'action',
       width: 80,
-      render: () => (
-        <Button
-          type="link"
-          size="small"
-          onClick={() => message.info(isZh ? '正在调取物料BOM与图纸...' : 'Opening CAD drawing...')}
-        >
+      render: (_, record) => (
+        <Button type="link" size="small" onClick={() => setSelectedItem(record)}>
           {isZh ? '详情' : 'Detail'}
         </Button>
       ),
@@ -191,7 +224,11 @@ export const ItemsView: React.FC = () => {
         <Col xs={12} sm={6} md={6}>
           <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
             <Statistic
-              title={<span style={{ fontSize: 12 }}>{isZh ? '总物料/产品定义' : 'Total Registered SKUs'}</span>}
+              title={
+                <span style={{ fontSize: 12 }}>
+                  {isZh ? '总物料/产品定义' : 'Total Registered SKUs'}
+                </span>
+              }
               value={items.length}
               prefix={<AppstoreOutlined style={{ color: '#1677ff' }} />}
             />
@@ -218,7 +255,11 @@ export const ItemsView: React.FC = () => {
         <Col xs={12} sm={6} md={6}>
           <Card size="small" style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}>
             <Statistic
-              title={<span style={{ fontSize: 12 }}>{isZh ? '安全库存监控中' : 'Monitored Safety Lines'}</span>}
+              title={
+                <span style={{ fontSize: 12 }}>
+                  {isZh ? '安全库存监控中' : 'Monitored Safety Lines'}
+                </span>
+              }
               value={items.length}
               prefix={<WarningOutlined style={{ color: '#faad14' }} />}
             />
@@ -232,7 +273,15 @@ export const ItemsView: React.FC = () => {
         style={{ borderRadius: 4, border: '1px solid #e5e7eb' }}
         styles={{ body: { padding: '10px 14px' } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
           <Space wrap size="small">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: '#6b7280' }}>
@@ -245,16 +294,24 @@ export const ItemsView: React.FC = () => {
                 style={{ width: 170 }}
                 options={[
                   { value: 'ALL', label: isZh ? '全部物料属性' : 'All Classifications' },
-                  { value: 'RAW_MATERIAL', label: isZh ? '原材料 (Raw Materials)' : 'Raw Materials' },
-                  { value: 'WIP', label: isZh ? '在制品/半成品 (WIP)' : 'Work-in-Progress' },
-                  { value: 'FINISHED_GOODS', label: isZh ? '产成品 (Finished Goods)' : 'Finished Goods' },
-                  { value: 'SPARE_PART', label: isZh ? '备品备件 (Spare Parts)' : 'Spare Parts' },
+                  {
+                    value: 'RAW_MATERIAL',
+                    label: isZh ? '原材料' : 'Raw Materials',
+                  },
+                  { value: 'WIP', label: isZh ? '在制品/半成品' : 'Work-in-Progress' },
+                  {
+                    value: 'FINISHED_GOODS',
+                    label: isZh ? '产成品' : 'Finished Goods',
+                  },
+                  { value: 'SPARE_PART', label: isZh ? '备品备件' : 'Spare Parts' },
                 ]}
               />
             </div>
 
             <Input
-              placeholder={isZh ? '搜索物料编号、品名、规格...' : 'Search SKU, name, specification...'}
+              placeholder={
+                isZh ? '搜索物料编号、品名、规格...' : 'Search SKU, name, specification...'
+              }
               prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
               size="small"
               value={searchText}
@@ -265,19 +322,47 @@ export const ItemsView: React.FC = () => {
           </Space>
 
           <Space size="small">
-            <Button
-              type="primary"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={() => setModalVisible(true)}
-              style={{ backgroundColor: '#1677ff' }}
-            >
-              {isZh ? '新增物料定义' : 'New Item SKU'}
-            </Button>
+            <PermissionGuard action="CREATE_ITEM">
+              <Button
+                type="primary"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => setModalVisible(true)}
+                style={{ backgroundColor: '#1677ff' }}
+              >
+                {isZh ? '新增物料定义' : 'New Item SKU'}
+              </Button>
+            </PermissionGuard>
             <Button
               size="small"
               icon={<DownloadOutlined />}
-              onClick={() => message.success(isZh ? '正在导出物料主数据清单...' : 'Exporting Items Catalog CSV...')}
+              onClick={() => {
+                if (filteredItems.length === 0) {
+                  message.warning(isZh ? '无物料数据可导出' : 'No data to export');
+                  return;
+                }
+                const headers = [
+                  'ItemCode,NameEn,NameZh,Specification,Category,Type,UOM,SafetyStock,MaxStock,StandardCost,LeadTimeDays,Status',
+                ];
+                const rows = filteredItems.map(
+                  (i) =>
+                    `"${i.itemCode}","${i.nameEn}","${i.nameZh}","${i.specification}","${isZh ? i.categoryNameZh : i.categoryName}","${i.type}","${i.uomCode}",${i.safetyStock},${i.maxStock},${i.standardCost},${i.leadTimeDays},"${i.status}"`,
+                );
+                const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute(
+                  'download',
+                  `items_catalog_${new Date().toISOString().slice(0, 10)}.csv`,
+                );
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                message.success(isZh ? '物料主数据已成功导出' : 'Items catalog exported');
+              }}
             >
               {isZh ? '导出清单' : 'Export CSV'}
             </Button>
@@ -300,7 +385,8 @@ export const ItemsView: React.FC = () => {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `${isZh ? '共' : 'Total'} ${total} ${isZh ? '条物料记录' : 'items'}`,
+            showTotal: (total) =>
+              `${isZh ? '共' : 'Total'} ${total} ${isZh ? '条物料记录' : 'items'}`,
           }}
         />
       </Card>
@@ -310,6 +396,122 @@ export const ItemsView: React.FC = () => {
         onClose={() => setModalVisible(false)}
         onSuccess={fetchItems}
       />
+
+      {/* Real Item Details Drawer */}
+      <Drawer
+        title={
+          selectedItem ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <AppstoreOutlined style={{ color: '#1677ff' }} />
+              <span>{isZh ? '物料主数据明细' : 'Master Data SKU Details'}</span>
+              <Tag color="blue">{selectedItem.itemCode}</Tag>
+            </div>
+          ) : (
+            ''
+          )
+        }
+        size={560}
+        open={Boolean(selectedItem)}
+        onClose={() => setSelectedItem(null)}
+      >
+        {selectedItem && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Descriptions
+              bordered
+              size="small"
+              column={1}
+              items={[
+                {
+                  key: 'itemCode',
+                  label: isZh ? '物料编码' : 'Item Code',
+                  children: <strong>{selectedItem.itemCode}</strong>,
+                },
+                {
+                  key: 'nameZh',
+                  label: isZh ? '物料中文名称' : 'Chinese Name',
+                  children: selectedItem.nameZh,
+                },
+                {
+                  key: 'nameEn',
+                  label: isZh ? '物料英文名称' : 'English Name',
+                  children: selectedItem.nameEn,
+                },
+                {
+                  key: 'type',
+                  label: isZh ? '物料属性分类' : 'Item Classification',
+                  children: (
+                    <Tag color={getTypeTag(selectedItem.type).color}>
+                      {getTypeTag(selectedItem.type).label}
+                    </Tag>
+                  ),
+                },
+                {
+                  key: 'category',
+                  label: isZh ? '所属类目' : 'Category',
+                  children: isZh ? selectedItem.categoryNameZh : selectedItem.categoryName,
+                },
+                {
+                  key: 'uom',
+                  label: isZh ? '计量单位' : 'UoM',
+                  children: selectedItem.uomCode,
+                },
+                {
+                  key: 'spec',
+                  label: isZh ? '规格型号与标准' : 'Specification',
+                  children: selectedItem.specification || '—',
+                },
+                {
+                  key: 'cost',
+                  label: isZh ? '计划标准成本' : 'Standard Cost',
+                  children: `${selectedItem.standardCost.toFixed(2)} ${selectedItem.currency}`,
+                },
+                {
+                  key: 'safety',
+                  label: isZh ? '安全库存下限' : 'Safety Stock Min',
+                  children: `${selectedItem.safetyStock} ${selectedItem.uomCode}`,
+                },
+                {
+                  key: 'max',
+                  label: isZh ? '最高库容限额' : 'Max Capacity',
+                  children: `${selectedItem.maxStock} ${selectedItem.uomCode}`,
+                },
+                {
+                  key: 'status',
+                  label: isZh ? '状态' : 'Status',
+                  children: (
+                    <Tag color={selectedItem.status === 'ACTIVE' ? 'success' : 'default'}>
+                      {selectedItem.status}
+                    </Tag>
+                  ),
+                },
+                ...(selectedItem.updatedAt
+                  ? [
+                      {
+                        key: 'updatedAt',
+                        label: isZh ? '更新时间' : 'Updated At',
+                        children: selectedItem.updatedAt,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <Button onClick={() => setSelectedItem(null)}>{isZh ? '关闭' : 'Close'}</Button>
+              <Button
+                type="primary"
+                icon={<PartitionOutlined />}
+                onClick={() => {
+                  setSelectedItem(null);
+                  navigate('/production/bom');
+                }}
+              >
+                {isZh ? '物料定额工作台' : 'BOM Workbench'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };

@@ -1,15 +1,15 @@
-import React from 'react';
-import { Card, Input, Select, Radio, Button, Space, message } from 'antd';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  SendOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Input, Select, Radio, Button, Space } from 'antd';
+import { message } from '@/utils/antdApp';
+import { SearchOutlined, PlusOutlined, SendOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
-import { SalesOrderStatus } from '../types';
+import { PermissionGuard } from '@/components/common/PermissionGuard';
+import { masterDataService } from '@/services/masterDataService';
+import { CustomerRecord } from '@/features/customers/types';
+import { SalesOrderStatus, SalesOrderSummary } from '../types';
 
 interface SalesFilterBarProps {
+  orders: SalesOrderSummary[];
   selectedCustomer: string;
   onSelectCustomer: (val: string) => void;
   selectedStatus: SalesOrderStatus | 'ALL';
@@ -21,6 +21,7 @@ interface SalesFilterBarProps {
 }
 
 export const SalesFilterBar: React.FC<SalesFilterBarProps> = ({
+  orders,
   selectedCustomer,
   onSelectCustomer,
   selectedStatus,
@@ -32,14 +33,21 @@ export const SalesFilterBar: React.FC<SalesFilterBarProps> = ({
 }) => {
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+
+  useEffect(() => {
+    void masterDataService.getCustomers().then(setCustomers);
+  }, []);
 
   const customerOptions = [
-    { value: 'ALL', label: isZh ? '全部重点客户 / All Key Accounts (45)' : 'All Key Accounts (45)' },
-    { value: 'Tesla', label: isZh ? '特斯拉能源超级工厂 (Tesla Energy)' : 'Tesla Energy Gigafactory' },
-    { value: 'BYD', label: isZh ? '比亚迪汽车西安总装基地 (BYD Auto)' : "BYD Auto Xi'an Plant" },
-    { value: 'Siemens', label: isZh ? '西门子能源系统 (Siemens Energy)' : 'Siemens Energy AG' },
-    { value: 'Foxconn', label: isZh ? '富士康工业互联 (Foxconn FII)' : 'Foxconn Industrial Internet' },
-    { value: 'Sany', label: isZh ? '三一重工股份有限公司 (Sany Heavy)' : 'Sany Heavy Industry' },
+    {
+      value: 'ALL',
+      label: `${isZh ? '全部重点客户' : 'All Key Accounts'} (${customers.length})`,
+    },
+    ...customers.map((c) => ({
+      value: String(c.id),
+      label: `${isZh ? c.nameZh : c.name} (${c.code})`,
+    })),
   ];
 
   return (
@@ -92,28 +100,52 @@ export const SalesFilterBar: React.FC<SalesFilterBarProps> = ({
         </Space>
 
         <Space size="small">
-          <Button
-            type="primary"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={onOpenCreateSO}
-            style={{ backgroundColor: '#1677ff' }}
-          >
-            {isZh ? '新建销售订单' : 'New Sales Order'}
-          </Button>
+          <PermissionGuard action="CREATE_SALES_ORDER">
+            <Button
+              type="primary"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={onOpenCreateSO}
+              style={{ backgroundColor: '#1677ff' }}
+            >
+              {isZh ? '新建销售订单' : 'New Sales Order'}
+            </Button>
+          </PermissionGuard>
 
-          <Button
-            size="small"
-            icon={<SendOutlined />}
-            onClick={onOpenCreateDelivery}
-          >
-            {isZh ? '销售发货出库' : 'Create Outbound Delivery'}
-          </Button>
+          <PermissionGuard action="DISPATCH_DELIVERY">
+            <Button size="small" icon={<SendOutlined />} onClick={onOpenCreateDelivery}>
+              {isZh ? '销售发货出库' : 'Create Outbound Delivery'}
+            </Button>
+          </PermissionGuard>
 
           <Button
             size="small"
             icon={<DownloadOutlined />}
-            onClick={() => message.success(isZh ? '正在导出销售订单总台账...' : 'Exporting Sales Ledger CSV...')}
+            onClick={() => {
+              if (orders.length === 0) {
+                message.warning(isZh ? '无销售订单数据可导出' : 'No data to export');
+                return;
+              }
+              const headers = ['OrderNo,Customer,TotalAmount,Status,OrderDate,DeliveryDate'];
+              const rows = orders.map(
+                (o) =>
+                  `"${o.orderNo}","${isZh ? o.customerNameZh : o.customerNameEn}",${o.totalAmount},"${o.status}","${o.orderDate}","${o.deliveryDate}"`,
+              );
+              const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute(
+                'download',
+                `sales_orders_${new Date().toISOString().slice(0, 10)}.csv`,
+              );
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+              message.success(isZh ? '销售订单数据已成功导出' : 'Sales orders exported');
+            }}
           >
             {isZh ? '导出报表' : 'Export CSV'}
           </Button>
@@ -122,7 +154,9 @@ export const SalesFilterBar: React.FC<SalesFilterBarProps> = ({
 
       {/* Lower row: Status tags */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
+        <span
+          style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}
+        >
           {isZh ? '履约状态:' : 'ORDER STATUS:'}
         </span>
         <Radio.Group
@@ -132,24 +166,35 @@ export const SalesFilterBar: React.FC<SalesFilterBarProps> = ({
           buttonStyle="solid"
         >
           <Radio.Button value="ALL">
-            {isZh ? '全部 (45)' : 'All (45)'}
+            {isZh ? `全部 (${orders.length})` : `All (${orders.length})`}
           </Radio.Button>
           <Radio.Button value="QUOTATION">
-            {isZh ? '报价中 (6)' : 'Quotation (6)'}
+            {isZh
+              ? `报价中 (${orders.filter((o) => o.status === 'QUOTATION').length})`
+              : `Quotation (${orders.filter((o) => o.status === 'QUOTATION').length})`}
           </Radio.Button>
           <Radio.Button value="CONFIRMED">
-            {isZh ? '已确认 (18)' : 'Confirmed (18)'}
+            {isZh
+              ? `已确认 (${orders.filter((o) => o.status === 'CONFIRMED').length})`
+              : `Confirmed (${orders.filter((o) => o.status === 'CONFIRMED').length})`}
           </Radio.Button>
           <Radio.Button value="IN_PRODUCTION">
-            {isZh ? '生产在制 (12)' : 'Production WIP (12)'}
+            {isZh
+              ? `生产在制 (${orders.filter((o) => o.status === 'IN_PRODUCTION').length})`
+              : `Production WIP (${orders.filter((o) => o.status === 'IN_PRODUCTION').length})`}
           </Radio.Button>
           <Radio.Button value="READY_TO_SHIP">
             <span style={{ color: selectedStatus === 'READY_TO_SHIP' ? '#fff' : '#15803d' }}>
-              ● {isZh ? '待发货 (7)' : 'Ready to Ship (7)'}
+              ●{' '}
+              {isZh
+                ? `待发货 (${orders.filter((o) => o.status === 'READY_TO_SHIP').length})`
+                : `Ready to Ship (${orders.filter((o) => o.status === 'READY_TO_SHIP').length})`}
             </span>
           </Radio.Button>
           <Radio.Button value="SHIPPED">
-            {isZh ? '已出库 (2)' : 'Shipped (2)'}
+            {isZh
+              ? `已出库 (${orders.filter((o) => o.status === 'SHIPPED').length})`
+              : `Shipped (${orders.filter((o) => o.status === 'SHIPPED').length})`}
           </Radio.Button>
         </Radio.Group>
       </div>

@@ -1,15 +1,14 @@
 import React from 'react';
-import { Card, Input, Select, Radio, Button, Space, message } from 'antd';
-import {
-  SearchOutlined,
-  SwapOutlined,
-  FormOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import { Card, Input, Select, Radio, Button, Space } from 'antd';
+import { message } from '@/utils/antdApp';
+import { SearchOutlined, SwapOutlined, FormOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
-import { StockStatus } from '../types';
+import { PermissionGuard } from '@/components/common/PermissionGuard';
+import { inventoryService } from '@/services/inventoryService';
+import { StockStatus, WarehouseSummary, InventoryBalanceItem } from '../types';
 
 interface InventoryFilterBarProps {
+  balances?: InventoryBalanceItem[];
   selectedWarehouse: number | 'ALL';
   onSelectWarehouse: (val: number | 'ALL') => void;
   selectedCategory: string;
@@ -23,6 +22,7 @@ interface InventoryFilterBarProps {
 }
 
 export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
+  balances = [],
   selectedWarehouse,
   onSelectWarehouse,
   selectedCategory,
@@ -36,21 +36,35 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
 }) => {
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
+  const [warehouses, setWarehouses] = React.useState<WarehouseSummary[]>([]);
+
+  React.useEffect(() => {
+    let active = true;
+    void inventoryService.getWarehouses().then((whs) => {
+      if (active) setWarehouses(whs);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const warehouseOptions = [
-    { value: 'ALL', label: isZh ? '全部仓库 / All Hubs (4)' : 'All Warehouses (4)' },
-    { value: 1, label: isZh ? 'WH-01 原材料一号库 (680)' : 'WH-01 Raw Materials (680)' },
-    { value: 2, label: isZh ? 'WH-02 车间在制品库 (210)' : 'WH-02 WIP Workshop (210)' },
-    { value: 3, label: isZh ? 'WH-03 成品总装库 (340)' : 'WH-03 Finished Goods (340)' },
-    { value: 4, label: isZh ? 'WH-04 保税物流中心 (252)' : 'WH-04 Bonded Logistics (252)' },
+    { value: 'ALL', label: isZh ? '全部仓库' : 'All Warehouses' },
+    ...warehouses.map((w) => ({
+      value: w.id,
+      label: `${w.code} - ${isZh ? w.nameZh || w.nameEn : w.nameEn}`,
+    })),
   ];
 
   const categoryOptions = [
-    { value: 'ALL', label: isZh ? '全部物料类别 (1,482)' : 'All Categories (1,482)' },
-    { value: 'Raw Alloys', label: isZh ? '特种合金 / Raw Alloys (340)' : 'Raw Alloys (340)' },
-    { value: 'Fasteners', label: isZh ? '标准紧固件 / Fasteners (520)' : 'Fasteners (520)' },
-    { value: 'Electrical', label: isZh ? '电气伺服 / Electrical (280)' : 'Electrical (280)' },
-    { value: 'Packaging & Consumables', label: isZh ? '包材辅料 / Packaging (342)' : 'Packaging & Consumables (342)' },
+    { value: 'ALL', label: isZh ? '全部物料类别' : 'All Categories' },
+    { value: 'Raw Alloys', label: isZh ? '特种合金' : 'Raw Alloys' },
+    { value: 'Fasteners', label: isZh ? '标准紧固件' : 'Fasteners' },
+    { value: 'Electrical', label: isZh ? '电气伺服' : 'Electrical' },
+    {
+      value: 'Packaging & Consumables',
+      label: isZh ? '包材辅料' : 'Packaging & Consumables',
+    },
   ];
 
   return (
@@ -103,9 +117,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
 
           <Input
             placeholder={
-              isZh
-                ? '搜索物料号、批次、库位、规格...'
-                : 'Search SKU, Lot, Bin location, Spec...'
+              isZh ? '搜索物料号、批次、库位、规格...' : 'Search SKU, Lot, Bin location, Spec...'
             }
             prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
             size="small"
@@ -117,28 +129,56 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
         </Space>
 
         <Space size="small">
-          <Button
-            type="primary"
-            size="small"
-            icon={<SwapOutlined />}
-            onClick={onOpenTransfer}
-            style={{ backgroundColor: '#1677ff' }}
-          >
-            {isZh ? '库位调拨' : 'Stock Transfer'}
-          </Button>
+          <PermissionGuard action="TRANSFER_STOCK">
+            <Button
+              type="primary"
+              size="small"
+              icon={<SwapOutlined />}
+              onClick={onOpenTransfer}
+              style={{ backgroundColor: '#1677ff' }}
+            >
+              {isZh ? '库位调拨' : 'Stock Transfer'}
+            </Button>
+          </PermissionGuard>
 
-          <Button
-            size="small"
-            icon={<FormOutlined />}
-            onClick={onOpenAdjustment}
-          >
-            {isZh ? '盘点调整' : 'Stocktake / Adjust'}
-          </Button>
+          <PermissionGuard action="ADJUST_STOCK">
+            <Button size="small" icon={<FormOutlined />} onClick={onOpenAdjustment}>
+              {isZh ? '盘点调整' : 'Stocktake / Adjust'}
+            </Button>
+          </PermissionGuard>
 
           <Button
             size="small"
             icon={<DownloadOutlined />}
-            onClick={() => message.success(isZh ? '正在导出实时库存台账...' : 'Exporting Stock Ledger CSV...')}
+            onClick={() => {
+              if (balances.length === 0) {
+                message.warning(isZh ? '暂无库存台账数据可导出' : 'No inventory data to export');
+                return;
+              }
+              const headers = [
+                'ItemCode,ItemNameZh,ItemNameEn,Category,LotNo,Warehouse,LocationBin,AvailableQty,ReservedQty,TotalQty,UOM,UnitCost,TotalValuation,Status',
+              ];
+              const rows = balances.map(
+                (b) =>
+                  `"${b.itemCode}","${b.itemNameZh}","${b.itemNameEn}","${isZh ? b.itemCategoryZh : b.itemCategory}","${b.lotNumber}","${isZh ? b.warehouseNameZh : b.warehouseNameEn}","${b.locationCode}",${b.availableQuantity},${b.reservedQuantity},${b.quantity},"${b.itemUnitCode}",${b.unitCost},${b.totalValuation},"${b.status}"`,
+              );
+              const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute(
+                'download',
+                `inventory_ledger_${new Date().toISOString().slice(0, 10)}.csv`,
+              );
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+              message.success(
+                isZh ? '实时库存台账已成功导出' : 'Stock ledger exported successfully',
+              );
+            }}
           >
             {isZh ? '导出台账' : 'Export CSV'}
           </Button>
@@ -147,7 +187,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
 
       {/* Lower row: Quick alert status filter pills */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
+        <span
+          style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}
+        >
           {isZh ? '状态筛选:' : 'ALERT FILTERS:'}
         </span>
         <Radio.Group
@@ -156,27 +198,25 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
           onChange={(e) => onSelectStatus(e.target.value)}
           buttonStyle="solid"
         >
-          <Radio.Button value="ALL">
-            {isZh ? '全部 (1,482)' : 'All (1,482)'}
-          </Radio.Button>
+          <Radio.Button value="ALL">{isZh ? '全部' : 'All'}</Radio.Button>
           <Radio.Button value="NORMAL">
             <span style={{ color: selectedStatus === 'NORMAL' ? '#fff' : '#15803d' }}>
-              {isZh ? '充足 (1,418)' : 'Normal (1,418)'}
+              {isZh ? '充足' : 'Normal'}
             </span>
           </Radio.Button>
           <Radio.Button value="LOW_STOCK">
             <span style={{ color: selectedStatus === 'LOW_STOCK' ? '#fff' : '#b45309' }}>
-              {isZh ? '低于安全线 (14)' : 'Below Safety (14)'}
+              {isZh ? '低于安全线' : 'Below Safety'}
             </span>
           </Radio.Button>
           <Radio.Button value="STOCKOUT">
             <span style={{ color: selectedStatus === 'STOCKOUT' ? '#fff' : '#b91c1c' }}>
-              {isZh ? '缺料断货 (4)' : 'Zero Stock (4)'}
+              {isZh ? '缺料断货' : 'Zero Stock'}
             </span>
           </Radio.Button>
           <Radio.Button value="QUARANTINE">
             <span style={{ color: selectedStatus === 'QUARANTINE' ? '#fff' : '#6b7280' }}>
-              {isZh ? '待检隔离 (46)' : 'Quarantine (46)'}
+              {isZh ? '待检隔离' : 'Quarantine'}
             </span>
           </Radio.Button>
         </Radio.Group>

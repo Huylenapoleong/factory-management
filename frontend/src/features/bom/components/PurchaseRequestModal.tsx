@@ -20,14 +20,23 @@ interface FormValues {
   expectedDate: Dayjs;
 }
 
-export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({ line, analysis, isZh, onClose }) => {
+export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({
+  line,
+  analysis,
+  isZh,
+  onClose,
+}) => {
   const [form] = Form.useForm<FormValues>();
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const open = line !== null;
   const needBy = dayjs(analysis.startDate);
 
-  const suppliersQuery = useQuery({ queryKey: ['suppliers', 'active'], queryFn: bomService.getSuppliers, enabled: open });
+  const suppliersQuery = useQuery({
+    queryKey: ['suppliers', 'active'],
+    queryFn: bomService.getSuppliers,
+    enabled: open,
+  });
 
   useEffect(() => {
     if (!line) return;
@@ -35,7 +44,10 @@ export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({ line
       supplierId: line.supplierId ?? undefined,
       quantity: line.orderQuantity,
       unitPrice: line.unitCost,
-      expectedDate: line.leadTimeDays != null ? dayjs().add(line.leadTimeDays, 'day') : dayjs(analysis.startDate),
+      expectedDate:
+        line.leadTimeDays != null
+          ? dayjs().add(line.leadTimeDays, 'day')
+          : dayjs(analysis.startDate),
     });
   }, [line, form, analysis.startDate]);
 
@@ -49,14 +61,20 @@ export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({ line
         orderDate: dayjs().format('YYYY-MM-DD'),
         expectedDate: values.expectedDate.format('YYYY-MM-DD'),
         note: `BOM ${analysis.bomCode} × ${formatQty(analysis.plannedQuantity)} ${analysis.productUnitCode ?? ''}`.trim(),
-        items: [{ itemId: (line as BomAnalysisLine).materialId, quantity: values.quantity, unitPrice: values.unitPrice }],
+        items: [
+          {
+            itemId: (line as BomAnalysisLine).materialId,
+            quantity: values.quantity,
+            unitPrice: values.unitPrice,
+          },
+        ],
       }),
     onSuccess: (po, values) => {
       const l = line as BomAnalysisLine;
       message.success(
         isZh
           ? `已创建采购单 ${po.poNo}（草稿）· ${formatQty(values.quantity)} ${l.unitCode ?? ''} ${materialName(l, isZh)} · 预计 ${values.expectedDate.format('DD/MM')} 到货`
-          : `Purchase order ${po.poNo} created (draft) · ${formatQty(values.quantity)} ${l.unitCode ?? ''} ${materialName(l, isZh)} · arrives ${values.expectedDate.format('DD/MM')}`
+          : `Purchase order ${po.poNo} created (draft) · ${formatQty(values.quantity)} ${l.unitCode ?? ''} ${materialName(l, isZh)} · arrives ${values.expectedDate.format('DD/MM')}`,
       );
       queryClient.invalidateQueries({ queryKey: ['bom-analysis'] });
       onClose();
@@ -88,7 +106,9 @@ export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({ line
             </strong>
             {line.onOrderQuantity > 0 && (
               <>
-                {' '}· {isZh ? '在途' : 'already on order'} {formatQty(line.onOrderQuantity)} {line.unitCode}
+                {' '}
+                · {isZh ? '在途' : 'already on order'} {formatQty(line.onOrderQuantity)}{' '}
+                {line.unitCode}
               </>
             )}{' '}
             · {isZh ? '需在' : 'needed by'} <strong>{formatDay(analysis.startDate)}</strong>
@@ -98,7 +118,11 @@ export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({ line
               type="warning"
               showIcon
               style={{ marginBottom: 12 }}
-              title={isZh ? '预计到货晚于计划开工日期' : 'Expected arrival is after the planned start date'}
+              title={
+                isZh
+                  ? '预计到货晚于计划开工日期'
+                  : 'Expected arrival is after the planned start date'
+              }
             />
           )}
           <Form form={form} layout="vertical">
@@ -106,22 +130,49 @@ export const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({ line
               name="supplierId"
               label={isZh ? '供应商' : 'Supplier'}
               rules={[{ required: true, message: isZh ? '请选择供应商' : 'Choose a supplier' }]}
-              extra={line.supplierName ? `${isZh ? '上次采购' : 'Last bought from'}: ${line.supplierName}` : isZh ? '该物料暂无采购记录' : 'No purchase history for this material yet'}
+              extra={
+                line.supplierName
+                  ? `${isZh ? '上次采购' : 'Last bought from'}: ${line.supplierName}`
+                  : isZh
+                    ? '该物料暂无采购记录'
+                    : 'No purchase history for this material yet'
+              }
             >
               <Select
                 showSearch={{ optionFilterProp: 'label' }}
                 loading={suppliersQuery.isLoading}
-                options={(suppliersQuery.data ?? []).map((s) => ({ value: s.id, label: `${s.name} (${s.code})` }))}
+                options={(suppliersQuery.data ?? []).map((s) => ({
+                  value: s.id,
+                  label: `${s.name} (${s.code})`,
+                }))}
               />
             </Form.Item>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-              <Form.Item name="quantity" label={`${isZh ? '数量' : 'Quantity'} (${line.unitCode ?? ''})`} rules={[{ required: true }]}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: 12,
+              }}
+            >
+              <Form.Item
+                name="quantity"
+                label={`${isZh ? '数量' : 'Quantity'} (${line.unitCode ?? ''})`}
+                rules={[{ required: true }]}
+              >
                 <InputNumber min={0.0001} style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item name="unitPrice" label={isZh ? '单价' : 'Unit price'} rules={[{ required: true }]}>
+              <Form.Item
+                name="unitPrice"
+                label={isZh ? '单价' : 'Unit price'}
+                rules={[{ required: true }]}
+              >
                 <InputNumber min={0} prefix="$" style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item name="expectedDate" label={isZh ? '预计到货' : 'Expected arrival'} rules={[{ required: true }]}>
+              <Form.Item
+                name="expectedDate"
+                label={isZh ? '预计到货' : 'Expected arrival'}
+                rules={[{ required: true }]}
+              >
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
             </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Table, Tag, Button, Spin, message } from 'antd';
+import { Modal, Table, Tag, Button, Spin } from 'antd';
+import { message } from '@/utils/antdApp';
 import type { ColumnsType } from 'antd/es/table';
 import {
   InboxOutlined,
@@ -50,11 +51,15 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
     setIssuing(true);
     try {
       await productionService.issueMaterials(order.id);
-      message.success(`Materials issued to Work Order ${order.orderNo} successfully!`);
+      message.success(
+        language === 'zh-CN'
+          ? `工单 ${order.orderNo} 领料出库成功！`
+          : `Materials issued to Work Order ${order.orderNo} successfully!`,
+      );
       onMaterialsIssued?.();
       onClose();
     } catch {
-      message.error('Failed to issue materials');
+      message.error(language === 'zh-CN' ? '领料出库失败' : 'Failed to issue materials');
     } finally {
       setIssuing(false);
     }
@@ -62,14 +67,18 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
 
   const columns: ColumnsType<BomComponentItem> = [
     {
-      title: language === 'zh-CN' ? '物料编码 (Item Code)' : 'Component Code',
+      title: language === 'zh-CN' ? '物料编码' : 'Component Code',
       dataIndex: 'componentCode',
       key: 'code',
       width: 160,
-      render: (text) => <strong className="tnum" style={{ color: '#1677ff' }}>{text}</strong>,
+      render: (text) => (
+        <strong className="tnum" style={{ color: '#1677ff' }}>
+          {text}
+        </strong>
+      ),
     },
     {
-      title: language === 'zh-CN' ? '物料名称与规格 (Name & Spec)' : 'Name & Spec',
+      title: language === 'zh-CN' ? '物料名称与规格' : 'Name & Spec',
       key: 'name',
       render: (_, record) => (
         <div>
@@ -81,23 +90,31 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
       ),
     },
     {
-      title: language === 'zh-CN' ? '单件定额 (Unit Norm)' : 'Unit Norm',
+      title: language === 'zh-CN' ? '单件定额' : 'Unit Norm',
       dataIndex: 'unitConsumption',
       key: 'unitConsumption',
       width: 100,
       align: 'right',
-      render: (val, record) => <span className="tnum">{val} {record.uom}</span>,
+      render: (val, record) => (
+        <span className="tnum">
+          {val} {record.uom}
+        </span>
+      ),
     },
     {
-      title: language === 'zh-CN' ? '总需求量 (Req Total)' : 'Required Total',
+      title: language === 'zh-CN' ? '总需求量' : 'Required Total',
       dataIndex: 'requiredTotal',
       key: 'requiredTotal',
       width: 120,
       align: 'right',
-      render: (val, record) => <span className="tnum" style={{ fontWeight: 600 }}>{val.toLocaleString()} {record.uom}</span>,
+      render: (val, record) => (
+        <span className="tnum" style={{ fontWeight: 600 }}>
+          {val.toLocaleString()} {record.uom}
+        </span>
+      ),
     },
     {
-      title: language === 'zh-CN' ? '当前库存 (In Stock)' : 'Current Stock',
+      title: language === 'zh-CN' ? '当前库存' : 'Current Stock',
       dataIndex: 'currentStock',
       key: 'currentStock',
       width: 120,
@@ -115,7 +132,7 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
       ),
     },
     {
-      title: language === 'zh-CN' ? '齐套状态 (Status)' : 'Status',
+      title: language === 'zh-CN' ? '齐套状态' : 'Status',
       key: 'status',
       width: 110,
       align: 'center',
@@ -140,8 +157,14 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <InboxOutlined style={{ color: '#1677ff' }} />
           <span>
-            {language === 'zh-CN' ? '物料清单 (BOM) 与齐套核算' : 'Bill of Materials (BOM) & Material Demand'}
-            {order && <span style={{ color: '#6b7280', fontSize: 13, marginLeft: 8 }}>— {order.orderNo} ({order.productCode})</span>}
+            {language === 'zh-CN'
+              ? '物料清单与齐套核算'
+              : 'Bill of Materials (BOM) & Material Demand'}
+            {order && (
+              <span style={{ color: '#6b7280', fontSize: 13, marginLeft: 8 }}>
+                — {order.orderNo} ({order.productCode})
+              </span>
+            )}
           </span>
         </div>
       }
@@ -161,14 +184,20 @@ export const BomViewerModal: React.FC<BomViewerModalProps> = ({
           loading={issuing}
           onClick={handleIssueMaterials}
         >
-          {language === 'zh-CN' ? '确认领料出库 (Issue Materials)' : 'Confirm Issue Materials'}
+          {language === 'zh-CN' ? '确认领料出库' : 'Confirm Issue Materials'}
         </Button>,
       ]}
       styles={{ body: { paddingTop: 8 } }}
     >
       {loading ? (
         <div style={{ textAlign: 'center', padding: 32 }}>
-          <Spin description="Calculating BOM material requirements..." />
+          <Spin
+            description={
+              language === 'zh-CN'
+                ? '正在核算物料清单需求...'
+                : 'Calculating BOM material requirements...'
+            }
+          />
         </div>
       ) : (
         <Table

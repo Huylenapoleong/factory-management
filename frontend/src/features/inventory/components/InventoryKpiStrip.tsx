@@ -8,11 +8,24 @@ import {
   SendOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/useAppStore';
+import { InventoryBalanceItem } from '../types';
 
-export const InventoryKpiStrip: React.FC = () => {
+interface InventoryKpiStripProps {
+  balances?: InventoryBalanceItem[];
+}
+
+export const InventoryKpiStrip: React.FC<InventoryKpiStripProps> = ({ balances = [] }) => {
   const { language } = useAppStore();
   const { token } = theme.useToken();
   const isZh = language === 'zh-CN';
+
+  const totalSkus = balances.length;
+  const totalValuation = balances.reduce((s, b) => s + (b.totalValuation || 0), 0);
+  const lowStockCount = balances.filter(
+    (b) => b.status === 'LOW_STOCK' || b.status === 'STOCKOUT',
+  ).length;
+  const totalAvailable = balances.reduce((s, b) => s + (b.availableQuantity || 0), 0);
+  const reservedCount = balances.reduce((s, b) => s + (b.reservedQuantity || 0), 0);
 
   return (
     <Row gutter={[10, 10]} style={{ marginBottom: 12 }}>
@@ -20,28 +33,29 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '在库物料种类' : 'TOTAL ACTIVE SKUS'}
                 </span>
                 <AppstoreOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
-            value={1482}
+            value={totalSkus}
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-            suffix={
-              <span style={{ fontSize: 11, color: '#10b981', marginLeft: 8, fontWeight: 500 }}>
-                +12 {isZh ? '本周新增' : 'this week'}
-              </span>
-            }
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            98.4% {isZh ? '已赋条码/RFID' : 'RFID/Bar Tracked'}
+            {isZh ? '系统台账跟踪中' : 'Tracked in ledger'}
           </div>
         </Card>
       </Col>
@@ -50,30 +64,31 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
                   {isZh ? '库存总货值' : 'INVENTORY VALUATION'}
                 </span>
                 <DollarOutlined style={{ color: '#0f766e', fontSize: 13 }} />
               </div>
             }
-            value={4.28}
+            value={totalValuation}
             precision={2}
             prefix="$"
-            suffix={
-              <span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 6 }}>
-                M <span style={{ color: token.colorTextSecondary }}>({isZh ? '约¥30.8M' : '¥30.8M'})</span>
-              </span>
-            }
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
           />
-          <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>
-            MoM -2.4% | {isZh ? '周转率 14.2天' : 'Turnover 14.2d'}
+          <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
+            {isZh ? '实时账面货值' : 'Book valuation'}
           </div>
         </Card>
       </Col>
@@ -82,107 +97,142 @@ export const InventoryKpiStrip: React.FC = () => {
       <Col xs={12} sm={8} lg={4} xl={4}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: '1px solid #f87171', backgroundColor: token.colorFillAlter }}
+          style={{
+            borderRadius: 4,
+            border:
+              lowStockCount > 0 ? '1px solid #f87171' : `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: lowStockCount > 0 ? token.colorFillAlter : token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 600 }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: lowStockCount > 0 ? '#dc2626' : token.colorTextSecondary,
+                    fontWeight: 600,
+                  }}
+                >
                   {isZh ? '安全库存预警' : 'LOW SAFETY STOCK'}
                 </span>
-                <AlertOutlined style={{ color: '#dc2626', fontSize: 13 }} />
+                <AlertOutlined
+                  style={{ color: lowStockCount > 0 ? '#dc2626' : '#10b981', fontSize: 13 }}
+                />
               </div>
             }
-            value={14}
-            styles={{ content: { fontSize: 20, fontWeight: 700, color: '#dc2626' } }}
+            value={lowStockCount}
+            styles={{
+              content: {
+                fontSize: 20,
+                fontWeight: 700,
+                color: lowStockCount > 0 ? '#dc2626' : token.colorText,
+              },
+            }}
             suffix={
-              <span
-                style={{
-                  fontSize: 10,
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  padding: '1px 5px',
-                  borderRadius: 2,
-                  marginLeft: 6,
-                  fontWeight: 600,
-                }}
-              >
-                {isZh ? '严重缺料' : 'Critical'}
-              </span>
+              lowStockCount > 0 ? (
+                <span
+                  style={{
+                    fontSize: 10,
+                    backgroundColor: '#fee2e2',
+                    color: '#dc2626',
+                    padding: '1px 5px',
+                    borderRadius: 2,
+                    marginLeft: 6,
+                    fontWeight: 600,
+                  }}
+                >
+                  {isZh ? '缺料预警' : 'Alert'}
+                </span>
+              ) : null
             }
           />
-          <div style={{ fontSize: 11, color: '#ef4444', marginTop: 2 }}>
-            4 {isZh ? '笔采购单在途' : 'POs in transit'}
+          <div
+            style={{
+              fontSize: 11,
+              color: lowStockCount > 0 ? '#ef4444' : token.colorTextSecondary,
+              marginTop: 2,
+            }}
+          >
+            {lowStockCount > 0
+              ? isZh
+                ? '低于安全库存水位'
+                : 'Below safety threshold'
+              : isZh
+                ? '全部处于安全库存内'
+                : 'Stock levels normal'}
           </div>
         </Card>
       </Col>
 
-      {/* 4. Inbound Staging */}
+      {/* 4. Total Available Stock */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '待检入库暂存' : 'INBOUND STAGING'}
+                  {isZh ? '可用库存总数' : 'TOTAL AVAILABLE STOCK'}
                 </span>
                 <InboxOutlined style={{ color: '#1677ff', fontSize: 13 }} />
               </div>
             }
-            value={180}
+            value={totalAvailable}
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-            suffix={<span style={{ fontSize: 11, color: token.colorTextSecondary, marginLeft: 4 }}>{isZh ? '托盘' : 'pallets'}</span>}
+            suffix={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>pcs</span>}
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            6 {isZh ? '批到货待检 (Dock 01-04)' : 'ASN arriving (Dock 01-04)'}
+            {isZh ? '现场可即时领用' : 'Available on hand'}
           </div>
         </Card>
       </Col>
 
-      {/* 5. Staged for Lines */}
+      {/* 5. Reserved Stock */}
       <Col xs={12} sm={8} lg={5} xl={5}>
         <Card
           size="small"
-          style={{ borderRadius: 4, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorBgContainer }}
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            backgroundColor: token.colorBgContainer,
+          }}
           styles={{ body: { padding: '8px 12px' } }}
         >
           <Statistic
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <span style={{ fontSize: 11, color: token.colorTextSecondary, fontWeight: 600 }}>
-                  {isZh ? '产线备料待出库' : 'STAGED FOR LINES'}
+                  {isZh ? '已锁定/预留库存' : 'RESERVED STOCK'}
                 </span>
                 <SendOutlined style={{ color: '#10b981', fontSize: 13 }} />
               </div>
             }
-            value={42}
+            value={reservedCount}
             styles={{ content: { fontSize: 20, fontWeight: 700, color: token.colorText } }}
-            suffix={
-              <span
-                style={{
-                  fontSize: 10,
-                  backgroundColor: '#dcfce7',
-                  color: '#15803d',
-                  padding: '1px 5px',
-                  borderRadius: 2,
-                  marginLeft: 6,
-                  fontWeight: 600,
-                }}
-              >
-                {isZh ? '备料完成' : 'Picked'}
-              </span>
-            }
+            suffix={<span style={{ fontSize: 11, color: token.colorTextSecondary }}>pcs</span>}
           />
           <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>
-            {isZh ? '下次派送料: 25分钟后' : 'Next dispatch: 25 min'}
+            {isZh ? '已分配给工单/订单' : 'Allocated to orders'}
           </div>
         </Card>
       </Col>
     </Row>
   );
 };
+
+export default InventoryKpiStrip;

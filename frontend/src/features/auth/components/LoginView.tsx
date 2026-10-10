@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Alert, Space, Tag, Checkbox, Divider, App } from 'antd';
+import { Form, Input, Button, Card, Typography, Alert, Space, Tag, Checkbox, App } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
@@ -8,7 +8,6 @@ import {
   SafetyCertificateOutlined,
   CheckCircleFilled,
   DesktopOutlined,
-  ToolOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -40,15 +39,6 @@ export const LoginView: React.FC = () => {
     const nextLang = language === 'zh-CN' ? 'en' : 'zh-CN';
     setLanguage(nextLang);
     i18n.changeLanguage(nextLang);
-  };
-
-  const handleFillDemo = (username: string, pass: string) => {
-    form.setFieldsValue({
-      username,
-      password: pass,
-      remember: true,
-    });
-    setAuthError(null);
   };
 
   const onFinish = async (values: LoginFormValues) => {
@@ -92,7 +82,7 @@ export const LoginView: React.FC = () => {
         <Space size="middle">
           <Tag color="blue" style={{ margin: 0, padding: '2px 8px', fontSize: 12 }}>
             <DesktopOutlined style={{ marginRight: 4 }} />
-            {t('auth.terminalId')}
+            {t('auth.terminalReady')}
           </Tag>
           <Tag color="success" style={{ margin: 0, padding: '2px 8px', fontSize: 12 }}>
             <CheckCircleFilled style={{ marginRight: 4 }} />
@@ -112,7 +102,7 @@ export const LoginView: React.FC = () => {
             fontSize: 12,
           }}
         >
-          {language === 'zh-CN' ? 'English (EN)' : '简体中文 (ZH)'}
+          {language === 'zh-CN' ? 'English' : '简体中文'}
         </Button>
       </div>
 
@@ -146,12 +136,13 @@ export const LoginView: React.FC = () => {
           >
             <BuildFilled style={{ fontSize: 26 }} />
           </div>
-          <Title level={3} style={{ margin: '0 0 4px 0', fontSize: 20, color: '#0f172a', fontWeight: 700 }}>
+          <Title
+            level={3}
+            style={{ margin: '0 0 4px 0', fontSize: 20, color: '#0f172a', fontWeight: 700 }}
+          >
             {t('auth.loginTitle')}
           </Title>
-          <Text style={{ fontSize: 13, color: '#64748b' }}>
-            {t('auth.loginSubtitle')}
-          </Text>
+          <Text style={{ fontSize: 13, color: '#64748b' }}>{t('auth.loginSubtitle')}</Text>
         </div>
 
         {authError && (
@@ -169,7 +160,7 @@ export const LoginView: React.FC = () => {
           form={form}
           name="wifim_login"
           layout="vertical"
-          initialValues={{ username: 'admin', password: 'admin123', remember: true }}
+          initialValues={{ remember: true }}
           onFinish={onFinish}
           autoComplete="off"
         >
@@ -200,9 +191,7 @@ export const LoginView: React.FC = () => {
           </Form.Item>
 
           <Form.Item name="remember" valuePropName="checked" style={{ marginBottom: 20 }}>
-            <Checkbox style={{ fontSize: 13, color: '#475569' }}>
-              {t('auth.rememberMe')}
-            </Checkbox>
+            <Checkbox style={{ fontSize: 13, color: '#475569' }}>{t('auth.rememberMe')}</Checkbox>
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 16 }}>
@@ -225,38 +214,27 @@ export const LoginView: React.FC = () => {
           </Form.Item>
         </Form>
 
-        <Divider style={{ margin: '16px 0', fontSize: 12, color: '#94a3b8' }}>
-          {t('auth.demoAccounts')}
-        </Divider>
-
-        {/* Demo Fast-Fill Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <Button
-            size="small"
-            icon={<UserOutlined />}
-            onClick={() => handleFillDemo('admin', 'admin123')}
-            style={{
-              fontSize: 12,
-              textAlign: 'center',
-              backgroundColor: '#f8fafc',
-              borderColor: '#cbd5e1',
-            }}
-          >
-            {t('auth.adminDemo')}
-          </Button>
-          <Button
-            size="small"
-            icon={<ToolOutlined />}
-            onClick={() => handleFillDemo('operator', 'operator123')}
-            style={{
-              fontSize: 12,
-              textAlign: 'center',
-              backgroundColor: '#f8fafc',
-              borderColor: '#cbd5e1',
-            }}
-          >
-            {t('auth.operatorDemo')}
-          </Button>
+        {/* Security & Access Assistance Notice */}
+        <div
+          style={{
+            marginTop: 8,
+            padding: '10px 12px',
+            backgroundColor: '#f8fafc',
+            borderRadius: 6,
+            border: '1px solid #e2e8f0',
+            fontSize: 12,
+            color: '#64748b',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <SafetyCertificateOutlined style={{ color: '#1677ff', fontSize: 16, flexShrink: 0 }} />
+          <span>
+            {language === 'zh-CN'
+              ? '请使用系统管理员分配的工控账号凭据登录。如遇登录问题或网络离线，请联系工厂IT运维或当班主管。'
+              : 'Please authenticate with plant credentials assigned by system administrator. For connection assistance, contact IT operations.'}
+          </span>
         </div>
 
         {/* Plant Policy Notice */}

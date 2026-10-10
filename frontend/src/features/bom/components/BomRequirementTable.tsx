@@ -3,7 +3,14 @@ import { Button, Card, Progress, Segmented, Table, Tag, Tooltip, theme } from 'a
 import type { TableColumnsType } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import type { BomAnalysis, BomAnalysisLine, CoverageFilter } from '../types';
-import { formatMoney, formatQty, itemNameByCode, materialName, procurementMeta, statusMeta } from '../utils';
+import {
+  formatMoney,
+  formatQty,
+  itemNameByCode,
+  materialName,
+  procurementMeta,
+  statusMeta,
+} from '../utils';
 
 interface BomRequirementTableProps {
   analysis: BomAnalysis;
@@ -19,8 +26,42 @@ const csvCell = (value: string | number): string => `"${String(value).replace(/"
 
 const exportCsv = (analysis: BomAnalysis, isZh: boolean) => {
   const header = isZh
-    ? ['序号', '层级', '物料编码', '物料名称', '来源', '用于', '单位', '单件用量', '损耗率%', '需求量', '可用库存', '缺口', '满足率%', '状态', '单价', '金额']
-    : ['#', 'Level', 'Material code', 'Material', 'Source', 'Used in', 'Unit', 'Qty per unit', 'Scrap %', 'Required', 'Available', 'Shortage', 'Coverage %', 'Status', 'Unit cost', 'Amount'];
+    ? [
+        '序号',
+        '层级',
+        '物料编码',
+        '物料名称',
+        '来源',
+        '用于',
+        '单位',
+        '单件用量',
+        '损耗率%',
+        '需求量',
+        '可用库存',
+        '缺口',
+        '满足率%',
+        '状态',
+        '单价',
+        '金额',
+      ]
+    : [
+        '#',
+        'Level',
+        'Material code',
+        'Material',
+        'Source',
+        'Used in',
+        'Unit',
+        'Qty per unit',
+        'Scrap %',
+        'Required',
+        'Available',
+        'Shortage',
+        'Coverage %',
+        'Status',
+        'Unit cost',
+        'Amount',
+      ];
   const rows = analysis.lines.map((line, index) => [
     index + 1,
     line.level,
@@ -59,7 +100,8 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
   loading,
 }) => {
   const { token } = theme.useToken();
-  const rows = filter === 'ALL' ? analysis.lines : analysis.lines.filter((line) => line.status === filter);
+  const rows =
+    filter === 'ALL' ? analysis.lines : analysis.lines.filter((line) => line.status === filter);
 
   const columns: TableColumnsType<BomAnalysisLine> = [
     {
@@ -77,15 +119,30 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
       key: 'material',
       render: (_, line) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusMeta(line.status, token, isZh).color, flexShrink: 0 }} />
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: statusMeta(line.status, token, isZh).color,
+              flexShrink: 0,
+            }}
+          />
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <span style={{ fontWeight: 500, lineHeight: 1.35 }}>{materialName(line, isZh)}</span>
-            <span style={{ fontSize: 11, color: token.colorTextTertiary, fontFamily: 'ui-monospace, Menlo, monospace' }}>
+            <span
+              style={{
+                fontSize: 11,
+                color: token.colorTextTertiary,
+                fontFamily: 'ui-monospace, Menlo, monospace',
+              }}
+            >
               {line.materialCode}
             </span>
             {line.usedIn.some((code) => code !== analysis.productCode) && (
               <span style={{ fontSize: 11, color: token.colorPrimary }}>
-                ↳ {isZh ? '用于' : 'used in'} {line.usedIn.map((code) => itemNameByCode(analysis, code, isZh)).join(', ')}
+                ↳ {isZh ? '用于' : 'used in'}{' '}
+                {line.usedIn.map((code) => itemNameByCode(analysis, code, isZh)).join(', ')}
               </span>
             )}
           </div>
@@ -105,13 +162,21 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
                 ? '含半成品部件的用量；半成品已先扣除自身库存，只为需自制的部分计算物料'
                 : 'Includes use inside sub-assemblies; their own stock is used first, so only the part still to be made needs this material'
               : `${formatQty(line.unitQuantity, 4)} ${line.unitCode ?? ''} × ${formatQty(analysis.plannedQuantity)}${
-                  line.scrapRate > 0 ? ` + ${formatQty(line.scrapRate)}% ${isZh ? '损耗' : 'scrap'}` : ''
+                  line.scrapRate > 0
+                    ? ` + ${formatQty(line.scrapRate)}% ${isZh ? '损耗' : 'scrap'}`
+                    : ''
                 }`
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }} className="tnum">
+          <div
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}
+            className="tnum"
+          >
             <span style={{ fontWeight: 600 }}>
-              {formatQty(line.requiredQuantity)} <span style={{ fontWeight: 400, fontSize: 11, color: token.colorTextTertiary }}>{line.unitCode}</span>
+              {formatQty(line.requiredQuantity)}{' '}
+              <span style={{ fontWeight: 400, fontSize: 11, color: token.colorTextTertiary }}>
+                {line.unitCode}
+              </span>
             </span>
             <span style={{ fontSize: 11, color: token.colorTextTertiary }}>
               {formatQty(line.unitQuantity, 4)}/{isZh ? '件' : 'unit'}
@@ -154,7 +219,15 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
           const proc = procurementMeta(line, token, isZh);
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Tag color={token.colorPrimary} variant="outlined" style={{ background: token.colorPrimaryBg, borderRadius: 999, width: 'fit-content' }}>
+              <Tag
+                color={token.colorPrimary}
+                variant="outlined"
+                style={{
+                  background: token.colorPrimaryBg,
+                  borderRadius: 999,
+                  width: 'fit-content',
+                }}
+              >
                 {statusMeta('MAKE', token, isZh).label}
               </Tag>
               <span style={{ fontSize: 11, fontWeight: 600, color: proc.color }}>{proc.label}</span>
@@ -164,7 +237,11 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
         if (line.status !== 'SHORTAGE') {
           const meta = statusMeta(line.status, token, isZh);
           return (
-            <Tag color={meta.color} variant="outlined" style={{ background: meta.bg, borderRadius: 999 }}>
+            <Tag
+              color={meta.color}
+              variant="outlined"
+              style={{ background: meta.bg, borderRadius: 999 }}
+            >
               {meta.label}
             </Tag>
           );
@@ -172,8 +249,13 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
         const proc = procurementMeta(line, token, isZh);
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Tag color={token.colorError} variant="outlined" style={{ background: token.colorErrorBg, borderRadius: 999, width: 'fit-content' }}>
-              {isZh ? '缺' : 'Short'} {formatQty(Math.ceil(line.shortageQuantity), 0)} {line.unitCode ?? ''}
+            <Tag
+              color={token.colorError}
+              variant="outlined"
+              style={{ background: token.colorErrorBg, borderRadius: 999, width: 'fit-content' }}
+            >
+              {isZh ? '缺' : 'Short'} {formatQty(Math.ceil(line.shortageQuantity), 0)}{' '}
+              {line.unitCode ?? ''}
             </Tag>
             <span style={{ fontSize: 11, fontWeight: 600, color: proc.color }}>{proc.label}</span>
           </div>
@@ -186,7 +268,9 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
       align: 'right',
       width: 120,
       render: (_, line) => (
-        <Tooltip title={`${formatMoney(line.unitCost)} / ${line.unitCode ?? (isZh ? '单位' : 'unit')}`}>
+        <Tooltip
+          title={`${formatMoney(line.unitCost)} / ${line.unitCode ?? (isZh ? '单位' : 'unit')}`}
+        >
           <span className="tnum">{formatMoney(line.lineCost)}</span>
         </Tooltip>
       ),
@@ -197,7 +281,12 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
     { value: 'ALL', label: `${isZh ? '全部' : 'All'} (${analysis.lines.length})` },
     { value: 'SHORTAGE', label: `${isZh ? '缺料' : 'Shortage'} (${analysis.shortageCount})` },
     ...(analysis.makeCount > 0
-      ? [{ value: 'MAKE' as CoverageFilter, label: `${isZh ? '自制' : 'Make'} (${analysis.makeCount})` }]
+      ? [
+          {
+            value: 'MAKE' as CoverageFilter,
+            label: `${isZh ? '自制' : 'Make'} (${analysis.makeCount})`,
+          },
+        ]
       : []),
     { value: 'LOW', label: `${isZh ? '偏低' : 'Low'} (${analysis.lowCount})` },
     { value: 'SUFFICIENT', label: `${isZh ? '充足' : 'OK'} (${analysis.sufficientCount})` },
@@ -210,8 +299,17 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
       title={isZh ? '物料定额' : 'Material norms'}
       extra={
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Segmented size="small" value={filter} onChange={(v) => onFilterChange(v as CoverageFilter)} options={filterOptions} />
-          <Button size="small" icon={<DownloadOutlined />} onClick={() => exportCsv(analysis, isZh)}>
+          <Segmented
+            size="small"
+            value={filter}
+            onChange={(v) => onFilterChange(v as CoverageFilter)}
+            options={filterOptions}
+          />
+          <Button
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={() => exportCsv(analysis, isZh)}
+          >
             {isZh ? '导出' : 'Export'}
           </Button>
         </div>
@@ -237,7 +335,8 @@ export const BomRequirementTable: React.FC<BomRequirementTableProps> = ({
           <Table.Summary.Row>
             <Table.Summary.Cell index={0} colSpan={6}>
               <span style={{ color: token.colorTextSecondary }}>
-                {isZh ? '合计' : 'Total'} · {formatQty(analysis.plannedQuantity)} {analysis.productUnitCode ?? 'pcs'}
+                {isZh ? '合计' : 'Total'} · {formatQty(analysis.plannedQuantity)}{' '}
+                {analysis.productUnitCode ?? 'pcs'}
               </span>
             </Table.Summary.Cell>
             <Table.Summary.Cell index={6} align="right">
