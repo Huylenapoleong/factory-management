@@ -99,3 +99,10 @@ body {
     min-height: 0;
   }
 }
+
+/* Responsive Login Card */
+@media (max-width: 576px) {
+  .login-card .ant-card-body {
+    padding: 24px 16px 18px 16px !important;
+  }
+}
