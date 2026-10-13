@@ -6,16 +6,19 @@ import { masterDataService } from '@/services/masterDataService';
 import { CreateSupplierPayload } from '../types';
 
 interface CreateSupplierModalProps {
-  visible: boolean;
+  open?: boolean;
+  visible?: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
+  open,
   visible,
   onClose,
   onSuccess,
 }) => {
+  const isOpen = open ?? visible ?? false;
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
   const [form] = Form.useForm();
@@ -54,7 +57,7 @@ export const CreateSupplierModal: React.FC<CreateSupplierModalProps> = ({
   return (
     <Modal
       title={isZh ? '新增合格供应链厂商档案' : 'Register Qualified Supplier Profile'}
-      open={visible}
+      open={isOpen}
       onCancel={onClose}
       onOk={handleSubmit}
       centered

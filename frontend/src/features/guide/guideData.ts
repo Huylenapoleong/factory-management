@@ -662,9 +662,9 @@ export const FEATURE_GUIDE_MODULES: FeatureGuideModule[] = [
     category: 'GOVERNANCE',
     allowedRoles: ['ADMIN', 'VIEWER'],
     summaryZh:
-      '全厂不可篡改审计日志（Audit Trail），记录每一次用户登录、工单下达、采购审批、质量放行、库存盘点与出库发货事件，符合 ISO 9001 与 FDA 21 CFR Part 11 合规标准。',
+      '全厂不可篡改审计日志（Audit Trail），记录每一次用户登录、工单下达、采购审批、质量放行、库存盘点与出库发货事件，符合 ISO 9001:2026 与 FDA 21 CFR Part 11 合规标准。',
     summaryEn:
-      'Immutable factory audit trail capturing user logins, order releases, PO approvals, QC releases, inventory adjustments, and dispatch events complying with ISO 9001 standards.',
+      'Immutable factory audit trail capturing user logins, order releases, PO approvals, QC releases, inventory adjustments, and dispatch events complying with ISO 9001:2026 standards.',
     keyFeaturesZh: [
       '完整操作审计：记录操作人、业务动作（USER_LOGIN, PO_APPROVE, WORK_ORDER_RELEASE, QC_INSPECTION_PASS 等）',
       '精确追踪：记录操作来源客户端 IP 地址与毫秒级精确时间戳',
