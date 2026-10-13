@@ -173,7 +173,7 @@ export const ShiftHandoverModal: React.FC = () => {
                   WIFIM MES
                 </span>
                 <Tag color="blue" style={{ borderRadius: 2, fontWeight: 600 }}>
-                  ISO-9001 / IATF-16949 COMPLIANT
+                  ISO-9001:2026 / IATF-16949 COMPLIANT
                 </Tag>
               </div>
               <h2

@@ -296,7 +296,7 @@ export const LoginView: React.FC = () => {
           paddingTop: 8,
         }}
       >
-        <div>WIFIM MES Enterprise Suite | ISO 9001:2015 Manufacturing Standard</div>
+        <div>WIFIM MES Enterprise Suite | ISO 9001:2026 Manufacturing Standard</div>
         <div style={{ marginTop: 4, fontSize: 11, color: '#475569' }}>
           Plant Operations System v2.6 | Secure Industrial Protocol Active
         </div>

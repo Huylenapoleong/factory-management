@@ -6,16 +6,19 @@ import { masterDataService } from '@/services/masterDataService';
 import { CreateItemPayload, ItemType } from '../types';
 
 interface CreateItemModalProps {
-  visible: boolean;
+  open?: boolean;
+  visible?: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const CreateItemModal: React.FC<CreateItemModalProps> = ({
+  open,
   visible,
   onClose,
   onSuccess,
 }) => {
+  const isOpen = open ?? visible ?? false;
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
   const [form] = Form.useForm();
@@ -79,7 +82,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
   return (
     <Modal
       title={isZh ? '新增主数据物料 / 产品编码' : 'Create Master Data Item / SKU'}
-      open={visible}
+      open={isOpen}
       onCancel={onClose}
       onOk={handleSubmit}
       centered
