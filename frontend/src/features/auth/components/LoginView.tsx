@@ -259,7 +259,7 @@ export const LoginView: React.FC = () => {
 
       {/* Industrial Footer */}
       <div style={{ marginTop: 24, textAlign: 'center', color: '#64748b', fontSize: 12 }}>
-        <div>WIFIM MES Enterprise Suite | ISO 9001:2015 Manufacturing Standard</div>
+        <div>WIFIM MES Enterprise Suite | ISO 9001:2026 Manufacturing Standard</div>
         <div style={{ marginTop: 4, fontSize: 11, color: '#475569' }}>
           Plant Operations System v2.6 | Secure Industrial Protocol Active
         </div>

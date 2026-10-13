@@ -52,9 +52,11 @@ management:
 springdoc:
   api-docs:
     path: /v3/api-docs
+    enabled: ${SPRINGDOC_ENABLED:true}
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method
+    enabled: ${SWAGGER_UI_ENABLED:true}
 
 app:
   api:

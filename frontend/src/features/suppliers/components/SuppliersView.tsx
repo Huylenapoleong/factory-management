@@ -389,7 +389,7 @@ export const SuppliersView: React.FC = () => {
       </Card>
 
       <CreateSupplierModal
-        visible={modalVisible}
+        open={modalVisible}
         onClose={() => setModalVisible(false)}
         onSuccess={fetchSuppliers}
       />

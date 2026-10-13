@@ -6,16 +6,19 @@ import { masterDataService } from '@/services/masterDataService';
 import { CreateCustomerPayload } from '../types';
 
 interface CreateCustomerModalProps {
-  visible: boolean;
+  open?: boolean;
+  visible?: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
+  open,
   visible,
   onClose,
   onSuccess,
 }) => {
+  const isOpen = open ?? visible ?? false;
   const { language } = useAppStore();
   const isZh = language === 'zh-CN';
   const [form] = Form.useForm();
@@ -54,7 +57,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
   return (
     <Modal
       title={isZh ? '新增商业客户与渠道档案' : 'Register Commercial Client Account'}
-      open={visible}
+      open={isOpen}
       onCancel={onClose}
       onOk={handleSubmit}
       centered

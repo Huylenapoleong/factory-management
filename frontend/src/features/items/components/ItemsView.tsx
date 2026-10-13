@@ -392,7 +392,7 @@ export const ItemsView: React.FC = () => {
       </Card>
 
       <CreateItemModal
-        visible={modalVisible}
+        open={modalVisible}
         onClose={() => setModalVisible(false)}
         onSuccess={fetchItems}
       />

@@ -322,8 +322,8 @@ export const OutboundDispatchDrawer: React.FC<OutboundDispatchDrawerProps> = ({
           }}
         >
           {isZh
-            ? '出库质检放行记录 · IATF-16949 / ISO-9001 溯源'
-            : 'IATF-16949 / ISO-9001 Outbound Release'}
+            ? '出库质检放行记录 · IATF-16949 / ISO-9001:2026 溯源'
+            : 'IATF-16949 / ISO-9001:2026 Outbound Release'}
         </div>
       </Card>
     </div>

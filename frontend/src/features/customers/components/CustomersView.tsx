@@ -358,7 +358,7 @@ export const CustomersView: React.FC = () => {
       </Card>
 
       <CreateCustomerModal
-        visible={modalVisible}
+        open={modalVisible}
         onClose={() => setModalVisible(false)}
         onSuccess={fetchCustomers}
       />
