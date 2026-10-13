@@ -9,8 +9,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_factory_password_2026}
     volumes:
       - postgres_data:/var/lib/postgresql
-    ports:
-      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-factory_user} -d ${DB_NAME:-factory_db}"]
       interval: 10s
