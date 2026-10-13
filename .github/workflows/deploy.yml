@@ -213,7 +213,7 @@ jobs:
             fi
 
             # 7. Prune unused images to reclaim VPS disk space
-            echo "Cleaning dangling images..."
-            docker image prune -f
-            echo "Deployment completed successfully!"
+            echo "Pruning old and unused Docker images..."
+            docker image prune -a -f
+            echo "Deployment completed successfully! Disk space reclaimed."
 
