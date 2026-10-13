@@ -48,15 +48,15 @@ docker compose version
 
 ### Bước 2.2: Tạo thư mục triển khai
 ```bash
-sudo mkdir -p /opt/factory-management
-sudo chown -R $USER:$USER /opt/factory-management
-cd /opt/factory-management
+sudo mkdir -p /www/dk_project
+sudo chown -R $USER:$USER /www/dk_project
+cd /www/dk_project
 ```
 
 ### Bước 2.3: Tạo file môi trường `.env` ban đầu trên VPS
-Tạo file `/opt/factory-management/.env` với các thông số bảo mật của bạn:
+Tạo file `/www/dk_project/.env` với các thông số bảo mật của bạn:
 ```bash
-nano /opt/factory-management/.env
+nano /www/dk_project/.env
 ```
 *(Hoặc cấu hình qua GitHub Secret `APP_ENV_FILE` ở phần 3 để GitHub tự động ghi đè).*
 
