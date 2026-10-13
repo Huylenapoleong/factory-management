@@ -1,0 +1,210 @@
+name: Build, Publish & Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run Automated Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Validate Frontend (Lint, Typecheck, Build)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run validate
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+
+      - name: Test Backend
+        working-directory: backend
+        run: mvn -B test
+
+  build-and-push:
+    name: Build & Push Docker Images
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      backend_image: ${{ steps.set-image-names.outputs.backend_image }}
+      frontend_image: ${{ steps.set-image-names.outputs.frontend_image }}
+      image_tag: ${{ steps.set-image-names.outputs.image_tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Normalized Image Names & Tags
+        id: set-image-names
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          TAG="${{ github.sha }}"
+          BACKEND_IMG="ghcr.io/${OWNER_LC}/factory-backend"
+          FRONTEND_IMG="ghcr.io/${OWNER_LC}/factory-frontend"
+
+          echo "backend_image=${BACKEND_IMG}" >> $GITHUB_OUTPUT
+          echo "frontend_image=${FRONTEND_IMG}" >> $GITHUB_OUTPUT
+          echo "image_tag=${TAG}" >> $GITHUB_OUTPUT
+
+          echo "BACKEND_IMG=${BACKEND_IMG}" >> $GITHUB_ENV
+          echo "FRONTEND_IMG=${FRONTEND_IMG}" >> $GITHUB_ENV
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMG }}:latest
+            ${{ env.BACKEND_IMG }}:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMG }}:latest
+            ${{ env.FRONTEND_IMG }}:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-vps:
+    name: Deploy to VPS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare Remote Deployment Directory
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            mkdir -p /opt/factory-management
+
+      - name: Copy Compose and Nginx Configurations to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          source: "deploy/docker-compose.prod.yml,deploy/nginx.conf"
+          target: "/opt/factory-management"
+          strip_components: 1
+
+      - name: Deploy & Restart Containers on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BACKEND_IMG: ${{ needs.build-and-push.outputs.backend_image }}
+          FRONTEND_IMG: ${{ needs.build-and-push.outputs.frontend_image }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          APP_ENV: ${{ secrets.APP_ENV_FILE }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          envs: GH_ACTOR,GH_TOKEN,BACKEND_IMG,FRONTEND_IMG,IMAGE_TAG,APP_ENV
+          script: |
+            cd /opt/factory-management
+
+            # 1. Update or initialize environment variables (.env)
+            if [ -n "$APP_ENV" ]; then
+              echo "$APP_ENV" > .env
+              echo "Updated .env from GitHub Secrets."
+            elif [ ! -f .env ]; then
+              echo "Creating initial .env with default secure tokens..."
+              touch .env
+            fi
+
+            # 2. Authenticate Docker with GHCR to pull images
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+
+            # 3. Pull latest prebuilt images
+            export BACKEND_IMAGE="${BACKEND_IMG}:${IMAGE_TAG}"
+            export FRONTEND_IMAGE="${FRONTEND_IMG}:${IMAGE_TAG}"
+
+            echo "Pulling images..."
+            docker compose -f docker-compose.prod.yml pull
+
+            # 4. Gracefully restart services with zero-downtime dependency order
+            echo "Restarting services..."
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # 5. Logout GHCR credentials from VPS
+            docker logout ghcr.io
+
+            # 6. Verify healthcheck of the new deployment
+            echo "Waiting for services to become healthy..."
+            MAX_RETRIES=12
+            COUNT=0
+            until [ $COUNT -ge $MAX_RETRIES ]; do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${HOST_HTTP_PORT:-3977}/actuator/health" || curl -s -o /dev/null -w "%{http_code}" "http://localhost/actuator/health" || true)
+              if [ "$STATUS" = "200" ]; then
+                echo "Deployment healthcheck PASSED (HTTP 200)."
+                break
+              fi
+              echo "Healthcheck status: $STATUS. Retrying in 5s ($((COUNT+1))/$MAX_RETRIES)..."
+              sleep 5
+              COUNT=$((COUNT+1))
+            done
+
+            if [ $COUNT -ge $MAX_RETRIES ]; then
+              echo "Deployment healthcheck timed out!"
+              docker compose -f docker-compose.prod.yml ps
+              docker logs --tail 40 factory-backend
+              exit 1
+            fi
+
+            # 7. Prune unused images to reclaim VPS disk space
+            echo "Cleaning dangling images..."
+            docker image prune -f
+            echo "Deployment completed successfully!"
+
