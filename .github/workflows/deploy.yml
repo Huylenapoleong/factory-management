@@ -212,8 +212,8 @@ jobs:
               exit 1
             fi
 
-            # 7. Prune unused images to reclaim VPS disk space
-            echo "Pruning old and unused Docker images..."
-            docker image prune -a -f
+            # 7. Safely prune dangling images without removing other projects' images
+            echo "Pruning dangling Docker images safely..."
+            docker image prune -f
             echo "Deployment completed successfully! Disk space reclaimed."
 
